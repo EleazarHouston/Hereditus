@@ -129,6 +129,7 @@ env.bak/
 venv.bak/
 hereditus_develop_venv
 hereditus_main_venv
+Dans_Hereditus
 
 # Spyder project settings
 .spyderproject
