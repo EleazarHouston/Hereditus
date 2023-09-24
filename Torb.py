@@ -50,3 +50,9 @@ print(torb1.generation)
 
 
 #TODO #1 COLONY CLASS
+
+
+#TODO #2 PLAYER CLASS
+
+
+#TODO #3 SIMULATOR CLASS
