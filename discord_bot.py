@@ -13,10 +13,13 @@ tree = app_commands.CommandTree(client)
 
 @tree.command(guild=discord.Object(id=guildID))
 async def command1(interaction: discord.Interaction):
-    await interaction.response.send_message("Test message")
+    await interaction.response.send_message("Everyone can see this!")
+    await interaction.followup.send("Only you can see this!",ephemeral=True)
     
 @client.event
 async def on_ready():
+    await tree.sync()
+    await tree.sync(guild=discord.Object(id=guildID))
     print(f"Bot {client.user.name} is ready") 
 
 @app_commands.command()
@@ -28,3 +31,4 @@ tree.add_command(slash)
 
 token = input("Token: ")
 client.run(token)
+
