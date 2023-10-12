@@ -2,6 +2,7 @@
 import random
 import numpy as np
 import logging
+from exceptions import *
 logging.basicConfig(level=logging.DEBUG,format='{asctime} ({filename}) [{levelname:^8s}] {message}', style='{')
 logging.debug("Imported modules")
 all_torbs = {}
@@ -99,6 +100,7 @@ class Torb:
 
 class Colony:
     _instances = {}
+    _next_CID = 0
     def __init__(self, CID: int, name: str, EEID: int, PID: int = None):
         self.CID = CID
         self.name = name
@@ -107,7 +109,9 @@ class Colony:
         self.generations = 0
         self.torbs = {}
         self.torb_count = 0
+        self.PID = PID
         Colony._instances[self.CID] = self
+        Colony._next_CID += 1
         self.at_arms = []
         logging.info(f"{self.log_head()}: Successfully initialized")
         return
@@ -151,7 +155,28 @@ class Colony:
         return f"CID-{self.CID:02d} Colony {self.name:>8}"
 
 #TODO #2 PLAYER CLASS
-
+class Player:
+    _instances = {}
+    def __init__(self, PID):
+        self.PID = PID
+        self.colonies = {}
+        self.colony_count = 0
+        Player._instances[PID] = self
+        return
+    
+    def assign_colony(self, CID):
+        if CID in Colony._instances:
+            Colony._instances[CID].PID = self.PID
+            self.colonies[self.colony_count+1]=(Colony._instances[CID])
+            self.colony_count += 1
+        else:
+            raise PlayerException("Cannot claim nonexistant colony")
+        return
+    
+    def new_colony(self, name, EEID):
+        self.colonies[self.colony_count+1] = Colony(Colony._next_CID, name, EEID, self.PID)
+        self.colony_count += 1
+        return
 
 #TODO #3 SIMULATOR CLASS
 
@@ -181,7 +206,7 @@ class EvolutionEngine:
         logging.debug(f"{self.log_head()}: Verifying parents {parents}")
         if not isinstance(parents[0], Torb) or not isinstance(parents[1], Torb):
             logging.warning(f"{self.log_head()}: Parents {parents} are not valid Torbs")
-            return False
+            raise False
         if parents[0] == parents[1]:
             logging.warning(f"{self.log_head()}: Parents {parents} are the same instance")
             return False
@@ -196,7 +221,7 @@ class EvolutionEngine:
     def breed_parents(self, parents: list):
         logging.debug(f"{self.log_head()}: Breeding parents {parents}")
         if self.verify_parents(parents) == False:
-            return False
+            raise InvalidParents(f"{parents} are invalid")
         for parent in parents:
             parent.fertile = False
         genes = []
@@ -273,22 +298,13 @@ class Gene:
         return f"EEID-{self.EE.EEID:02d} {self.EE.gene_list[self.GID]}-gene GID {self.GID:02d}"
 
 EE0 = EvolutionEngine(0)
-C0 = Colony(0, "C0", 0)
-#C0.init_gen_zero(8)
-#print(f"Torbs: {C0.torbs.__str__()}")
-#print(f"Torb0: {C0.torbs[0]}")
-#print(f"Torb0 Genes: {C0.torbs[0].show_genes()}")
-#C0.colony_reproduction([[0,1],[2,3],[4,5],[6,7]])
-#print([torb.show_genes() for ID, torb in C0.torbs.items()])
 
-#torb0 = Torb(0, 0)
-#print(torb0)
-#print(torb0.show_genes())   
-#torb1 = Torb(1, 0)
-#torb2 = Torb(2, 1, parents = [0, 1])
-#torb3 = Torb(3, 1)
+if __name__=="__main__":
+    C0 = Colony(0, "C0", 0)
+    C0.init_gen_zero(8)
 
-
-#print(torb2)
-#print(torb2.show_genes())
-#print(torb2.generation)
+    #print(f"Torbs: {C0.torbs.__str__()}")
+    #print(f"Torb0: {C0.torbs[0]}")
+    #print(f"Torb0 Genes: {C0.torbs[0].show_genes()}")
+    C0.colony_reproduction([[0,1],[2,3],[4,5],[6,7]])
+    #print([torb.show_genes() for ID, torb in C0.torbs.items()])
