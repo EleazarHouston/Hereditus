@@ -31,7 +31,6 @@ class Torb:
         elif len(genes) != 0 and len(parents) == 2:
             self.set_genes(genes, EEID)
         elif parents[0] == parents[1]:
-            #Error!
             logging.warning(f"{self.log_head()}: Invalid parents, parent1 = parent2")
             return
         else:
@@ -56,9 +55,7 @@ class Torb:
         return genes
     
     def show_genes(self):
-        #print("Showing genes...")
         genes = [f"{gene}: {getattr(self, gene).__str__()}" for gene in GENE_LIST]
-        #print(f"Gene string type: {type(genes[0])}")
         return genes
     
     def random_genes(self):
@@ -118,7 +115,6 @@ class Colony:
         logging.debug(f"{self.log_head()}: Generating generation 0")
         for i in range(num_torbs):
             new_torb = Torb(i, 0, self.CID)
-            #new_torb.random_genes()
             self.torbs[self.torb_count] = new_torb
             self.torb_count += 1
         logging.debug(f"{self.log_head()}: Generation 0 initialized")
@@ -132,7 +128,6 @@ class Colony:
             child_genes = self.EE.breed_parents(torb_pair)
             logging.debug(f"{self.log_head()}: Child genes {child_genes} generated")
             child = Torb(i, self.generations, self.CID, parents = torb_pair, genes = child_genes, EEID = self.EE.EEID)
-            #child.set_genes(child_genes, self.EE.EEID)
             self.torbs[self.torb_count] = child
             self.torb_count += 1
         logging.info(f"{self.log_head()}: Generation {self.generations} generated")
@@ -196,14 +191,11 @@ class EvolutionEngine:
             for i in range(0, self.alleles_per_gene):
                 p0_allele = getattr(parents[0],gene).get_allele(is_random=True)
                 p1_allele = getattr(parents[1],gene).get_allele(is_random=True)
-                #print(f"Parent alleles: {p0_allele}, {p1_allele}")
                 if i == 0:
                     alleles.append(random.choice([p0_allele, p1_allele]))
                 else:
                     alleles.append(np.mean([p0_allele, p1_allele]))
-            #print(f"Pre-mutate alleles: {alleles}")
             alleles = self.mutate_and_shuffle(alleles)
-            #print(f"Shuffled: {alleles}")
             genes.append(alleles)
             logging.debug(f"{self.log_head()}: Gene {gene} generated {alleles}")
         logging.info(f"{self.log_head()}: Genes generated {genes}")
@@ -222,9 +214,7 @@ class EvolutionEngine:
                 mutation_amount = np.random.normal(0, self.mutation_dev)
                 allele = round(allele * (1 + mutation_amount),5)
                 logging.info(f"{self.log_head()}: Allele mutated from {allele_hist} to {allele}")
-                #print(f"Mutated: {allele}")
             out_alleles.append(allele)
-        #print(f"Mutated alleles: {out_alleles}")
         random.shuffle(out_alleles)
         logging.info(f"{self.log_head()}: Allele post-mutation box {out_alleles}")
         return out_alleles
@@ -237,20 +227,17 @@ class Gene:
         self.GID = GID
         self.alleles = alleles
         self.EE = EvolutionEngine._instances[EEID]
-        logging.info(f"{self.log_head()}: Successfully initialized")
+        logging.debug(f"{self.log_head()}: Successfully initialized with alleles {self.alleles}")
         return
     
     def __str__(self):
         return (f"Gene {self.GID}: {self.alleles}")
 
     def get_allele(self, idx=0, is_random=False):
-        #logging.debug(f"{self.log_head()}: Fetching allele")
         if is_random==True:
             out_allele = random.choice(self.alleles)
-            #logging.debug(f"{self.log_head()}: Fetched {out_allele}")
             return out_allele
         else:
-            #logging.debug(f"{self.log_head()}: Fetched {self.alleles[idx]}")
             return self.alleles[idx]
         
     def set_allele(self, start_idx, gene_len: int = None, values=[0], is_random=False):
@@ -263,7 +250,6 @@ class Gene:
             logging.debug(f"{self.log_head()}: Alleles set to {values}")
         else:
             alleles = []
-            #print(f"len: {gene_len}")
             for i in range(0, gene_len):
                 alleles.append(random.randrange(self.EE.gene_min,self.EE.gene_max))
             self.alleles[start_idx:start_idx+gene_len-1] = alleles
@@ -271,7 +257,6 @@ class Gene:
         return
     def log_head(self):
         return f"EEID-{self.EE.EEID:02d} {self.EE.gene_list[self.GID]}-gene GID {self.GID:02d}"
-
 
 EE0 = EvolutionEngine(0)
 C0 = Colony(0, "C0", 0)
