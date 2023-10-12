@@ -130,6 +130,8 @@ class Colony:
         for i, pair in enumerate(pairs):
             torb_pair = [self.torbs[pair[0]], self.torbs[pair[1]]]
             child_genes = self.EE.breed_parents(torb_pair)
+            if child_genes == False:
+                return
             logging.debug(f"{self.log_head()}: Child genes {child_genes} generated")
             child = Torb(i, self.generations, self.CID, parents = torb_pair, genes = child_genes, EEID = self.EE.EEID)
             self.torbs[self.torb_count] = child
@@ -194,7 +196,7 @@ class EvolutionEngine:
     def breed_parents(self, parents: list):
         logging.debug(f"{self.log_head()}: Breeding parents {parents}")
         if self.verify_parents(parents) == False:
-            return
+            return False
         for parent in parents:
             parent.fertile = False
         genes = []

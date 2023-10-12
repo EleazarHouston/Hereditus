@@ -20,50 +20,58 @@ async def command1(interaction: discord.Interaction):
     
 @tree.command(guild=discord.Object(id=guildID))
 async def generate(interaction: discord.Interaction, colony_id: int):
-    
-    if not isinstance(colony_id, int):
-        await interaction.response.send_message("Please enter an integer for colony_id")
-        return
+    try:
+        if not isinstance(colony_id, int):
+            await interaction.response.send_message("Please enter an integer for colony_id")
+            return
 
-    if not colony_id in torb.Colony._instances:
-        torb.Colony(colony_id, f"C{colony_id}", 0)
+        if not colony_id in torb.Colony._instances:
+            torb.Colony(colony_id, f"C{colony_id}", 0)
+            
         
-    
-    torb.Colony._instances[colony_id].init_gen_zero(8)
-    #torb.C0.init_gen_zero(8)
-    out = torb.Colony._instances[colony_id].out_torbs()
-    await interaction.response.send_message(f"{out}")
-    #await interaction.followup.send("Only you can see this!",ephemeral=True)
+        torb.Colony._instances[colony_id].init_gen_zero(8)
+        #torb.C0.init_gen_zero(8)
+        out = torb.Colony._instances[colony_id].out_torbs()
+        await interaction.response.send_message(f"{out}")
+        #await interaction.followup.send("Only you can see this!",ephemeral=True)
+    except Exception as e:
+        await interaction.response.send_message(f"An error occurred: {e}")
 
 @tree.command(guild=discord.Object(id=guildID))
 async def reset_colony(interaction: discord.Interaction, colony_id: int):
-    if not isinstance(colony_id, int):
-        await interaction.response.send_message("Please enter an integer for colony_id")
-        return
-    if not colony_id in torb.Colony._instances:
-        await interaction.response.send_message(f"Error: Colony not found")
-        return
-    #torb.Colony._instances[colony_id]
-    C99 = torb.Colony(colony_id, f"C{colony_id}", 0)
-    torb.Colony._instances[colony_id].init_gen_zero(8)
-    out = torb.Colony._instances[colony_id].out_torbs()
-    await interaction.response.send_message(f"{out}")
+    try:
+        if not isinstance(colony_id, int):
+            await interaction.response.send_message("Please enter an integer for colony_id")
+            return
+        if not colony_id in torb.Colony._instances:
+            await interaction.response.send_message(f"Error: Colony not found")
+            return
+        #torb.Colony._instances[colony_id]
+        C99 = torb.Colony(colony_id, f"C{colony_id}", 0)
+        torb.Colony._instances[colony_id].init_gen_zero(8)
+        out = torb.Colony._instances[colony_id].out_torbs()
+        await interaction.response.send_message(f"{out}")
+    except Exception as e:
+        await interaction.response.send_message(f"An error occurred: {e}")
 
 @tree.command(guild=discord.Object(id=guildID))
 async def breed(interaction: discord.Interaction, colony_id: int, pairs: str):
-    if not isinstance(colony_id, int):
-        await interaction.response.send_message("Please enter an integer for colony_id")
-        return
-    if not colony_id in torb.Colony._instances:
-        await interaction.response.send_message(f"Error: Colony not found")
-        return
-    pairs = ast.literal_eval(pairs)
-    if isinstance(pairs, list) and all(isinstance(sublist, list) for sublist in pairs):
-        torb.Colony._instances[colony_id].colony_reproduction(pairs)
-        out = torb.Colony._instances[colony_id].out_torbs()
-        await interaction.response.send_message(f"{out}")
-    else:
-        await interaction.response.send_message(f"Error: Incorrectly formatted breeding pairs, use format [[0, 1], [2, 3]] to breed Torb 0 and 1 together and Torb 2 and 3 together")
+    try:
+        if not isinstance(colony_id, int):
+            await interaction.response.send_message("Please enter an integer for colony_id")
+            return
+        if not colony_id in torb.Colony._instances:
+            await interaction.response.send_message(f"Error: Colony not found")
+            return
+        pairs = ast.literal_eval(pairs)
+        if isinstance(pairs, list) and all(isinstance(sublist, list) and all(isinstance(item, int) for item in sublist) for sublist in pairs):
+            torb.Colony._instances[colony_id].colony_reproduction(pairs)
+            out = torb.Colony._instances[colony_id].out_torbs()
+            await interaction.response.send_message(f"{out}")
+        else:
+            await interaction.response.send_message(f"Error: Incorrectly formatted breeding pairs, use format [[0, 1], [2, 3]] to breed Torb 0 and 1 together and Torb 2 and 3 together")
+    except Exception as e:
+        await interaction.response.send_message(f"An error occurred: {e}")
 
 @client.event
 async def on_ready():
