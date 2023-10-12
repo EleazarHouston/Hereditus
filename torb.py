@@ -18,6 +18,10 @@ class Torb:
         self.fertile = True
         self.alive = True
         logging.debug(f"{self.log_head()}: Basic attributes set")
+        if genes == None:
+            genes = []
+        if parents == None:
+            parents = []
         if len(parents) == 0 and len(genes) == 0:
             logging.debug(f"{self.log_head()}: Has no parents and no starting genes")
             self.spontaneous_generation = True
@@ -132,6 +136,14 @@ class Colony:
             self.torb_count += 1
         logging.info(f"{self.log_head()}: Generation {self.generations} generated")
         return
+    
+    def out_torbs(self):
+        out_string = ""
+        for ID, torb in self.torbs.items():
+            out_string += (f"Colony {torb.colony.name}: Torb {torb.generation}-{torb.ID} has genes {[getattr(torb, gene).alleles for gene in GENE_LIST]}\n")
+        print(out_string)
+        return out_string
+    
     #TODO #4 add method to return readable string of all torbs in colony from SQL
     def log_head(self):
         return f"CID-{self.CID:02d} Colony {self.name:>8}"
@@ -260,11 +272,11 @@ class Gene:
 
 EE0 = EvolutionEngine(0)
 C0 = Colony(0, "C0", 0)
-C0.init_gen_zero(8)
+#C0.init_gen_zero(8)
 #print(f"Torbs: {C0.torbs.__str__()}")
 #print(f"Torb0: {C0.torbs[0]}")
 #print(f"Torb0 Genes: {C0.torbs[0].show_genes()}")
-C0.colony_reproduction([[0,1],[2,3],[4,5],[6,7]])
+#C0.colony_reproduction([[0,1],[2,3],[4,5],[6,7]])
 #print([torb.show_genes() for ID, torb in C0.torbs.items()])
 
 #torb0 = Torb(0, 0)
