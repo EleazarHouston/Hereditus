@@ -10,7 +10,7 @@ GENE_LIST = ["health", "defense", "agility", "strength"]
 class Torb:
     _instances = {}
     _next_UID = 0
-    def __init__(self, ID: int, generation: int, colony_ID: int = -1, parents: list = []):
+    def __init__(self, ID: int, generation: int, colony_ID: int = -1, parents: list = [], genes = [], EEID = None):
         self.ID = ID
         self.generation = generation
         self.colony = Colony._instances[colony_ID]
@@ -18,18 +18,26 @@ class Torb:
         self.fertile = True
         self.alive = True
         logging.debug(f"{self.log_head()}: Basic attributes set")
-        if len(parents) == 0:
-            logging.debug(f"{self.log_head()}: Has no parents")
+        if len(parents) == 0 and len(genes) == 0:
+            logging.debug(f"{self.log_head()}: Has no parents and no starting genes")
             self.spontaneous_generation = True
             self.random_genes()
-        elif len(parents) == 2:
-            if parents[0] == parents[1]:
-                #Error!
-                logging.warning(f"{self.log_head()}: Invalid parents, parent1 = parent2")
-                return
-        else:
+        elif len(parents) == 0 and len(genes) != 0:
+            logging.warning(f"{self.log_head()}: Has {len(parents)} parents and was given starting genes")
+            return
+        elif len(parents) != 2:
             logging.warning(f"{self.log_head()}: Has {len(parents)} parents")
             return
+        elif len(genes) != 0 and len(parents) == 2:
+            self.set_genes(genes, EEID)
+        elif parents[0] == parents[1]:
+            #Error!
+            logging.warning(f"{self.log_head()}: Invalid parents, parent1 = parent2")
+            return
+        else:
+            logging.info(f"{self.log_head()}: Spontaneous generation disabled and not given genes {len(genes)}")
+            return
+            
         self.max_hp = getattr(self,"health").get_allele(is_random=True)
         self.hp = self.max_hp
         self.UID = Torb._next_UID
@@ -123,15 +131,15 @@ class Colony:
             torb_pair = [self.torbs[pair[0]], self.torbs[pair[1]]]
             child_genes = self.EE.breed_parents(torb_pair)
             logging.debug(f"{self.log_head()}: Child genes {child_genes} generated")
-            child = Torb(i, self.generations, self.CID, parents = torb_pair)
-            child.set_genes(child_genes, self.EE.EEID)
+            child = Torb(i, self.generations, self.CID, parents = torb_pair, genes = child_genes, EEID = self.EE.EEID)
+            #child.set_genes(child_genes, self.EE.EEID)
             self.torbs[self.torb_count] = child
             self.torb_count += 1
         logging.info(f"{self.log_head()}: Generation {self.generations} generated")
         return
     #TODO #4 add method to return readable string of all torbs in colony from SQL
     def log_head(self):
-        return f"CID-{self.CID:02d} Colony {self.name:>7}"
+        return f"CID-{self.CID:02d} Colony {self.name:>8}"
 
 #TODO #2 PLAYER CLASS
 
@@ -236,13 +244,13 @@ class Gene:
         return (f"Gene {self.GID}: {self.alleles}")
 
     def get_allele(self, idx=0, is_random=False):
-        logging.debug(f"{self.log_head()}: Fetching allele")
+        #logging.debug(f"{self.log_head()}: Fetching allele")
         if is_random==True:
             out_allele = random.choice(self.alleles)
-            logging.debug(f"{self.log_head()}: Fetched {out_allele}")
+            #logging.debug(f"{self.log_head()}: Fetched {out_allele}")
             return out_allele
         else:
-            logging.debug(f"{self.log_head()}: Fetched {self.alleles[idx]}")
+            #logging.debug(f"{self.log_head()}: Fetched {self.alleles[idx]}")
             return self.alleles[idx]
         
     def set_allele(self, start_idx, gene_len: int = None, values=[0], is_random=False):
