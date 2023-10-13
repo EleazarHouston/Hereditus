@@ -1,6 +1,8 @@
 #Describes class Torb
 import random
+from typing import Any
 import numpy as np
+import ast
 import logging
 from exceptions import *
 logging.basicConfig(level=logging.DEBUG,format='{asctime} ({filename}) [{levelname:^8s}] {message}', style='{')
@@ -18,35 +20,28 @@ class Torb:
         self.parents = parents
         self.fertile = True
         self.alive = True
+        
+        #Change to has actual EE, and move initial gene gen to EE
+        self.EEID = EEID
         logging.debug(f"{self.log_head()}: Basic attributes set")
-        if genes == None:
-            genes = []
-        if parents == None:
-            parents = []
-        if len(parents) == 0 and len(genes) == 0:
-            logging.debug(f"{self.log_head()}: Has no parents and no starting genes")
-            self.spontaneous_generation = True
-            self.random_genes()
-        elif len(parents) == 0 and len(genes) != 0:
-            logging.warning(f"{self.log_head()}: Has {len(parents)} parents and was given starting genes")
-            return
-        elif len(parents) != 2:
-            logging.warning(f"{self.log_head()}: Has {len(parents)} parents")
-            return
-        elif len(genes) != 0 and len(parents) == 2:
-            self.set_genes(genes, EEID)
-        elif parents[0] == parents[1]:
-            logging.warning(f"{self.log_head()}: Invalid parents, parent1 = parent2")
-            return
-        else:
-            logging.info(f"{self.log_head()}: Spontaneous generation disabled and not given genes {len(genes)}")
-            return
-            
+        
+        self.start_genes(parents, genes)
         self.max_hp = getattr(self,"health").get_allele(is_random=True)
         self.hp = self.max_hp
         self.UID = Torb._next_UID
         Torb._next_UID += 1
         logging.info(f"{self.log_head()}: Successfully instantiated")
+        return
+
+    def start_genes(self, parents, genes):
+        if not isinstance(parents, list):
+            parents = []
+        if not isinstance(genes, list):
+            genes = []
+        if len(genes) != 0:
+            self.set_genes(genes, self.EEID)
+        if len(parents) == 0 and len(genes) == 0:
+            self.random_genes()
         return
 
     def __str__(self):
@@ -177,6 +172,67 @@ class Player:
         self.colonies[self.colony_count+1] = Colony(Colony._next_CID, name, EEID, self.PID)
         self.colony_count += 1
         return
+    
+    def view_torbs(self, colony_ID, generations = [0,99]):
+        from unittest.mock import ANY
+        if type(generations) == list:
+            generations = range(generations[0], generations[1])
+        #Should return string where each line is Torb info from generations
+        found_torbs = self.find_torb(colony_ID, generations, "any")
+        out_string = ""
+        for torb in found_torbs:
+            out_string += f"\nColony {torb.colony.name} Torb {torb.generation:02d}-{torb.ID:02d}: {torb.hp}/{torb.max_hp} hp"
+        print(out_string)
+        return
+
+    def call_colony_reproduction(self, colony_ID: int, pairs: str):
+        import re
+        breeding_list = []
+        if pairs == "":
+            pairs = "00-01, 00-02"
+        
+        pattern1 = r"\d{1,2}\s*[-]\s*\d{1,2}"
+        breeding_list = re.findall(pattern1, pairs)
+        print(f"List1: {breeding_list}")
+        pattern2 = r"\d{1,2}"
+        breeding_torbs_info = []
+        for torb_info in breeding_list:
+            print(f"Splitting {torb_info}")
+            breeding_torbs_info.append(re.findall(pattern2, torb_info))
+        print(breeding_list)
+        print(breeding_torbs_info)
+        
+        if len(breeding_torbs_info)%2 != 0:
+            raise PlayerException(f"Asked to breed invalid number {len(breeding_torbs_info)} of torbs")
+        out_pairs = []
+        for i in range(0, len(breeding_torbs_info)//2):
+            out_pair = []
+            parent1 = self.find_torb(colony_ID, breeding_torbs_info[2*i][0], breeding_torbs_info[2*i][1])
+            parent2 = self.find_torb(colony_ID, breeding_torbs_info[2*i+1][0], breeding_torbs_info[2*i+1][1])
+            print(parent1.UID)
+            out_pair = [parent1, parent2]
+            out_pairs.append(out_pair)
+
+        return
+    
+    def find_torb(self, colony_ID, gen: int|str, ID: int|str):
+        out = False
+        if type(gen) != list:
+            gen = [int(gen)]
+        if ID != "any":
+            ID = int(ID)
+        print(f"gen: {gen}, ID: {ID}")
+        out_torbs = []
+        for CID, colony in Colony._instances.items():
+            for UID, torb in colony.torbs.items():
+                if torb.generation in gen and torb.ID == ID:
+                    print("Found torb")
+                    return torb
+                elif torb.generation in gen and ID == "any":
+                    out_torbs.append(torb)
+                    out = out_torbs
+        print("Not found")
+        return out
 
 #TODO #3 SIMULATOR CLASS
 
@@ -308,3 +364,6 @@ if __name__=="__main__":
     #print(f"Torb0 Genes: {C0.torbs[0].show_genes()}")
     C0.colony_reproduction([[0,1],[2,3],[4,5],[6,7]])
     #print([torb.show_genes() for ID, torb in C0.torbs.items()])
+    P1 = Player(0)
+    P1.call_colony_reproduction(0, r"[00-00,/00-01]; 00-02, 00-03 00-04 00-05")
+    P1.view_torbs(0, 0)

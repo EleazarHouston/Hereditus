@@ -10,3 +10,6 @@ class InvalidParents(EvolutionEngineException):
 
 class PlayerException(HereditusException):
     pass
+
+class TorbException(HereditusException):
+    pass
