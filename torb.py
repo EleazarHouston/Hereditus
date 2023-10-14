@@ -7,13 +7,13 @@ import logging
 from exceptions import *
 logging.basicConfig(level=logging.DEBUG,format='{asctime} ({filename}) [{levelname:^8s}] {message}', style='{')
 logging.debug("Imported modules")
-all_torbs = {}
-GENE_LIST = ["health", "defense", "agility", "strength"]
 
 class Torb:
     _instances = {}
     _next_UID = 0
     def __init__(self, ID: int, generation: int, colony_ID: int = -1, parents: list = [], genes = [], EEID = None):
+        from colony import Colony
+        from evolution_engine import EvolutionEngine
         self.ID = ID
         self.generation = generation
         self.colony = Colony._instances[colony_ID]
@@ -22,7 +22,7 @@ class Torb:
         self.alive = True
         
         #Change to has actual EE, and move initial gene gen to EE
-        self.EEID = EEID
+        self.EE = EvolutionEngine._instances[EEID]
         logging.debug(f"{self.log_head()}: Basic attributes set")
         
         self.start_genes(parents, genes)
@@ -39,7 +39,7 @@ class Torb:
         if not isinstance(genes, list):
             genes = []
         if len(genes) != 0:
-            self.set_genes(genes, self.EEID)
+            self.set_genes(genes, self.EE.EEID)
         if len(parents) == 0 and len(genes) == 0:
             self.random_genes()
         return
@@ -51,16 +51,17 @@ class Torb:
         return (f"Torb(ID={self.ID}, generation={self.generation}, colony_ID={self.colony.CID}, parents={self.parents})")
 
     def get_genes(self):
-        genes = [getattr(self, gene) for gene in GENE_LIST]
+        genes = [getattr(self, gene) for gene in self.EE.gene_list]
         return genes
     
     def show_genes(self):
-        genes = [f"{gene}: {getattr(self, gene).__str__()}" for gene in GENE_LIST]
+        genes = [f"{gene}: {getattr(self, gene).__str__()}" for gene in self.EE.gene_list]
         return genes
     
     def random_genes(self):
+        from gene import Gene
         logging.debug(f"Generating random genes for {Torb._next_UID}")
-        for i, gene in enumerate(GENE_LIST):
+        for i, gene in enumerate(self.EE.gene_list):
             new_gene = Gene(i, [], 0)
             setattr(self, gene, new_gene)
             getattr(self, gene).set_allele(0, is_random=True)
@@ -69,8 +70,9 @@ class Torb:
         return
     
     def set_genes(self, genes, EEID):
+        from gene import Gene
         logging.debug(f"{self.log_head()}: Setting genes...")
-        for i, gene in enumerate(GENE_LIST):
+        for i, gene in enumerate(self.EE.gene_list):
             new_gene = Gene(i, genes[i], EEID)
             setattr(self, gene, new_gene)
             logging.debug(f"{self.log_head()}: Got gene {getattr(self, gene)}")
@@ -93,277 +95,13 @@ class Torb:
     def log_head(self):
         return f"UID-{Torb._next_UID:03d} Colony {self.colony.name:>7}-{self.generation:02d}-{self.ID:02d}"
 
-class Colony:
-    _instances = {}
-    _next_CID = 0
-    def __init__(self, CID: int, name: str, EEID: int, PID: int = None):
-        self.CID = CID
-        self.name = name
-        self.EE = EvolutionEngine._instances[EEID]
-        #self.PID = PlayerController._instances[PID]
-        self.generations = 0
-        self.torbs = {}
-        self.torb_count = 0
-        self.PID = PID
-        Colony._instances[self.CID] = self
-        Colony._next_CID += 1
-        self.at_arms = []
-        logging.info(f"{self.log_head()}: Successfully initialized")
-        return
-    
-    def init_gen_zero(self, num_torbs):
-        if self.generations != 0:
-            logging.warning(f"{self.log_head()}: There are already {self.generations} generations")
-            return
-        logging.debug(f"{self.log_head()}: Generating generation 0")
-        for i in range(num_torbs):
-            new_torb = Torb(i, 0, self.CID)
-            self.torbs[self.torb_count] = new_torb
-            self.torb_count += 1
-        logging.debug(f"{self.log_head()}: Generation 0 initialized")
-        return
 
-    def colony_reproduction(self, pairs: list):
-        self.generations += 1
-        logging.debug(f"{self.log_head()}: Breeding generation {self.generations} with pairs {pairs}")
-        for i, pair in enumerate(pairs):
-            torb_pair = [self.torbs[pair[0]], self.torbs[pair[1]]]
-            child_genes = self.EE.breed_parents(torb_pair)
-            if child_genes == False:
-                return
-            logging.debug(f"{self.log_head()}: Child genes {child_genes} generated")
-            child = Torb(i, self.generations, self.CID, parents = torb_pair, genes = child_genes, EEID = self.EE.EEID)
-            self.torbs[self.torb_count] = child
-            self.torb_count += 1
-        logging.info(f"{self.log_head()}: Generation {self.generations} generated")
-        return
-    
-    def out_torbs(self):
-        out_string = ""
-        for ID, torb in self.torbs.items():
-            out_string += (f"Colony {torb.colony.name}: Torb {torb.generation}-{torb.ID} has genes {[getattr(torb, gene).alleles for gene in GENE_LIST]}\n")
-        print(out_string)
-        return out_string
-    
-    #TODO #4 add method to return readable string of all torbs in colony from SQL
-    def log_head(self):
-        return f"CID-{self.CID:02d} Colony {self.name:>8}"
 
-#TODO #2 PLAYER CLASS
-class Player:
-    _instances = {}
-    def __init__(self, PID):
-        self.PID = PID
-        self.colonies = {}
-        self.colony_count = 0
-        Player._instances[PID] = self
-        return
-    
-    def assign_colony(self, CID):
-        if CID in Colony._instances:
-            Colony._instances[CID].PID = self.PID
-            self.colonies[self.colony_count+1]=(Colony._instances[CID])
-            self.colony_count += 1
-        else:
-            raise PlayerException("Cannot claim nonexistant colony")
-        return
-    
-    def new_colony(self, name, EEID):
-        self.colonies[self.colony_count+1] = Colony(Colony._next_CID, name, EEID, self.PID)
-        self.colony_count += 1
-        return
-    
-    def view_torbs(self, colony_ID, generations = [0,99]):
-        from unittest.mock import ANY
-        if type(generations) == list:
-            generations = range(generations[0], generations[1])
-        #Should return string where each line is Torb info from generations
-        found_torbs = self.find_torb(colony_ID, generations, "any")
-        out_string = ""
-        for torb in found_torbs:
-            out_string += f"\nColony {torb.colony.name} Torb {torb.generation:02d}-{torb.ID:02d}: {torb.hp}/{torb.max_hp} hp"
-        print(out_string)
-        return
-
-    def call_colony_reproduction(self, colony_ID: int, pairs: str):
-        import re
-        breeding_list = []
-        if pairs == "":
-            pairs = "00-01, 00-02"
-        
-        pattern1 = r"\d{1,2}\s*[-]\s*\d{1,2}"
-        breeding_list = re.findall(pattern1, pairs)
-        print(f"List1: {breeding_list}")
-        pattern2 = r"\d{1,2}"
-        breeding_torbs_info = []
-        for torb_info in breeding_list:
-            print(f"Splitting {torb_info}")
-            breeding_torbs_info.append(re.findall(pattern2, torb_info))
-        print(breeding_list)
-        print(breeding_torbs_info)
-        
-        if len(breeding_torbs_info)%2 != 0:
-            raise PlayerException(f"Asked to breed invalid number {len(breeding_torbs_info)} of torbs")
-        out_pairs = []
-        for i in range(0, len(breeding_torbs_info)//2):
-            out_pair = []
-            parent1 = self.find_torb(colony_ID, breeding_torbs_info[2*i][0], breeding_torbs_info[2*i][1])
-            parent2 = self.find_torb(colony_ID, breeding_torbs_info[2*i+1][0], breeding_torbs_info[2*i+1][1])
-            print(parent1.UID)
-            out_pair = [parent1, parent2]
-            out_pairs.append(out_pair)
-
-        return
-    
-    def find_torb(self, colony_ID, gen: int|str, ID: int|str):
-        out = False
-        if type(gen) != list:
-            gen = [int(gen)]
-        if ID != "any":
-            ID = int(ID)
-        print(f"gen: {gen}, ID: {ID}")
-        out_torbs = []
-        for CID, colony in Colony._instances.items():
-            for UID, torb in colony.torbs.items():
-                if torb.generation in gen and torb.ID == ID:
-                    print("Found torb")
-                    return torb
-                elif torb.generation in gen and ID == "any":
-                    out_torbs.append(torb)
-                    out = out_torbs
-        print("Not found")
-        return out
 
 #TODO #3 SIMULATOR CLASS
 
 
-class EvolutionEngine:
-    _instances = {}
 
-    def __init__(self,
-                 evolution_engine_ID: int,
-                 random_gene_min: int = 1,
-                 random_gene_max: int = 10,
-                 mutation_chance: float = 0.1,
-                 mutation_dev: float = 0.15,
-                 alleles_per_gene: int = 2):
-        self.EEID = evolution_engine_ID
-        self.gene_min = random_gene_min
-        self.gene_max = random_gene_max
-        self.mutation_chance = mutation_chance
-        self.mutation_dev = mutation_dev
-        self.alleles_per_gene = alleles_per_gene
-        self.gene_list = GENE_LIST
-        EvolutionEngine._instances[self.EEID] = self
-        logging.info(f"{self.log_head()}: Successfully initialized")
-        return
-    
-    def verify_parents(self, parents: list):
-        logging.debug(f"{self.log_head()}: Verifying parents {parents}")
-        if not isinstance(parents[0], Torb) or not isinstance(parents[1], Torb):
-            logging.warning(f"{self.log_head()}: Parents {parents} are not valid Torbs")
-            raise False
-        if parents[0] == parents[1]:
-            logging.warning(f"{self.log_head()}: Parents {parents} are the same instance")
-            return False
-        if any(parent.fertile for parent in parents) == False:
-            logging.warning(f"{self.log_head()}: Parents {[parent for parent in parents if parent.fertile == False]} are infertile")
-            return False
 
-        #Maybe check if Parent UID found in SQL table    
-        logging.info(f"{self.log_head()}: Parents verified")
-        return True
-    
-    def breed_parents(self, parents: list):
-        logging.debug(f"{self.log_head()}: Breeding parents {parents}")
-        if self.verify_parents(parents) == False:
-            raise InvalidParents(f"{parents} are invalid")
-        for parent in parents:
-            parent.fertile = False
-        genes = []
-        for gene in GENE_LIST:
-            alleles = []
-            for i in range(0, self.alleles_per_gene):
-                p0_allele = getattr(parents[0],gene).get_allele(is_random=True)
-                p1_allele = getattr(parents[1],gene).get_allele(is_random=True)
-                if i == 0:
-                    alleles.append(random.choice([p0_allele, p1_allele]))
-                else:
-                    alleles.append(np.mean([p0_allele, p1_allele]))
-            alleles = self.mutate_and_shuffle(alleles)
-            genes.append(alleles)
-            logging.debug(f"{self.log_head()}: Gene {gene} generated {alleles}")
-        logging.info(f"{self.log_head()}: Genes generated {genes}")
-        return genes
-    
-    def mutate_and_shuffle(self, alleles):
-        logging.debug(f"{self.log_head()}: Mutating and shuffling alleles {alleles}")
-        out_alleles = []
-        mutated = False
-        for allele in alleles:
-            die_roll = random.uniform(0, 1)
-            if die_roll > 1 - self.mutation_chance:
-                allele_hist = allele
-                logging.debug(f"{self.log_head()}: Mutation achieved {die_roll} > {1 - self.mutation_chance}")
-                mutated = True
-                mutation_amount = np.random.normal(0, self.mutation_dev)
-                allele = round(allele * (1 + mutation_amount),5)
-                logging.info(f"{self.log_head()}: Allele mutated from {allele_hist} to {allele}")
-            out_alleles.append(allele)
-        random.shuffle(out_alleles)
-        logging.info(f"{self.log_head()}: Allele post-mutation box {out_alleles}")
-        return out_alleles
-    
-    def log_head(self):
-        return f"EEID-{self.EEID:02d}"
 
-class Gene:
-    def __init__(self, GID: int, alleles: list, EEID: int):
-        self.GID = GID
-        self.alleles = alleles
-        self.EE = EvolutionEngine._instances[EEID]
-        logging.debug(f"{self.log_head()}: Successfully initialized with alleles {self.alleles}")
-        return
-    
-    def __str__(self):
-        return (f"Gene {self.GID}: {self.alleles}")
 
-    def get_allele(self, idx=0, is_random=False):
-        if is_random==True:
-            out_allele = random.choice(self.alleles)
-            return out_allele
-        else:
-            return self.alleles[idx]
-        
-    def set_allele(self, start_idx, gene_len: int = None, values=[0], is_random=False):
-        logging.debug(f"{self.log_head()}: Setting allele")
-        if gene_len == None:
-            gene_len = self.EE.alleles_per_gene
-            
-        if is_random == False:
-            self.alleles[start_idx:start_idx+gene_len-1] = values
-            logging.debug(f"{self.log_head()}: Alleles set to {values}")
-        else:
-            alleles = []
-            for i in range(0, gene_len):
-                alleles.append(random.randrange(self.EE.gene_min,self.EE.gene_max))
-            self.alleles[start_idx:start_idx+gene_len-1] = alleles
-            logging.debug(f"{self.log_head()}: Alleles set to {alleles}")
-        return
-    def log_head(self):
-        return f"EEID-{self.EE.EEID:02d} {self.EE.gene_list[self.GID]}-gene GID {self.GID:02d}"
-
-EE0 = EvolutionEngine(0)
-
-if __name__=="__main__":
-    C0 = Colony(0, "C0", 0)
-    C0.init_gen_zero(8)
-
-    #print(f"Torbs: {C0.torbs.__str__()}")
-    #print(f"Torb0: {C0.torbs[0]}")
-    #print(f"Torb0 Genes: {C0.torbs[0].show_genes()}")
-    C0.colony_reproduction([[0,1],[2,3],[4,5],[6,7]])
-    #print([torb.show_genes() for ID, torb in C0.torbs.items()])
-    P1 = Player(0)
-    P1.call_colony_reproduction(0, r"[00-00,/00-01]; 00-02, 00-03 00-04 00-05")
-    P1.view_torbs(0, 0)
