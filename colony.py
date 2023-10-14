@@ -1,6 +1,7 @@
 from exceptions import *
 from evolution_engine import EvolutionEngine
 import logging
+import random
 from torb import Torb
 logging.basicConfig(level=logging.DEBUG,format='{asctime} ({filename}) [{levelname:^8s}] {message}', style='{')
 
@@ -20,6 +21,7 @@ class Colony:
         Colony._next_CID += 1
         self.at_arms = []
         self.breeding = []
+        self.food = 5
         logging.info(f"{self.log_head()}: Successfully initialized")
         return
     
@@ -60,5 +62,28 @@ class Colony:
                 logging.warning(f"{self.log_head()}: Torb {torb.UUID} {torb.gen}-{torb.ID} is not a valid soldier candidate.")
         return
     
+    def gather(self):
+        living_torbs = [torb for torb in self.torbs if torb.alive == True]
+        num_torbs = len(living_torbs)
+        num_breeding = len(self.breeding)
+        num_guarding = len(self.at_arms)
+        gathering = living_torbs - num_breeding - num_guarding
+        num_gathering = len(gathering)
+        self.food += num_gathering
+        #Maybe add differing amounts based on gathering torb genes
+        
+        return
+        
+    def colony_meal(self):
+        living_torbs = [torb for torb in self.torbs if torb.alive == True]
+        self.food -= len(living_torbs)
+        if self.food < 0:
+            for i in range(self.food, 0):
+                random.shuffle(living_torbs)
+                living_torbs[0].lower_hp(1)
+                living_torbs = [torb for torb in self.torbs if torb.alive == True]
+        return
+    
+
     def log_head(self):
         return f"CID-{self.CID:02d} Colony {self.name:>8}"
