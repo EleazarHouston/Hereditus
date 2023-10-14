@@ -19,6 +19,7 @@ class Colony:
         Colony._instances[self.CID] = self
         Colony._next_CID += 1
         self.at_arms = []
+        self.breeding = []
         logging.info(f"{self.log_head()}: Successfully initialized")
         return
     
@@ -39,6 +40,8 @@ class Colony:
         logging.debug(f"{self.log_head()}: Breeding generation {self.generations} with pairs {pairs}")
         for i, pair in enumerate(pairs):
             torb_pair = [self.torbs[pair[0]], self.torbs[pair[1]]]
+            self.breeding.append(torb_pair[0])
+            self.breeding.append(torb_pair[1])
             child_genes = self.EE.breed_parents(torb_pair)
             if child_genes == False:
                 return
@@ -47,6 +50,14 @@ class Colony:
             self.torbs[self.torb_count] = child
             self.torb_count += 1
         logging.info(f"{self.log_head()}: Generation {self.generations} generated")
+        return
+    
+    def battle_ready(self, torbs: list):
+        for torb in torbs:
+            if torb.hp != 0 and torb.alive == True and torb not in self.breeding and isinstance(torb, Torb):
+                self.at_arms.append(torb)
+            else:
+                logging.warning(f"{self.log_head()}: Torb {torb.UUID} {torb.gen}-{torb.ID} is not a valid soldier candidate.")
         return
     
     def log_head(self):
