@@ -1,8 +1,8 @@
 from colony import Colony
 from exceptions import *
 from evolution_engine import EvolutionEngine
-import logging
 from torb import Torb
+import logging
 logging.basicConfig(level=logging.DEBUG,format='{asctime} ({filename}) [{levelname:^8s}] {message}', style='{')
 
 class Player:
@@ -12,6 +12,7 @@ class Player:
         self.colonies = {}
         self.colony_count = 0
         Player._instances[PID] = self
+        logging.info(f"{self.log_head()}: Initialization successful")
         return
     
     def assign_colony(self, CID):
@@ -19,14 +20,13 @@ class Player:
             Colony._instances[CID].PID = self.PID
             self.colonies[self.colony_count+1]=(Colony._instances[CID])
             self.colony_count += 1
+            logging.debug(f"{self.log_head()}: Assigned colony {self.colony_count}")
         else:
             raise PlayerException("Cannot claim nonexistant colony")
+        
         return
     
-    
-    
     def view_torbs(self, colony_ID, generations = [0,99]):
-        from unittest.mock import ANY
         if type(generations) == list:
             generations = range(generations[0], generations[1])
         #Should return string where each line is Torb info from generations
@@ -35,9 +35,11 @@ class Player:
         for torb in found_torbs:
             out_string += f"\nColony {torb.colony.name} Torb {torb.generation:02d}-{torb.ID:02d}: {torb.hp}/{torb.max_hp} hp"
         print(out_string)
-        return
+        logging.debug(f"{self.log_head()}: Viewing {colony_ID} torbs")
+        return out_string
 
     def call_colony_reproduction(self, colony_ID: int, pairs: str):
+        logging.debug(f"{self.log_head()}: Calling colony reproduction in colony {colony_ID}")
         import re
         breeding_list = []
         if pairs == "":
@@ -64,10 +66,11 @@ class Player:
             print(parent1.UID)
             out_pair = [parent1, parent2]
             out_pairs.append(out_pair)
-
+        logging.info(f"{self.log_head()}: Player requested breeding complete in colony {colony_ID}")
         return
     
     def find_torb(self, colony_ID, gen: int|str, ID: int|str):
+        logging.debug(f"{self.log_head()}: Finding torb {gen}-{id}")
         out = False
         if type(gen) != list:
             gen = [int(gen)]
@@ -83,5 +86,7 @@ class Player:
                 elif torb.generation in gen and ID == "any":
                     out_torbs.append(torb)
                     out = out_torbs
-        print("Not found")
         return out
+    
+    def log_head(self):
+        return f"PID-{self.PID:02d}"
