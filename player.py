@@ -44,18 +44,8 @@ class Player:
         breeding_list = []
         if pairs == "":
             pairs = "00-01, 00-02"
-        
-        pattern1 = r"\d{1,2}\s*[-]\s*\d{1,2}"
-        breeding_list = re.findall(pattern1, pairs)
-        print(f"List1: {breeding_list}")
-        pattern2 = r"\d{1,2}"
-        breeding_torbs_info = []
-        for torb_info in breeding_list:
-            print(f"Splitting {torb_info}")
-            breeding_torbs_info.append(re.findall(pattern2, torb_info))
-        print(breeding_list)
-        print(breeding_torbs_info)
-        
+
+        breeding_torbs_info = self.torb_string_regex(pairs)
         if len(breeding_torbs_info)%2 != 0:
             raise PlayerException(f"Asked to breed invalid number {len(breeding_torbs_info)} of torbs")
         out_pairs = []
@@ -68,6 +58,18 @@ class Player:
             out_pairs.append(out_pair)
         logging.info(f"{self.log_head()}: Player requested breeding complete in colony {colony_ID}")
         return
+    
+    def torb_string_regex(self, torb_str):
+        import re
+        pattern0 = r"\d{1,2}\s*[-]\s*\d{1,2}"
+        pattern1 = r"\d{1,2}"
+        
+        torb_list = re.findall(pattern0, torb_str)
+        out_torb_list = []
+        for torb_info in torb_list:
+            out_torb_list.append(re.findall(pattern1, torb_info))
+        
+        return out_torb_list
     
     def find_torb(self, colony_ID, gen: int|str, ID: int|str):
         logging.debug(f"{self.log_head()}: Finding torb {gen}-{id}")
