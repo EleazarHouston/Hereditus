@@ -4,26 +4,28 @@ from exceptions import *
 import random
 import numpy as np
 
-GENE_LIST = ["health", "defense", "agility", "strength"]
+#GENE_LIST = ["health", "defense", "agility", "strength"]
 
 class EvolutionEngine:
     _instances = {}
-
+    _next_EID = 0
     def __init__(self,
                  evolution_engine_ID: int,
                  random_gene_min: int = 1,
                  random_gene_max: int = 10,
                  mutation_chance: float = 0.1,
                  mutation_dev: float = 0.15,
-                 alleles_per_gene: int = 2):
+                 alleles_per_gene: int = 2,
+                 gene_list = ["health", "defense", "agility", "strength"]):
         self.EEID = evolution_engine_ID
         self.gene_min = random_gene_min
         self.gene_max = random_gene_max
         self.mutation_chance = mutation_chance
         self.mutation_dev = mutation_dev
         self.alleles_per_gene = alleles_per_gene
-        self.gene_list = GENE_LIST
+        self.gene_list = gene_list
         EvolutionEngine._instances[self.EEID] = self
+        EvolutionEngine._next_EID += 1
         logging.info(f"{self.log_head()}: Successfully initialized")
         return
     
@@ -51,7 +53,7 @@ class EvolutionEngine:
         for parent in parents:
             parent.fertile = False
         genes = []
-        for gene in GENE_LIST:
+        for gene in self.gene_list:
             alleles = []
             for i in range(0, self.alleles_per_gene):
                 p0_allele = getattr(parents[0],gene).get_allele(is_random=True)
