@@ -93,7 +93,7 @@ class Colony:
         for i, pair in enumerate(pairs):
             child_genes = self.EE.breed_parents(pair)
             if child_genes == False:
-                return
+                continue
             logging.debug(f"{self.log_head()}: Child genes {child_genes} generated")
             child = Torb(i, self.generations, self.CID, parents = pair, genes = child_genes, EEID = self.EE.EEID)
             self.torbs[self.torb_count] = child
@@ -114,7 +114,7 @@ class Colony:
                 self.scouts += 1
             else:
                 logging.warning(f"{self.log_head()}: Torb {torb.UUID} {torb.gen}-{torb.ID} is not a valid soldier candidate.")
-                # This should raise an exception that is caught and communicated to player
+                #TODO This should raise an exception that is caught and communicated to player
         return
     
     def gather(self) -> None:
@@ -128,23 +128,29 @@ class Colony:
         num_gathering = num_torbs - num_breeding - num_guarding
         #num_gathering = len(gathering)
         self.food += num_gathering
-        #Maybe add differing amounts based on gathering torb genes: strength?
-        
+        #TODO Maybe add differing amounts based on gathering torb genes: strength?
         return
         
     def colony_meal(self) -> None:
         """
         Feed the colony and handle starvation if necessary.
         """
-        living_torbs = [torb for torb in self.torbs if torb.alive]
+        living_torbs = [torb for torb in self.torbs.values() if torb.alive]
+        starved_torbs = []
+
+        # Handle starvation if not enough food
+        if self.food < len(living_torbs):
+            starved_torbs = random.sample(living_torbs, len(living_torbs) - self.food)  # Randomly select torbs to starve
+            for torb in starved_torbs:
+                torb.lower_hp(1)
+
+        # Raise HP for Torbs that ate
+        for torb in living_torbs:
+            if torb not in starved_torbs:
+                torb.raise_hp(1)
+        
         self.food -= len(living_torbs)
-        if self.food < 0:
-            for i in range(self.food, 0):
-                random.shuffle(living_torbs)
-                living_torbs[0].lower_hp(1)
-                living_torbs = [torb for torb in self.torbs if torb.alive]
         return
-    
 
     def log_head(self) -> str:
         """
@@ -154,7 +160,6 @@ class Colony:
             str: Formatted log header string
         """
         return f"CID-{self.CID:02d} Colony {self.name:>8}"
-
 
     def new_round(self) -> None:
         """
@@ -166,8 +171,6 @@ class Colony:
         for torb in self.torbs:
             torb.fertile = True
         return
-    
-    
     
     def at_arms_info(self) -> ArmyStats:
         """
