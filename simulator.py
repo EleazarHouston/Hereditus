@@ -113,6 +113,8 @@ class Simulator:
                 a = 1
                 # Not implemented yet, might give simple "above average, below average, etc."
             known_info[colony.name] = given_info
+            
+        # Should still be modified to conform to combined power and resilience, not gene level
         return known_info
 
     def specific_scout(self, target_colony_CID):
