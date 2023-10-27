@@ -80,7 +80,7 @@ class Torb:
         return
     
     def lower_hp(self, amount):
-        hp = max(self.hp - amount, 0)
+        self.hp = max(self.hp - amount, 0)
         if self.hp == 0:
             #Maybe create separate death method later
             self.alive = False
@@ -89,7 +89,7 @@ class Torb:
 
     def raise_hp(self, amount):
         #Maybe combine into one adjust hp method
-        hp = min(self.hp + amount, self.max_hp)
+        self.hp = min(self.hp + amount, self.max_hp)
         return
     
     def log_head(self):
