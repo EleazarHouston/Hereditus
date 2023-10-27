@@ -1,15 +1,50 @@
-from exceptions import *
-from evolution_engine import EvolutionEngine
+from __future__ import annotations
+
 import logging
 import random
-from torb import Torb
+
 import numpy as np
+
+from exceptions import *
+from evolution_engine import EvolutionEngine
+from torb import Torb
+
 logging.basicConfig(level=logging.DEBUG,format='{asctime} ({filename}) [{levelname:^8s}] {message}', style='{')
 
 class Colony:
-    _instances = {}
-    _next_CID = 0
-    def __init__(self, CID: int, name: str, EEID: int, PID: int = None):
+    """A Colony class represents a group of entities for the game's ecosystem.
+
+    Attributes:
+        CID (int): Unique Colony ID
+        name (str): Name of the Colony
+        EE (EvolutionEngine): Associated Evolution Engine instance
+        PID (int): Player ID associated with the Colony, can be None
+        generations (int): Number of generations that exist in the Colony
+        torbs (dict): Dictionary storing Torbs, with the Torb count as keys and Torb objects as values
+        torb_count (int): Total count of Torbs in the Colony
+        at_arms (list): List of Torbs that are ready for battle.
+        breeding (list): List of Torbs that are currently breeding
+        food (int): Current amount of food available to the Colony
+        scouts (int): Count of Torbs that are ready to scout
+
+    Class Attributes:
+        _instances (dict): Stores all Colony instances with their CID as keys
+        _next_CID (int): The next available CID
+    """
+    
+    _instances: dict[int, Colony] = {}
+    _next_CID: int = 0
+    
+    def __init__(self, CID: int, name: str, EEID: int, PID: int = None) -> None:
+        """
+        Initialize a new colony instance.
+        
+        Args:
+            CID (int): Unique Colony ID
+            name (str): Name of the colony
+            EEID (int): Evolution Engine ID associated with the Colony
+            PID (int, optional): Player ID associated with the colony, defaults to None
+        """
         self.CID = CID
         self.name = name
         self.EE = EvolutionEngine._instances[EEID]
@@ -27,7 +62,13 @@ class Colony:
         logging.info(f"{self.log_head()}: Successfully initialized: PID {self.PID}")
         return
     
-    def init_gen_zero(self, num_torbs):
+    def init_gen_zero(self, num_torbs: int) -> None:
+        """
+        Initialize generation zero with a specified number of torbs
+        
+        Args:
+            num_torbs (int): Number of Torbs to generate for generation zero
+        """
         if self.generations != 0:
             logging.warning(f"{self.log_head()}: There are already {self.generations} generations")
             return
@@ -39,7 +80,13 @@ class Colony:
         logging.debug(f"{self.log_head()}: Generation 0 initialized")
         return
 
-    def colony_reproduction(self, pairs: list):
+    def colony_reproduction(self, pairs: list) -> None:
+        """
+        Carry out reproduction for the specified Torb pairs to generate a new generation.
+        
+        Args:
+            pairs (list): A list of lists where each sublist is a pair of Torbs to breed
+        """
         self.generations += 1
         logging.debug(f"{self.log_head()}: Breeding generation {self.generations} with pairs {pairs}")
         for i, pair in enumerate(pairs):
@@ -53,9 +100,15 @@ class Colony:
         logging.info(f"{self.log_head()}: Generation {self.generations} generated")
         return
     
-    def battle_ready(self, torbs: list):
+    def battle_ready(self, torbs: list) -> None:
+        """
+        Enlist Torbs for battle if they are eligible.
+        
+        Args:
+            torbs (list): List of Torbs to be checked and enlisted for battle
+        """
         for torb in torbs:
-            if torb.hp != 0 and torb.alive == True and torb not in self.breeding and isinstance(torb, Torb):
+            if torb.hp != 0 and torb.alive and torb not in self.breeding and isinstance(torb, Torb):
                 self.at_arms.append(torb)
                 self.scouts += 1
             else:
@@ -63,34 +116,49 @@ class Colony:
                 # This should raise an exception that is caught and communicated to player
         return
     
-    def gather(self):
-        living_torbs = [torb for torb in self.torbs if torb.alive == True]
+    def gather(self) -> None:
+        """
+        Gather food for the colony based on available Torbs.
+        """
+        living_torbs = [torb for torb in self.torbs if torb.alive]
         num_torbs = len(living_torbs)
         num_breeding = len(self.breeding)
         num_guarding = len(self.at_arms)
-        gathering = num_torbs - num_breeding - num_guarding
-        num_gathering = len(gathering)
+        num_gathering = num_torbs - num_breeding - num_guarding
+        #num_gathering = len(gathering)
         self.food += num_gathering
         #Maybe add differing amounts based on gathering torb genes: strength?
         
         return
         
-    def colony_meal(self):
-        living_torbs = [torb for torb in self.torbs if torb.alive == True]
+    def colony_meal(self) -> None:
+        """
+        Feed the colony and handle starvation if necessary.
+        """
+        living_torbs = [torb for torb in self.torbs if torb.alive]
         self.food -= len(living_torbs)
         if self.food < 0:
             for i in range(self.food, 0):
                 random.shuffle(living_torbs)
                 living_torbs[0].lower_hp(1)
-                living_torbs = [torb for torb in self.torbs if torb.alive == True]
+                living_torbs = [torb for torb in self.torbs if torb.alive]
         return
     
 
-    def log_head(self):
+    def log_head(self) -> str:
+        """
+        Generate a standard log header for the colony.
+        
+        Returns:
+            str: Formatted log header string
+        """
         return f"CID-{self.CID:02d} Colony {self.name:>8}"
 
 
-    def new_round(self):
+    def new_round(self) -> None:
+        """
+        Prepare the colony for a new round.
+        """
         self.scouts = 0
         self.at_arms = []
         self.breeding = []
@@ -98,8 +166,13 @@ class Colony:
             torb.fertile = True
         return
     
-    def at_arms_info(self):
-        """Return detailed combined standing army stats"""
+    def at_arms_info(self) -> list[float, float, float, float, float, float]:
+        """
+        Provide detailed stats about the colony's standing army.
+        
+        Returns:
+            list: Combined army's average strength, agility, constitution, defense, hp, max_hp
+        """
         real_average_strength = 0
         real_average_agility = 0
         real_average_constitution = 0
