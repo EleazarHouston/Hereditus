@@ -3,6 +3,7 @@ from evolution_engine import EvolutionEngine
 import logging
 import random
 from torb import Torb
+import numpy as np
 logging.basicConfig(level=logging.DEBUG,format='{asctime} ({filename}) [{levelname:^8s}] {message}', style='{')
 
 class Colony:
@@ -96,3 +97,22 @@ class Colony:
         for torb in self.torbs:
             torb.fertile = True
         return
+    
+    def at_arms_info(self):
+        """Return detailed combined standing army stats"""
+        real_average_strength = 0
+        real_average_agility = 0
+        real_average_constitution = 0
+        real_average_defense = 0
+        real_current_hp = 0
+        real_max_hp = 0
+        
+        for soldier in self.at_arms:
+            real_average_strength += np.average(soldier.strength.alleles)
+            real_average_agility += np.average(soldier.agility.alleles)
+            real_average_constitution += np.average(soldier.health.alleles)
+            real_average_defense += np.average(soldier.defense.alleles)
+            real_current_hp += soldier.hp
+            real_max_hp += soldier.max_hp
+            
+        return [real_average_strength, real_average_agility, real_average_constitution, real_average_defense, real_current_hp, real_max_hp]
