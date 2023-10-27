@@ -80,6 +80,7 @@ class Torb:
         return
     
     def lower_hp(self, amount):
+        logging.warning(f"{self.log_head()}: Deprecated function 'lower_hp'")
         self.hp = max(self.hp - amount, 0)
         if self.hp == 0:
             #Maybe create separate death method later
@@ -88,9 +89,23 @@ class Torb:
         return
 
     def raise_hp(self, amount):
-        #Maybe combine into one adjust hp method
+        logging.warning(f"{self.log_head()}: Deprecated function 'raise_hp'")
         self.hp = min(self.hp + amount, self.max_hp)
         return
+    
+    def adjust_hp(self, amount: int) -> None:
+        """
+        Adjust the HP of the Torb by a given amount.
+
+        Args:
+            amount (int): Positive values increase HP, negative values decrease HP.
+        """
+        self.hp = min(max(self.hp + amount, 0), self.max_hp)
+        if self.hp == 0:
+            self.alive = False
+            self.fertile = False
+        return
+
     
     def log_head(self):
         return f"UID-{Torb._next_UID:03d} Colony {self.colony.name:>7}-{self.generation:02d}-{self.ID:02d}"

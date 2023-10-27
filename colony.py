@@ -142,13 +142,13 @@ class Colony:
         if self.food < len(living_torbs):
             starved_torbs = random.sample(living_torbs, len(living_torbs) - self.food)  # Randomly select torbs to starve
             for torb in starved_torbs:
-                torb.lower_hp(1)
+                torb.adjust_hp(-1)
 
         # Raise HP for Torbs that ate
         for torb in living_torbs:
             if torb not in starved_torbs:
-                torb.raise_hp(1)
-        
+                torb.adjust_hp(1)
+                
         self.food -= len(living_torbs)
         return
 

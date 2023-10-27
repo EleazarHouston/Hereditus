@@ -80,10 +80,9 @@ class Simulator:
         impact_torb1 = torb0_hit - torb1_protection
         
         if impact_torb0 > 0:
-            torb0.lower_hp(impact_torb0)
+            torb0.adjust_hp(-impact_torb0)
         if impact_torb1 > 0:
-            torb1.lower_hp(impact_torb1)
-        
+            torb1.adjust_hp(-impact_torb1)
         return
     
     def next_round(self):
