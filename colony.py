@@ -22,7 +22,8 @@ class Colony:
         self.at_arms = []
         self.breeding = []
         self.food = 5
-        logging.info(f"{self.log_head()}: Successfully initialized")
+        self.scouts = 0
+        logging.info(f"{self.log_head()}: Successfully initialized: PID {self.PID}")
         return
     
     def init_gen_zero(self, num_torbs):
@@ -41,14 +42,11 @@ class Colony:
         self.generations += 1
         logging.debug(f"{self.log_head()}: Breeding generation {self.generations} with pairs {pairs}")
         for i, pair in enumerate(pairs):
-            torb_pair = [self.torbs[pair[0]], self.torbs[pair[1]]]
-            self.breeding.append(torb_pair[0])
-            self.breeding.append(torb_pair[1])
-            child_genes = self.EE.breed_parents(torb_pair)
+            child_genes = self.EE.breed_parents(pair)
             if child_genes == False:
                 return
             logging.debug(f"{self.log_head()}: Child genes {child_genes} generated")
-            child = Torb(i, self.generations, self.CID, parents = torb_pair, genes = child_genes, EEID = self.EE.EEID)
+            child = Torb(i, self.generations, self.CID, parents = pair, genes = child_genes, EEID = self.EE.EEID)
             self.torbs[self.torb_count] = child
             self.torb_count += 1
         logging.info(f"{self.log_head()}: Generation {self.generations} generated")
@@ -58,8 +56,10 @@ class Colony:
         for torb in torbs:
             if torb.hp != 0 and torb.alive == True and torb not in self.breeding and isinstance(torb, Torb):
                 self.at_arms.append(torb)
+                self.scouts += 1
             else:
                 logging.warning(f"{self.log_head()}: Torb {torb.UUID} {torb.gen}-{torb.ID} is not a valid soldier candidate.")
+                # This should raise an exception that is caught and communicated to player
         return
     
     def gather(self):
@@ -67,10 +67,10 @@ class Colony:
         num_torbs = len(living_torbs)
         num_breeding = len(self.breeding)
         num_guarding = len(self.at_arms)
-        gathering = living_torbs - num_breeding - num_guarding
+        gathering = num_torbs - num_breeding - num_guarding
         num_gathering = len(gathering)
         self.food += num_gathering
-        #Maybe add differing amounts based on gathering torb genes
+        #Maybe add differing amounts based on gathering torb genes: strength?
         
         return
         
@@ -87,3 +87,12 @@ class Colony:
 
     def log_head(self):
         return f"CID-{self.CID:02d} Colony {self.name:>8}"
+
+
+    def new_round(self):
+        self.scouts = 0
+        self.at_arms = []
+        self.breeding = []
+        for torb in self.torbs:
+            torb.fertile = True
+        return
