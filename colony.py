@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import random
+from dataclasses import dataclass
 
 import numpy as np
 
@@ -45,20 +46,20 @@ class Colony:
             EEID (int): Evolution Engine ID associated with the Colony
             PID (int, optional): Player ID associated with the colony, defaults to None
         """
-        self.CID = CID
-        self.name = name
-        self.EE = EvolutionEngine._instances[EEID]
+        self.CID: int = CID
+        self.name: str = name
+        self.EE: EvolutionEngine = EvolutionEngine._instances[EEID]
         #self.PID = PlayerController._instances[PID]
-        self.generations = 0
-        self.torbs = {}
-        self.torb_count = 0
-        self.PID = PID
+        self.generations: int = 0
+        self.torbs: dict[int, Torb] = {}
+        self.torb_count: int = 0
+        self.PID: int = PID
         Colony._instances[self.CID] = self
         Colony._next_CID += 1
-        self.at_arms = []
-        self.breeding = []
-        self.food = 5
-        self.scouts = 0
+        self.at_arms: list[Torb] = []
+        self.breeding: list[Torb] = []
+        self.food: int = 5
+        self.scouts: int = 0
         logging.info(f"{self.log_head()}: Successfully initialized: PID {self.PID}")
         return
     
@@ -166,7 +167,9 @@ class Colony:
             torb.fertile = True
         return
     
-    def at_arms_info(self) -> list[float, float, float, float, float, float]:
+    
+    
+    def at_arms_info(self) -> ArmyStats:
         """
         Provide detailed stats about the colony's standing army.
         
@@ -188,4 +191,13 @@ class Colony:
             real_current_hp += soldier.hp
             real_max_hp += soldier.max_hp
             
-        return [real_average_strength, real_average_agility, real_average_constitution, real_average_defense, real_current_hp, real_max_hp]
+        return ArmyStats(real_average_strength, real_average_agility, real_average_constitution, real_average_defense, real_current_hp, real_max_hp)
+    
+@dataclass
+class ArmyStats:
+    average_strength: float
+    average_agility: float
+    average_constitution: float
+    average_defense: float
+    current_hp: float
+    max_hp: float
