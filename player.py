@@ -7,6 +7,8 @@ logging.basicConfig(level=logging.DEBUG,format='{asctime} ({filename}) [{levelna
 
 class Player:
     _instances = {}
+    #Don't add _next_PID
+    #PID = DiscordID
     def __init__(self, PID):
         self.PID = PID
         self.colonies = {}
@@ -18,22 +20,35 @@ class Player:
     def assign_colony(self, CID):
         if CID in Colony._instances:
             Colony._instances[CID].PID = self.PID
-            self.colonies[self.colony_count+1]=(Colony._instances[CID])
+            self.colonies[self.colony_count]=(Colony._instances[CID])
             self.colony_count += 1
-            logging.debug(f"{self.log_head()}: Assigned colony {self.colony_count}")
+            logging.debug(f"{self.log_head()}: Assigned colony {self.colony_count-1}")
         else:
             raise PlayerException("Cannot claim nonexistant colony")
-        
+        return
+    
+    def send_to_arms(self, colony_ID: int, torbs: str):
+        torb_parsed = self.torb_string_regex(torbs)
+        Colony._instances[colony_ID].battle_ready(torb_parsed)
         return
     
     def view_torbs(self, colony_ID, generations = [0,99]):
-        if type(generations) == list:
-            generations = range(generations[0], generations[1])
+        if generations == [0, 99]:
+            generations = list(range(generations[0], generations[1]))
+        if type(generations) == int:
+            generations = [generations]
         #Should return string where each line is Torb info from generations
         found_torbs = self.find_torb(colony_ID, generations, "any")
-        out_string = ""
+        out_string = "`COLONY " + " " * len(Colony._instances[colony_ID].name) + "TORB GEN-ID  CURRENT/MAX HP    CONSTITUTION   DEFENSE   AGILITY    STRENGTH`"
         for torb in found_torbs:
-            out_string += f"\nColony {torb.colony.name} Torb {torb.generation:02d}-{torb.ID:02d}: {torb.hp}/{torb.max_hp} hp"
+            out_string += (f"\n\n**Colony {torb.colony.name}** - Torb `{torb.generation:02d}-{torb.ID:02d}`:   "
+            f":mending_heart:[`{torb.hp:02d}/{torb.max_hp:02d}`]   Genes:  "
+            f":two_hearts:[`{torb.health.get_allele(0):02}|{torb.health.get_allele(1):02d}`]   "
+            f":shield:[`{torb.defense.get_allele(0):02d}|{torb.defense.get_allele(1):02d}`]   "
+            f":zap:[`{torb.agility.get_allele(0):02d}|{torb.agility.get_allele(1):02d}`]   "
+            f":muscle:[`{torb.strength.get_allele(0):02d}|{torb.strength.get_allele(1):02d}`]   "
+            )
+        #out_string += "```"
         print(out_string)
         logging.debug(f"{self.log_head()}: Viewing {colony_ID} torbs")
         return out_string
@@ -56,6 +71,9 @@ class Player:
             print(parent1.UID)
             out_pair = [parent1, parent2]
             out_pairs.append(out_pair)
+            
+            self.colonies[1].colony_reproduction(out_pairs)
+            
         logging.info(f"{self.log_head()}: Player requested breeding complete in colony {colony_ID}")
         return
     
@@ -72,7 +90,8 @@ class Player:
         return out_torb_list
     
     def find_torb(self, colony_ID, gen: int|str, ID: int|str):
-        logging.debug(f"{self.log_head()}: Finding torb {gen}-{id}")
+        logging.debug(f"{self.log_head()}: Finding torb {gen}-{ID}")
+        sel_colony = None
         out = False
         if type(gen) != list:
             gen = [int(gen)]
@@ -81,13 +100,22 @@ class Player:
         print(f"gen: {gen}, ID: {ID}")
         out_torbs = []
         for CID, colony in Colony._instances.items():
-            for UID, torb in colony.torbs.items():
-                if torb.generation in gen and torb.ID == ID:
-                    print("Found torb")
-                    return torb
-                elif torb.generation in gen and ID == "any":
-                    out_torbs.append(torb)
-                    out = out_torbs
+            print(f"Checking colony {colony.CID} against {colony_ID}")
+            if colony.CID == colony_ID:
+                print("Found colony")
+                sel_colony = colony
+                
+        
+        if sel_colony == None:
+            return False
+        
+        for UID, torb in sel_colony.torbs.items():
+            if torb.generation in gen and torb.ID == ID:
+                print("Found torb")
+                return torb
+            elif torb.generation in gen and ID == "any":
+                out_torbs.append(torb)
+                out = out_torbs
         return out
     
     def log_head(self):
