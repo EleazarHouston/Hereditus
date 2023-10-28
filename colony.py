@@ -1,19 +1,20 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
 import random
-from dataclasses import dataclass
 
 import numpy as np
 
-from exceptions import *
 from evolution_engine import EvolutionEngine
+from exceptions import *
 from torb import Torb
 
 logging.basicConfig(level=logging.DEBUG,format='{asctime} ({filename}) [{levelname:^8s}] {message}', style='{')
 
 class Colony:
-    """A Colony class represents a group of entities for the game's ecosystem.
+    """
+    Represents a group of entities for the game's ecosystem.
 
     Attributes:
         CID (int): Unique Colony ID
@@ -38,18 +39,18 @@ class Colony:
     
     def __init__(self, CID: int, name: str, EEID: int, PID: int = None) -> None:
         """
-        Initialize a new colony instance.
+        Initializes a new Colony instance.
         
         Args:
             CID (int): Unique Colony ID
-            name (str): Name of the colony
+            name (str): Name of the Colony
             EEID (int): Evolution Engine ID associated with the Colony
-            PID (int, optional): Player ID associated with the colony, defaults to None
+            PID (int, optional): Player ID associated with the Colony, defaults to None
         """
+        
         self.CID: int = CID
         self.name: str = name
         self.EE: EvolutionEngine = EvolutionEngine._instances[EEID]
-        #self.PID = PlayerController._instances[PID]
         self.generations: int = 0
         self.torbs: dict[int, Torb] = {}
         self.torb_count: int = 0
@@ -65,11 +66,12 @@ class Colony:
     
     def init_gen_zero(self, num_torbs: int) -> None:
         """
-        Initialize generation zero with a specified number of torbs
+        Initializes generation zero with a specified number of Torbs
         
         Args:
             num_torbs (int): Number of Torbs to generate for generation zero
         """
+        
         if self.generations != 0:
             logging.warning(f"{self.log_head()}: There are already {self.generations} generations")
             return
@@ -83,11 +85,12 @@ class Colony:
 
     def colony_reproduction(self, pairs: list) -> None:
         """
-        Carry out reproduction for the specified Torb pairs to generate a new generation.
+        Carries out reproduction for the specified Torb pairs to generate a new generation.
         
         Args:
             pairs (list): A list of lists where each sublist is a pair of Torbs to breed
         """
+        
         self.generations += 1
         logging.debug(f"{self.log_head()}: Breeding generation {self.generations} with pairs {pairs}")
         for i, pair in enumerate(pairs):
@@ -103,11 +106,12 @@ class Colony:
     
     def battle_ready(self, torbs: list) -> None:
         """
-        Enlist Torbs for battle if they are eligible.
+        Enlists Torbs for battle if they are eligible.
         
         Args:
             torbs (list): List of Torbs to be checked and enlisted for battle
         """
+        
         for torb in torbs:
             if torb.hp != 0 and torb.alive and torb not in self.breeding and isinstance(torb, Torb):
                 self.at_arms.append(torb)
@@ -119,32 +123,31 @@ class Colony:
     
     def gather(self) -> None:
         """
-        Gather food for the colony based on available Torbs.
+        Gathers food for the colony based on available Torbs.
         """
+        
         living_torbs = [torb for torb in self.torbs if torb.alive]
         num_torbs = len(living_torbs)
         num_breeding = len(self.breeding)
         num_guarding = len(self.at_arms)
         num_gathering = num_torbs - num_breeding - num_guarding
-        #num_gathering = len(gathering)
         self.food += num_gathering
-        #TODO Maybe add differing amounts based on gathering torb genes: strength?
+        #Maybe add differing amounts based on gathering torb genes: strength?
         return
         
     def colony_meal(self) -> None:
         """
-        Feed the colony and handle starvation if necessary.
+        Feeds the colony and handle starvation if necessary.
         """
+        
         living_torbs = [torb for torb in self.torbs.values() if torb.alive]
         starved_torbs = []
 
-        # Handle starvation if not enough food
         if self.food < len(living_torbs):
-            starved_torbs = random.sample(living_torbs, len(living_torbs) - self.food)  # Randomly select torbs to starve
+            starved_torbs = random.sample(living_torbs, len(living_torbs) - self.food)
             for torb in starved_torbs:
                 torb.adjust_hp(-1)
 
-        # Raise HP for Torbs that ate
         for torb in living_torbs:
             if torb not in starved_torbs:
                 torb.adjust_hp(1)
@@ -154,17 +157,19 @@ class Colony:
 
     def log_head(self) -> str:
         """
-        Generate a standard log header for the colony.
+        Generates a standard log header for the Colony.
         
         Returns:
             str: Formatted log header string
         """
+        
         return f"CID-{self.CID:02d} Colony {self.name:>8}"
 
     def new_round(self) -> None:
         """
-        Prepare the colony for a new round.
+        Prepares the colony for a new round.
         """
+        
         self.scouts = 0
         self.at_arms = []
         self.breeding = []
@@ -174,11 +179,12 @@ class Colony:
     
     def at_arms_info(self) -> ArmyStats:
         """
-        Provide detailed stats about the colony's standing army.
+        Provides detailed stats about the colony's standing army.
         
         Returns:
             list: Combined army's average strength, agility, constitution, defense, hp, max_hp
         """
+        
         real_average_strength = 0
         real_average_agility = 0
         real_average_constitution = 0
