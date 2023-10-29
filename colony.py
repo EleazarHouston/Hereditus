@@ -24,8 +24,8 @@ class Colony:
         generations (int): Number of generations that exist in the Colony
         torbs (dict): Dictionary storing Torbs, with the Torb count as keys and Torb objects as values
         torb_count (int): Total count of Torbs in the Colony
-        at_arms (list): List of Torbs that are ready for battle.
-        breeding (list): List of Torbs that are currently breeding
+        at_arms (list[Torb]): List of Torbs that are ready for battle.
+        breeding (list[Torb]): List of Torbs that are currently breeding
         food (int): Current amount of food available to the Colony
         scouts (int): Count of Torbs that are ready to scout
 
