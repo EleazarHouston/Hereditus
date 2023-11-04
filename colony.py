@@ -1,5 +1,4 @@
 from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 import random
@@ -30,7 +29,7 @@ class Colony:
         scouts (int): Count of Torbs that are ready to scout
 
     Class Attributes:
-        _instances (dict): Stores all Colony instances with their CID as keys
+        _instances (dict[int, Colony]): Stores all Colony instances with their CID as keys
         _next_CID (int): The next available CID
     """
     
