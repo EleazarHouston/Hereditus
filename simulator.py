@@ -21,7 +21,7 @@ class Simulator:
     
     def new_evolution_engine(self):
         from evolution_engine import EvolutionEngine
-        self.evolution_engines[EvolutionEngine._next_EID] = EvolutionEngine(EvolutionEngine._next_EID)
+        self.evolution_engines[EvolutionEngine._next_EEID] = EvolutionEngine(EvolutionEngine._next_EEID)
         return
     
     def new_colony(self, name, EEID, PID):
