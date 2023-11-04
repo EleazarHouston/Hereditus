@@ -10,22 +10,24 @@ class Gene:
         GID (int): Unique Gene ID
         alleles (list): List of integers representing Gene alleles
         EE (EvolutionEngine): The EvolutionEngine assigned to the Gene
+        mutated (bool): 
     """
     
-    def __init__(self, GID: int, alleles: list, EEID: int) -> None:
+    def __init__(self, GID: int, alleles: list[int], EEID: int) -> None:
         """
         Initializes a new Gene instance.
 
         Args:
-            GID (int): Unique Gene ID
+            GID (int): Unique Gene ID per Torb
             alleles (list): List of alleles
             EEID (int): The ID of the Evolution Engine assigned to the Gene
         """
         
         from evolution_engine import EvolutionEngine
-        self.GID = GID
-        self.alleles = alleles
-        self.EE = EvolutionEngine._instances[EEID]
+        self.GID: int = GID
+        self.alleles: list[int] = alleles
+        self.EE: EvolutionEngine = EvolutionEngine._instances[EEID]
+        self.mutated: bool = False
         logging.debug(f"{self.log_head()}: Successfully initialized with alleles {self.alleles}")
         return
     
