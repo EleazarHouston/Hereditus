@@ -7,6 +7,7 @@ import numpy as np
 
 from evolution_engine import EvolutionEngine
 from exceptions import *
+from simulator import Simulator
 from torb import Torb
 
 logging.basicConfig(level=logging.DEBUG,format='{asctime} ({filename}) [{levelname:^8s}] {message}', style='{')
@@ -20,6 +21,7 @@ class Colony:
         name (str): Name of the Colony
         EE (EvolutionEngine): Associated Evolution Engine instance
         PID (int): Player ID associated with the Colony, can be None
+        SID (int): Simulator ID in charge of this Colony, can be None
         generations (int): Number of generations that exist in the Colony
         torbs (dict): Dictionary storing Torbs, with the Torb count as keys and Torb objects as values
         torb_count (int): Total count of Torbs in the Colony
@@ -36,7 +38,7 @@ class Colony:
     _instances: dict[int, Colony] = {}
     _next_CID: int = 0
     
-    def __init__(self, CID: int, name: str, EEID: int, PID: int = None) -> None:
+    def __init__(self, CID: int, name: str, EEID: int, PID: int = None, SID: int = None) -> None:
         """
         Initializes a new Colony instance.
         
@@ -54,6 +56,7 @@ class Colony:
         self.torbs: dict[int, Torb] = {}
         self.torb_count: int = 0
         self.PID: int = PID
+        self.SID: int = SID
         Colony._instances[self.CID] = self
         Colony._next_CID += 1
         self.at_arms: list[Torb] = []
@@ -200,6 +203,37 @@ class Colony:
             real_max_hp += soldier.max_hp
             
         return ArmyStats(real_average_strength, real_average_agility, real_average_constitution, real_average_defense, real_current_hp, real_max_hp)
+    
+    def scout_all_colonies(self) -> dict[str, tuple[float, float, float]]:
+        """
+        Returns statistics for ecah colony in the game, compared to this colony.
+
+        Returns:
+            dict[str, tuple[float, float, float]]: A dictionary where the key is the Colony name, 
+            and the values are a tuple of the foreign army's hp percentage, comparative power, and comparative resilience.
+        """
+        
+        # This is inefficient when multiple colonies/players call global_scout(), consider storing and re-using per round
+        global_scout_info = Simulator._instances[self.SID].global_scout()
+        my_army_stats = self.at_arms_info()
+        my_power = my_army_stats.army_strength + my_army_stats.army_agility
+        my_resilience = my_army_stats.army_constitution + my_army_stats.army_defense
+
+        
+        compar_army_stats = {}
+        for foreign_colony, foreign_stats in global_scout_info:
+            if foreign_colony == self.name:
+                continue
+            foreign_army_power = foreign_stats.army_strength + foreign_stats.army_agility
+            foreign_army_resilience = foreign_stats.army_constitution + foreign_stats.army_defense
+            foreign_army_rel_hp = foreign_stats.army_hp / foreign_stats.army_max_hp
+            
+            compare_power = foreign_army_power / my_power
+            compare_resilience = foreign_army_resilience / my_resilience
+            compar_army_stats[foreign_colony] = foreign_army_rel_hp, compare_power, compare_resilience
+        
+        return compar_army_stats
+
     
 @dataclass
 class ArmyStats:

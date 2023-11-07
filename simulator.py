@@ -27,7 +27,7 @@ class Simulator:
     def new_colony(self, name, EEID, PID):
         from colony import Colony
         from player import Player
-        self.colonies[Colony._next_CID] = Colony(Colony._next_CID, name, EEID, PID)
+        self.colonies[Colony._next_CID] = Colony(CID = Colony._next_CID, name = name, EEID = EEID, PID = PID, SID = self.SID)
         print("Assigning colony from Sim---")
         Player._instances[PID].assign_colony(self.colonies[Colony._next_CID].CID)
         self.colony_count += 1
@@ -96,24 +96,17 @@ class Simulator:
     def log_head(self):
         return f"SID-{self.SID:02d}"
     
-    def global_scout(self, obscurity_level, adjust_factor = 0.75):
+    def global_scout(self):
         """Give basic scouting information on every colony"""
+        
+        from colony import ArmyStats
         known_info = {}
         # Depending on how many colonies there are, this will be a very large output
         # Will need to add discord support for multiple pages in message or other form of compression
         for colony in self.colonies:
-            exact_info = colony.at_arms_info()
-            if obscurity_level == 0:
-                given_info = exact_info
-            elif obscurity_level == 1:
-                adjusted_info = [info * (1 + random.uniform(-adjust_factor, adjust_factor)) for info in exact_info]
-                given_info = adjusted_info
-            elif obscurity_level == 2:
-                a = 1
-                # Not implemented yet, might give simple "above average, below average, etc."
-            known_info[colony.name] = given_info
+            army_stats = colony.at_arms_info()
+            known_info[colony.name] = army_stats
             
-        # Should still be modified to conform to combined power and resilience, not gene level
         return known_info
 
     def specific_scout(self, target_colony_CID):

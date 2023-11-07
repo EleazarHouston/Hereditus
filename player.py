@@ -60,25 +60,25 @@ class Player:
             raise PlayerException("Cannot claim non-existant colony")
         return
     
-    def send_to_arms(self, colony_ID: int, torbs: str) -> None:
+    def send_to_arms(self, CID: int, torbs: str) -> None:
         """
         Enlists Torbs into the army of selected Colony.
 
         Args:
-            colony_ID (int): Colony ID to search for Torbs given
+            CID (int): Colony ID to search for Torbs given
             torbs (str): List of Torbs in string format
         """
         
         torb_parsed = self.torb_string_regex(torbs)
-        Colony._instances[colony_ID].battle_ready(torb_parsed)
+        Colony._instances[CID].battle_ready(torb_parsed)
         return
     
-    def view_torbs(self, colony_ID: int, generations: int | list = [0,99]) -> str:
+    def view_torbs(self, CID: int, generations: int | list = [0,99]) -> str:
         """
         Generates a readable string of info from the selected Torbs.
 
         Args:
-            colony_ID (int): Colony ID to send the command to
+            CID (int): Colony ID to send the command to
             generations (int | list, optional): Torb generation(s) to view, defaults to [0,99].
 
         Returns:
@@ -90,8 +90,8 @@ class Player:
         if type(generations) == int:
             generations = [generations]
         
-        found_torbs = self.find_torb(colony_ID, generations, "any")
-        out_string = "`COLONY " + " " * len(Colony._instances[colony_ID].name) + "TORB GEN-ID  CURRENT/MAX HP    CONSTITUTION   DEFENSE   AGILITY    STRENGTH`"
+        found_torbs = self.find_torb(CID, generations, "any")
+        out_string = "`COLONY " + " " * len(Colony._instances[CID].name) + "TORB GEN-ID  CURRENT/MAX HP    CONSTITUTION   DEFENSE   AGILITY    STRENGTH`"
         
         for torb in found_torbs:
             out_string += (f"\n\n**Colony {torb.colony.name}** - Torb `{torb.generation:02d}-{torb.ID:02d}`:   "
@@ -103,22 +103,22 @@ class Player:
             )
             
         logging.debug(f"{self.log_head()}: {out_string}")
-        logging.debug(f"{self.log_head()}: Viewing {colony_ID} torbs")
+        logging.debug(f"{self.log_head()}: Viewing {CID} torbs")
         return out_string
 
-    def call_colony_reproduction(self, colony_ID: int, pairs: str) -> None:
+    def call_colony_reproduction(self, CID: int, pairs: str) -> None:
         """
         Requests Colony reproduction given Colony ID and breeding pairs.
 
         Args:
-            colony_ID (int): Colony ID to search for Torbs given
+            CID (int): Colony ID to search for Torbs given
             pairs (str): String representation of pairs to be bred together
 
         Raises:
             PlayerException: When number of Torbs given is not divisible by 2
         """
         
-        logging.debug(f"{self.log_head()}: Calling colony reproduction in colony {colony_ID}")
+        logging.debug(f"{self.log_head()}: Calling colony reproduction in colony {CID}")
         breeding_list = []
         if pairs == "":
             pairs = "00-00, 00-01"
@@ -129,15 +129,15 @@ class Player:
         out_pairs = []
         for i in range(0, len(breeding_torbs_info)//2):
             out_pair = []
-            parent1 = self.find_torb(colony_ID, breeding_torbs_info[2*i][0], breeding_torbs_info[2*i][1])
-            parent2 = self.find_torb(colony_ID, breeding_torbs_info[2*i+1][0], breeding_torbs_info[2*i+1][1])
+            parent1 = self.find_torb(CID, breeding_torbs_info[2*i][0], breeding_torbs_info[2*i][1])
+            parent2 = self.find_torb(CID, breeding_torbs_info[2*i+1][0], breeding_torbs_info[2*i+1][1])
             print(parent1.UID)
             out_pair = [parent1, parent2]
             out_pairs.append(out_pair)
             
-            self.colonies[colony_ID].colony_reproduction(out_pairs)
+            self.colonies[CID].colony_reproduction(out_pairs)
             
-        logging.info(f"{self.log_head()}: Player requested breeding complete in colony {colony_ID}")
+        logging.info(f"{self.log_head()}: Player requested breeding complete in colony {CID}")
         return
     
     def torb_string_regex(self, torb_str: str) -> list[str]:
@@ -161,12 +161,12 @@ class Player:
         
         return out_torb_list
     
-    def find_torb(self, colony_ID: int, gen: int|list, ID: int|str) -> list[Torb] | Torb:
+    def find_torb(self, CID: int, gen: int|list, ID: int|str) -> list[Torb] | Torb:
         """
         Searches given Colony for identified Torb.
 
         Args:
-            colony_ID (int): Colony ID (CID) to be searched
+            CID (int): Colony ID (CID) to be searched
             gen (int | list): Generation of Torb to be found
             ID (int | str): ID of Torb to be found
 
@@ -186,8 +186,8 @@ class Player:
         logging.debug(f"{self.log_head()}: gen: {gen}, ID: {ID}")
         out_torbs = []
         for CID, colony in Colony._instances.items():
-            logging.debug(f"{self.log_head()}: Checking colony {colony.CID} against {colony_ID}")
-            if colony.CID == colony_ID:
+            logging.debug(f"{self.log_head()}: Checking colony {colony.CID} against {CID}")
+            if colony.CID == CID:
                 logging.debug(f"{self.log_head()}: Found colony {colony.CID} {colony.name}")
                 sel_colony = colony
                 
@@ -202,6 +202,57 @@ class Player:
                 out_torbs.append(torb)
                 out = out_torbs
         return out
+        
+    def scout_all(self, CID: int) -> str:
+        """
+        Returns a string describing the stats of all armies compared to this Colony's army.
+
+        Args:
+            CID (int): ID of the scouting Colony
+
+        Returns:
+            str: Player-readable string describing each Colony in comparison to their own
+        """
+        out_str = ""
+        foreign_army_info = self.colonies[CID].scout_all_colonies()
+        for foreign_colony, army_stats in foreign_army_info:
+            hp_str = ""
+            power_str = ""
+            resil_str = ""
+            if army_stats[0] == 1:
+                hp_str = "seems uninjured"
+            elif army_stats[0] > 0.7:
+                hp_str = "is lightly injured"
+            elif army_stats[0] > 0.4:
+                hp_str = "appear moderately injured"
+            elif army_stats[0] > 0:
+                hp_str = "looks like it's on the brink of collapse"
+            
+            if army_stats[1] > 1.5:
+                power_str = "appears much stronger than our army"
+            elif army_stats[1] > 1.15:
+                power_str = "seems somehwat stronger than our army"
+            elif army_stats[1] > 0.85:
+                power_str = "looks about the same strength as ours"
+            elif army_stats[1] > 0.5:
+                power_str = "is moderately weaker than ours"
+            elif army_stats[1] > 0:
+                power_str = "is much weaker than our army"
+                
+            if army_stats[2] > 1.5:
+                resil_str = "appears much more resilient than ours"
+            elif army_stats[2] > 1.15:
+                resil_str = "seems somehwat more resilient than our army"
+            elif army_stats[2] > 0.85:
+                resil_str = "looks just as resilient as ours"
+            elif army_stats[2] > 0.5:
+                resil_str = "is moderately less resilient than ours"
+            elif army_stats[2] > 0:
+                resil_str = "is much less resilient than our army"
+        
+            out_str += f"{foreign_colony}'s Army: {hp_str}, {power_str}, and {resil_str}\n"
+        return out_str
+        
     
     def log_head(self) -> str:
         """
