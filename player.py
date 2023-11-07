@@ -213,45 +213,49 @@ class Player:
         Returns:
             str: Player-readable string describing each Colony in comparison to their own
         """
+
+        def describe_stat(value, thresholds, descriptions):
+            for threshold, desc in zip(thresholds, descriptions):
+                if value > threshold:
+                    return desc
+            return descriptions[-1]
+
+        hp_thresholds = [0.95, 0.7, 0.4, 0]
+        hp_descriptions = [
+            "seems uninjured",
+            "is lightly injured",
+            "appear moderately injured",
+            "looks like it's on the brink of collapse"
+        ]
+
+        power_thresholds = [1.4, 1.15, 0.85, 0.5, 0]
+        power_descriptions = [
+            "appears much stronger than our army",
+            "seems somewhat stronger than our army",
+            "looks about the same strength as ours",
+            "is moderately weaker than ours",
+            "is much weaker than our army"
+        ]
+
+        resil_thresholds = [1.4, 1.15, 0.85, 0.5, 0]
+        resil_descriptions = [
+            "appears much more resilient than ours",
+            "seems somewhat more resilient than our army",
+            "looks just as resilient as ours",
+            "is moderately less resilient than ours",
+            "is much less resilient than our army"
+        ]
+
         out_str = ""
         foreign_army_info = self.colonies[CID].scout_all_colonies()
-        for foreign_colony, army_stats in foreign_army_info:
-            hp_str = ""
-            power_str = ""
-            resil_str = ""
-            if army_stats[0] == 1:
-                hp_str = "seems uninjured"
-            elif army_stats[0] > 0.7:
-                hp_str = "is lightly injured"
-            elif army_stats[0] > 0.4:
-                hp_str = "appear moderately injured"
-            elif army_stats[0] > 0:
-                hp_str = "looks like it's on the brink of collapse"
+        for foreign_colony, (hp, power, resil) in foreign_army_info:
+            hp_str = describe_stat(hp, hp_thresholds, hp_descriptions)
+            power_str = describe_stat(power, power_thresholds, power_descriptions)
+            resil_str = describe_stat(resil, resil_thresholds, resil_descriptions)
             
-            if army_stats[1] > 1.5:
-                power_str = "appears much stronger than our army"
-            elif army_stats[1] > 1.15:
-                power_str = "seems somehwat stronger than our army"
-            elif army_stats[1] > 0.85:
-                power_str = "looks about the same strength as ours"
-            elif army_stats[1] > 0.5:
-                power_str = "is moderately weaker than ours"
-            elif army_stats[1] > 0:
-                power_str = "is much weaker than our army"
-                
-            if army_stats[2] > 1.5:
-                resil_str = "appears much more resilient than ours"
-            elif army_stats[2] > 1.15:
-                resil_str = "seems somehwat more resilient than our army"
-            elif army_stats[2] > 0.85:
-                resil_str = "looks just as resilient as ours"
-            elif army_stats[2] > 0.5:
-                resil_str = "is moderately less resilient than ours"
-            elif army_stats[2] > 0:
-                resil_str = "is much less resilient than our army"
-        
             out_str += f"{foreign_colony}'s Army: {hp_str}, {power_str}, and {resil_str}\n"
         return out_str
+
         
     
     def log_head(self) -> str:
