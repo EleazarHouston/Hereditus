@@ -181,7 +181,7 @@ class Colony:
         Provides detailed stats about the colony's standing army.
         
         Returns:
-            list: Combined army's average strength, agility, constitution, defense, hp, max_hp
+            ArmyStats: Combined army's strength, agility, constitution, defense, hp, max_hp
         """
         
         real_average_strength = 0
@@ -203,9 +203,9 @@ class Colony:
     
 @dataclass
 class ArmyStats:
-    average_strength: float
-    average_agility: float
-    average_constitution: float
-    average_defense: float
-    current_hp: float
-    max_hp: float
+    army_strength: float
+    army_agility: float
+    army_constitution: float
+    army_defense: float
+    army_hp: float
+    army_max_hp: float
