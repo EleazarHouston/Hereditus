@@ -17,7 +17,6 @@ class Player:
     Attributes:
         PID (int): Unique Player ID
         colonies (list): List of associated Colonies
-        colony_count (int): Number of colonies controlled by this Player
         
     Class Attributes:
         _instances (dict[int, Player]): Stores all Player instances with their PID as keys
@@ -25,7 +24,7 @@ class Player:
     
     _instances: dict[int, Player] = {}
 
-    def __init__(self, PID: int) -> None:
+    def __init__(self, PID: int, name: str = None) -> None:
         """
         Initializes a new Player instance.
 
@@ -35,7 +34,8 @@ class Player:
         
         self.PID: int = PID
         self.colonies: dict[int, Colony] = {}
-        self.colony_count: int = 0
+        self.name = name
+        self.hide_dead = False
         Player._instances[PID] = self
         logging.info(f"{self.log_head()}: Initialization successful")
         return
@@ -53,14 +53,13 @@ class Player:
         
         if CID in Colony._instances:
             Colony._instances[CID].PID = self.PID
-            self.colonies[self.colony_count]=(Colony._instances[CID])
-            self.colony_count += 1
-            logging.debug(f"{self.log_head()}: Assigned colony {self.colony_count-1}")
+            self.colonies[CID] = (Colony._instances[CID])
+            logging.debug(f"{self.log_head()}: Assigned colony {CID} - {Colony._instances[CID].name}")
         else:
             raise PlayerException("Cannot claim non-existant colony")
         return
     
-    def send_to_arms(self, CID: int, torbs: str) -> None:
+    def train_soldiers(self, CID: int, torbs: str) -> None:
         """
         Enlists Torbs into the army of selected Colony.
 
@@ -69,9 +68,28 @@ class Player:
             torbs (str): List of Torbs in string format
         """
         
-        torb_parsed = self.torb_string_regex(torbs)
-        Colony._instances[CID].battle_ready(torb_parsed)
-        return
+        logging.debug(f"{self.log_head()}: Player calling train_soldiers with torbs {torbs[:16]}")
+        
+        torbs_parsed = self.torb_string_regex(torbs)
+        found_torbs = [self.find_torb(CID, torb[0], torb[1]) for torb in torbs_parsed]
+        Colony._instances[CID].train_soldier(found_torbs)
+        return len(found_torbs)
+    
+    def discharge_soldiers(self, CID: int, torbs: str) -> None:
+        """
+        Discharges Torbs from the army of selected Colony.
+
+        Args:
+            CID (int): Colony ID to search for Torbs given
+            torbs (str): List of Torbs in string format
+        """
+        
+        logging.debug(f"{self.log_head()}: Player calling discharge_soldiers with torbs {torbs[:16]}")
+        
+        torbs_parsed = self.torb_string_regex(torbs)
+        found_torbs = [self.find_torb(CID, torb[0], torb[1]) for torb in torbs_parsed]
+        Colony._instances[CID].discharge_soldier(found_torbs)
+        return len(found_torbs)
     
     def view_torbs(self, CID: int, generations: int | list = [0,99]) -> str:
         """
@@ -91,19 +109,60 @@ class Player:
             generations = [generations]
         
         found_torbs = self.find_torb(CID, generations, "any")
-        out_string = "`COLONY " + " " * len(Colony._instances[CID].name) + "TORB GEN-ID  CURRENT/MAX HP    CONSTITUTION   DEFENSE   AGILITY    STRENGTH`"
+        if found_torbs == False:
+            raise PlayerException("Could not find Torbs.")
+        
+        colony = Colony._instances[CID]
+        out_string = f"{colony.name} | Food: {colony.food} | "
+        out_string += f"Living Torbs: {len([torb for ID, torb in colony.torbs.items() if torb.alive])} | "
+        out_string += f"Dead Torbs: {len([torb for ID, torb in colony.torbs.items() if not torb.alive])}\n"
+        out_string += "`TORB GEN-ID     CURRENT/MAX HP    CONSTITUTION   DEFENSE   AGILITY    STRENGTH`"
+
+        if self.hide_dead == True:
+            found_torbs = [torb for torb in found_torbs if torb.alive]
         
         for torb in found_torbs:
-            out_string += (f"\n\n**Colony {torb.colony.name}** - Torb `{torb.generation:02d}-{torb.ID:02d}`:   "
-            f":mending_heart:[`{torb.hp:02d}/{torb.max_hp:02d}`]   Genes:  "
-            f":two_hearts:[`{torb.health.get_allele(0):02}|{torb.health.get_allele(1):02d}`]   "
-            f":shield:[`{torb.defense.get_allele(0):02d}|{torb.defense.get_allele(1):02d}`]   "
-            f":zap:[`{torb.agility.get_allele(0):02d}|{torb.agility.get_allele(1):02d}`]   "
-            f":muscle:[`{torb.strength.get_allele(0):02d}|{torb.strength.get_allele(1):02d}`]   "
-            )
+            id_str = str(f"{torb.ID:02d}") + ""
+            gen_str = str(f"{torb.generation:02d}") + ""
+            assert isinstance(torb.ID, int), f"torb.ID is not an int: {type(torb.ID)}"
+            assert isinstance(torb.generation, int), f"torb.generation is not an int: {type(torb.generation)}"
+            out_string += "\n\n"
+            status_effects = 0
+            if torb in torb.colony.breeding:
+                out_string += ":busts_in_silhouette: "
+                status_effects += 1
+            if torb in torb.colony.growing:
+                out_string += ":baby_bottle: "
+                status_effects += 1
+            if torb in torb.colony.soldiers:
+                out_string += ":military_helmet: "
+                status_effects += 1
+            if torb in torb.colony.training:
+                out_string += ":dart: "
+                status_effects += 1
+            if torb in torb.colony.resting:
+                out_string += ":pill: "
+                status_effects += 1
+            if torb.starving:
+                out_string += ":bone: "
+                status_effects += 1
+            if not torb.alive:
+                out_string += ":headstone: "
+            spacer = "       "
+            if status_effects == 0:
+                out_string += spacer * 2
+            elif status_effects == 1:
+                out_string += spacer
             
-        logging.debug(f"{self.log_head()}: {out_string}")
-        logging.debug(f"{self.log_head()}: Viewing {CID} torbs")
+            out_string += (f"**Colony {torb.colony.name}** - Torb `{gen_str}-{id_str}`:   ")
+            out_string += (f":mending_heart:[`{torb.hp:.2f}/{torb.max_hp:.2f}`]   Genes:  ")
+            out_string += (f":two_hearts:[`{torb.health.get_allele(0):.2f}|{torb.health.get_allele(1):.2f}`]   ")
+            out_string += (f":shield:[`{torb.defense.get_allele(0):.2f}|{torb.defense.get_allele(1):.2f}`]   ")
+            out_string += (f":zap:[`{torb.agility.get_allele(0):.2f}|{torb.agility.get_allele(1):.2f}`]   ")
+            out_string += (f":muscle:[`{torb.strength.get_allele(0):.2f}|{torb.strength.get_allele(1):.2f}`]   ")
+            
+        #logging.debug(f"{self.log_head()}: {out_string}")
+        logging.debug(f"{self.log_head()}: Viewing Colony {Colony._instances[CID].name} torbs")
         return out_string
 
     def call_colony_reproduction(self, CID: int, pairs: str) -> None:
@@ -135,7 +194,7 @@ class Player:
             out_pair = [parent1, parent2]
             out_pairs.append(out_pair)
             
-            self.colonies[CID].colony_reproduction(out_pairs)
+        self.colonies[CID].colony_reproduction(out_pairs)
             
         logging.info(f"{self.log_head()}: Player requested breeding complete in colony {CID}")
         return
@@ -150,7 +209,7 @@ class Player:
         Returns:
             list[str]: A list containing parsed Torb generation and ID, e.g., ['00', '04']
         """
-        
+        logging.debug(f"{self.log_head()}: Parsing input torb string")
         pattern0 = r"\d{1,2}\s*[-]\s*\d{1,2}"
         pattern1 = r"\d{1,2}"
         
@@ -185,18 +244,19 @@ class Player:
             logging.debug(f"{self.log_head()}: Finding all torbs in gen {gen}")
         logging.debug(f"{self.log_head()}: gen: {gen}, ID: {ID}")
         out_torbs = []
-        for CID, colony in Colony._instances.items():
-            logging.debug(f"{self.log_head()}: Checking colony {colony.CID} against {CID}")
+        for _, colony in Colony._instances.items():
+            logging.debug(f"{self.log_head()}: Checking colony {colony.CID:02d} against {CID:02d}")
             if colony.CID == CID:
-                logging.debug(f"{self.log_head()}: Found colony {colony.CID} {colony.name}")
+                logging.debug(f"{self.log_head()}: Found colony {colony.CID:02d} {colony.name}")
                 sel_colony = colony
                 
         if sel_colony == None:
+            logging.debug(f"{self.log_head()}: Could not find colony")
             return False
         
-        for UID, torb in sel_colony.torbs.items():
+        for _, torb in sel_colony.torbs.items():
             if torb.generation in gen and torb.ID == ID:
-                logging.debug(f"{self.log_head()}: Found torb {torb.gen}-{torb.ID}")
+                logging.debug(f"{self.log_head()}: Found torb {torb.generation:02d}-{torb.ID:02d}")
                 return torb
             elif torb.generation in gen and ID == "any":
                 out_torbs.append(torb)
@@ -214,6 +274,14 @@ class Player:
             str: Player-readable string describing each Colony in comparison to their own
         """
 
+        logging.debug(f"{self.log_head()}: Attempting to scout all colonies from CID {CID}")
+        from story_strings import player_strings
+        
+        if len(Colony._instances[CID].soldiers) == 0 and len(Colony._instances[CID].training) > 0:
+            return f"Our soldiers are still training, {player_strings(self.name)}."
+        elif len(Colony._instances[CID].soldiers) == 0:
+            return f"We cannot scout without an army, {player_strings(self.name)}."
+        
         def describe_stat(value, thresholds, descriptions):
             for threshold, desc in zip(thresholds, descriptions):
                 if value > threshold:
@@ -246,18 +314,58 @@ class Player:
             "is much less resilient than our army"
         ]
 
-        out_str = ""
+        out_str = f"{player_strings(self.name)}, your scouts have returned with the following info:\n"
         foreign_army_info = self.colonies[CID].scout_all_colonies()
-        for foreign_colony, (hp, power, resil) in foreign_army_info:
+        if foreign_army_info == False:
+            return "You have the only army in all the lands."
+        for foreign_colony, (hp, power, resil) in foreign_army_info.items():
             hp_str = describe_stat(hp, hp_thresholds, hp_descriptions)
             power_str = describe_stat(power, power_thresholds, power_descriptions)
             resil_str = describe_stat(resil, resil_thresholds, resil_descriptions)
-            
-            out_str += f"{foreign_colony}'s Army: {hp_str}, {power_str}, and {resil_str}\n"
+            if hp == 0:
+                out_str += f"{foreign_colony}'s Army: Does not exist\n"
+            else:
+                out_str += f"{foreign_colony}'s Army: {hp_str}, {power_str}, and {resil_str}\n"
         return out_str
 
+    def ready_up(self, CID: int) -> None:
+        """
+        Sets the given Colony's ready status to True.
+
+        Args:
+            CID (int): ID of the Colony to set to ready
+        """
         
-    
+        logging.info(f"{self.log_head()}: Colony {Colony._instances[CID].name} readied up")
+        Colony._instances[CID].ready = True
+        
+        from story_strings import random_event
+        out = random_event()
+        return out
+
+    def set_target(self, CID: int, target_colony: str) -> bool:
+        """
+        Searches for matching Colony and sets it as owned Colony's target.
+
+        Args:
+            CID (int): Owned Colony's ID
+            target_colony (str): String of the name of desired target Colony
+
+        Returns:
+            bool: Whether a valid target Colony was found
+        """
+        
+        search_text = target_colony.strip()
+        for target_CID, colony in Colony._instances.items():
+            if colony.name == search_text:
+                Colony._instances[CID].attack_target = target_CID
+                logging.debug(f"{self.log_head()}: Colony {Colony._instances[CID].name} chose {colony.name} as its target")
+                return True
+        logging.info(f"{self.log_head()}: Couldn't find Colony {search_text[:10]}")
+        return False
+
+
+
     def log_head(self) -> str:
         """
         Generates a standard log header for the Player.
@@ -266,4 +374,4 @@ class Player:
             str: Formatted log header string
         """
         
-        return f"PID-{self.PID:02d}"
+        return f"PID-{self.name[:10]}"

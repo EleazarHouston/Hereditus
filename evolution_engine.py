@@ -109,6 +109,7 @@ class EvolutionEngine:
         if self.verify_parents(parents) == False:
             raise InvalidParents(f"{parents} are invalid")
         for parent in parents:
+            print(f"Setting {parent.colony.name} {parent.generation}-{parent.ID} infertile")
             parent.fertile = False
         genes = []
         for j, gene in enumerate(self.gene_list):
@@ -153,6 +154,12 @@ class EvolutionEngine:
         random.shuffle(out_alleles)
         logging.info(f"{self.log_head()}: Allele post-mutation box {out_alleles}")
         return out_alleles, mutated
+    
+    def create_torb(self, ID: int, generation: int, CID: int, parents: list[Torb]=None, genes: list[Gene]=None):
+        logging.info(f"{self.log_head()}: Calling creation of Torb {generation:02d}-{ID:02d}")
+        if parents:
+            genes = self.breed_parents(parents)
+        return Torb(ID, generation, CID, parents, genes, EEID=self.EEID)
     
     def log_head(self):
         return f"EEID-{self.EEID:02d}"

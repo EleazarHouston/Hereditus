@@ -55,17 +55,17 @@ class Torb:
         self.parents = parents
         self.fertile = True
         self.alive = True
-        
+        self.starving = False
         
         self.EE = EvolutionEngine._instances[EEID]
         logging.debug(f"{self.log_head()}: Basic attributes set")
         
         self.start_genes(parents, genes)
-        self.max_hp = getattr(self,"health").get_allele(is_random=True)
+        self.max_hp = round(getattr(self,"health").get_allele(is_random=True))
         self.hp = self.max_hp
         self.UID = Torb._next_UID
-        Torb._next_UID += 1
         logging.info(f"{self.log_head()}: Successfully instantiated")
+        Torb._next_UID += 1
         return
 
     def start_genes(self, parents, genes):
@@ -108,10 +108,12 @@ class Torb:
     def set_genes(self, genes, EEID):
         from gene import Gene
         logging.debug(f"{self.log_head()}: Setting genes...")
-        for i, gene in enumerate(self.EE.gene_list):
-            new_gene = Gene(i, genes[i], EEID)
-            setattr(self, gene, new_gene)
-            logging.debug(f"{self.log_head()}: Got gene {getattr(self, gene)}")
+        if all(isinstance(gene, Gene) for gene in genes):
+            for i, gene_name in enumerate(self.EE.gene_list):
+                setattr(self, gene_name, genes[i])
+                logging.debug(f"{self.log_head()}: Got gene {getattr(self, gene_name)}")
+        else:
+            logging.error("Provided genes are not instances of Gene class.")
         logging.info(f"{self.log_head()}: Successfully set genes")
         return
     

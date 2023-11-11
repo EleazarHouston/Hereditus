@@ -13,7 +13,17 @@ def player_strings(name):
         "magnificent Ruler",
         "my Sovereign",
         f"Chancellor {name}",
-        f"Jarl {name}"
+        f"Jarl {name}",
+        f"noble {name}",
+        f"exalted {name}",
+        f"my Regent",
+        f"Sage Ruler",
+        f"majestic Overseer",
+        f"High Steward {name}",
+        f"eminent {name}",
+        f"oh revered {name}",
+        f"oh wise Protector",
+        f"Prime Arbiter {name}"
     ]
     random.shuffle(possibilities)
     return possibilities[0]
@@ -48,12 +58,12 @@ def torb_names():
 
 def AI_names(type):
     #types = ["weak", "strong", "aggressive", "passive", "retributive"]
-    weak = ["Smallville", "Smallsville", "Droughtown", "Foodfree", "Weaklings", "Scraplings"]
+    weak = ["Smallville", "Smallsville", "Droughttown", "Foodfree", "Weaklings", "Scraplings"]
     strong = ["Bulkland", "Gainstown", "Lifters", "Pressers", "Giants"]
     aggressive = ["Chasers", "Romans", "Barbarians"]
-    passive = [""]
-    retributive = [""]
-
+    passive = ["Sleepers", "Sleepyville", "Watchers", "Waiters", "Observers"]
+    retributive = ["Elephants", "Brutusites", "Backtoyou", "Postals"]
+    all = weak + strong + aggressive + passive + retributive
     all_dispositions = {"weak": weak,
            "strong": strong,
            "aggressive": aggressive,
@@ -63,6 +73,7 @@ def AI_names(type):
     if type == "random":
         type = random.choice(all_dispositions)
     random.shuffle(all_dispositions[type])
+    print(f"Returning AI_name {all_dispositions[type][0]}")
     return all_dispositions[type][0]
 
 def random_event():
@@ -93,11 +104,100 @@ def random_event():
         "Your Torbs seem sad today.",
         "Today's meal tasted delicious.",
         "Today's meal was quite bland.",
-        "You have to harsher on your Torbs today, they were slacking.",
+        "You have to be harsher on your Torbs today, they were slacking.",
         "You barely have to give any instruction today, your Torbs are feeling productive.",
         "Your Torbs' weapons look very sharp today.",
         "Your Torbs' weapons look duller than they should.",
-        ""
+        "A gentle breeze carries the scent of wildflowers.",
+        "A kaleidoscope of butterflies flutters through your colony.",
+        "A small bird lands nearby, observing you curiously.",
+        "Dew glistens on the grass in the early morning light.",
+        "A playful squirrel scampers across your path.",
+        "The moon seems unusually large tonight.",
+        "The moon seems unusually small tonight.",
+        "You find an oddly shaped rock that looks like a smiling face.",
+        "You find an oddly shaped rock that looks like a frowning face.",
+        "You find an oddly shaped tree branch that looks like a trident.",
+        "You find an oddly shaped tree branch that looks like a trumpet.",
+        "Your shadow is particularly amorphous today.",
+        "A cool mist rolls in from the nearby hills.",
+        "A small frog leaps into a pond as you approach.",
+        "The leaves rustle softly as if whispering secrets to each other.",
+        "A shooting star streaks across the sky.",
+        "An old tree creaks gently in the wind.",
+        "A friendly bee buzzes around you before fly away.",
+        "A cloud overhead looks remarkably like a portal you once saw.",
+        "You spot two birds playfully chasing each other.",
+        "The sun casts long, dramatic shadows as it sets.",
+        "You feel a tap on your shoulder, but when you turn no one is there.",
+        "The day is unnaturally quiet today.",
+        "You hear the sound of a distant waterfall."
+    ]
+    random.shuffle(possibilities)
+    return possibilities[0]
+
+def winner_adjectives():
+    possibilities = [
+        "mighty",
+        "fearsome",
+        "awe-inspiring",
+        "fear-inducing",
+        "tremendous",
+        "battle-hardened",
+        "experienced",
+        "well-trained",
+        "quick-footed",
+        "well-prepared",
+        "heroic",
+        "coordinated",
+        "renowned",
+        "unyielding",
+        "impressive",
+        "opportunistic",
+        "prolific"
+    ]
+    random.shuffle(possibilities)
+    return possibilities[0]
+
+def loser_adjectives():
+    possibilities = [
+        "feeble",
+        "uncoordinated",
+        "fearful",
+        "unimpressive",
+        "underprepared",
+        "unexperienced",
+        "lead-footed"
+    ]
+    random.shuffle(possibilities)
+    return possibilities[0]
+
+def ready_message(name):
+    possibilities = [
+        f"{name}'s Torbs are well-prepared for whatever happens next.",
+        f"The Colony lead by {name} stands vigilant and ready.",
+        f"{name}'s Colony has completed its preparations.",
+        f"Ready is the name of the game in {name}'s Colony.",
+        f"All is in order at {name}'s Colony, awaiting the next challenge.",
+        f"Steadfast and prepared, {name}'s Colony awaits what's to come.",
+        f"The Torbs in {name}'s Colony brace themselves for the future.",
+        f"Alert and poised, {name}'s Torbs stand ready.",
+        f"Everything in {name}'s Colony is set, eyes on the horizon.",
+        f"{name}'s Torbs are fully prepared.",
+        f"Anticipation builds in {name}'s Colony as they wait for danger.",
+        f"With preparations complete, {name}'s Torbs look to the future.",
+        f"The groundwork is laid, and {name}'s Colony is ready for new prospects.",
+        f"The stage is set for {name}'s Colony to embrace their next adventure.",
+        f"Readiness resonates through the ranks of {name}'s Torbs.",
+        f"A sense of preparedness envelops the atmosphere in {name}'s Colony.",
+        f"Eyes forward is the motto in {name}'s Colony.",
+        f"Look to the future is the rallying cry from {name}'s Torbs.",
+        f"The adrenaline is pumping in {name}'s Torbs, they're ready to rock.",
+        f"A pulse of readiness surges through {name}'s Torbs.",
+        f"Like a well-oiled machine, {name}'s Colony hums with preparedness.",
+        f"The anticipation of what will come next fuels the spirit in {name}'s Colony.",
+        f"For {name}'s Torbs, readiness is the shield against the unknown.",
+        f"In {name}'s Colony, the gears of readiness are always turning."
     ]
     random.shuffle(possibilities)
     return possibilities[0]
