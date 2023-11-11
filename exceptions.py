@@ -13,3 +13,9 @@ class PlayerException(HereditusException):
 
 class TorbException(HereditusException):
     pass
+
+class SimulatorException(HereditusException):
+    pass
+
+class ColonyException(HereditusException):
+    pass
