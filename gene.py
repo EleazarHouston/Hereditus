@@ -76,6 +76,8 @@ class Gene:
             #logging.debug(f"{self.log_head()}: Alleles set to {alleles}")
         return
     
+    
+
     def log_head(self) -> None:
         """
         Generates a standard log header for the Gene.

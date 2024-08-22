@@ -9,7 +9,7 @@ class Simulator:
     _instances = {}
     _next_SID = 0
     
-    def __init__(self, SID, battle_draw_chance = 0.02):
+    def __init__(self, SID, battle_draw_chance = 0.01):
         self.SID = SID
         self.colonies = {}
         self.colony_count = 0
@@ -53,6 +53,7 @@ class Simulator:
         self.started = True
         logging.info(f"{self.log_head()}: Global generation zero created")
         for PID, ai in AIPlayer._AI_instances.items():
+            logging.debug(f"{self.log_head()}: Calling AI decisions for {ai.name}")
             ai.make_decisions()
         return
     
@@ -75,13 +76,13 @@ class Simulator:
 
                 winner, loser = self.battle(colony, Colony._instances[colony.attack_target])
                 if isinstance(winner, Colony) and loser.food >= 1:
-                    food_stolen = random.randrange(1, loser.food)
+                    food_stolen = random.randrange(0, loser.food)
                     winner.food += food_stolen
                     loser.food -= food_stolen
                 if winner == None:
-                    out_str += f"The battle between {col0} and {col1} ended without clear winner.\n"
+                    out_str += f"The battle between **{col0}** and **{col1}** ended without a clear winner.\n"
                 else:
-                    out_str += f"The {winner_adjectives()} {winner.name} won against the {loser_adjectives()} {loser.name} and claimed {food_stolen} food.\n"
+                    out_str += f"The {winner_adjectives()} **{winner.name}** won against the {loser_adjectives()} **{loser.name}** and claimed {food_stolen} food.\n"
         logging.info(f"{self.log_head()}: Global combat round complete")
         return out_str
 
@@ -89,7 +90,9 @@ class Simulator:
         logging.debug(f"{self.log_head()}: Starting battle between {col0.name} and {col1.name}")
         army0 = col0.soldiers
         army1 = col1.soldiers
+        logging.debug(f"{self.log_head()}: Army0 {len(army0)}, Army1 {len(army1)}")
         while len(army0) > 0 and len(army1) > 0:
+            
             random.shuffle(army0)
             random.shuffle(army1)
             self.fight(army0[0], army1[0])
@@ -140,10 +143,14 @@ class Simulator:
         return
     
     def next_round(self, override: bool = False):
+        from player import Player
         logging.info(f"{self.log_head()}: Calculating round results")
-        if not self.check_ready() and not override:
-            raise SimulatorException("Not all Colonies are ready for next round.")
-            return
+        unready = self.check_ready()
+        if len(unready) > 0 and not override:
+            unready_player_names = ', '.join([Player._instances[colony.PID].name for colony in unready])
+            unready_colonies = ', '.join([colony.name for colony in unready])
+            logging.error(f"{self.log_head()}: {unready_player_names} unready with colonies {unready_colonies}")
+            raise SimulatorException(f"The following players' Colonies are not ready for the next round: {unready_player_names}.")
 
         for CID, colony in self.colonies.items():
             colony.new_round()
@@ -163,6 +170,7 @@ class Simulator:
 
         from ai_player import AIPlayer
         for PID, ai in AIPlayer._AI_instances.items():
+            logging.debug(f"{self.log_head()}: Calling AI decisions for {ai.name}")
             ai.make_decisions()
 
         return combat_notice, self.year
@@ -171,18 +179,22 @@ class Simulator:
         return f"SID-{self.SID:02d}"
     
     def ready_all(self):
-        for colony in self.colonies:
+        logging.debug(f"{self.log_head()}: Forcibly readying all Colonies")
+        for CID, colony in self.colonies.items():
             colony.ready = True
+        logging.info(f"{self.log_head()}: Forcibly set all Colonies ready")
         return
     
     def global_scout(self):
-        """Give basic scouting information on every colony"""
+        """Give basic scouting information on every Colony"""
         
         from colony import ArmyStats
         known_info = {}
         # Depending on how many colonies there are, this will be a very large output
         # Will need to add discord support for multiple pages in message or other form of compression
-        for CID, colony in self.colonies.items():
+        search_colonies = [colony for CID, colony in self.colonies.items()]
+        random.shuffle(search_colonies)
+        for colony in search_colonies:
             army_stats = colony.army_info()
             known_info[colony.name] = army_stats
             
@@ -193,7 +205,8 @@ class Simulator:
         return self.colonies[target_colony_CID].army_info()
         
     def check_ready(self):
+        unready = []
         for CID, colony in self.colonies.items():
             if colony.ready == False:
-                return False
-        return True
+                unready.append(colony)
+        return unready

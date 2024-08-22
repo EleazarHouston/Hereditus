@@ -62,7 +62,7 @@ async def ai_player(interaction: discord.Interaction, num_ai: int):
     try:
         new_ai = AIPlayer()
         new_ai.create_colonies(num_ai)
-        await interaction.response.send_message(f"", ephemeral=True)
+        await interaction.response.send_message(f"AIs generated.", ephemeral=True)
         return
     except Exception as e:
         error_type = type(e).__name__
@@ -74,13 +74,14 @@ async def ai_player(interaction: discord.Interaction, num_ai: int):
 @tree.command(guild=discord.Object(id=guildID))
 async def start(interaction: discord.Interaction, num_torbs: int):
     from simulator import Simulator
+    from colony import Colony
     try:
         Simulator._instances[0].init_all_colonies(num_torbs)
     except KeyError:
         await interaction.response.send_message(f"Command Invalid: Invalid Game ID")
         return
     await interaction.response.send_message(
-        """Colonies initialized, the game has started.
+        f"""{len(Colony._instances)} Colonies initialized, the game has started.
         Run /commands to see available commands and /help for help.""")
     return
 
@@ -98,7 +99,7 @@ async def join(interaction: discord.Interaction, colony_name: str):
     try:
         if Simulator._instances[0].started:
             await interaction.response.send_message("Sorry, the game already started. This game has late-join disabled.",ephemeral=True)
-        
+            return
         if interaction.user.id in Player._instances.items():
             await interaction.response.send_message("Command Invalid: You have already joined this game.",ephemeral=True)
             return
@@ -212,26 +213,26 @@ async def enlist(interaction: discord.Interaction, torbs: str):
 async def discharge(interaction: discord.Interaction, torbs: str):
     player_instance = Player._instances[interaction.user.id]
     first_colony_key = list(player_instance.colonies.keys())[0]
-    num_torbs_enlisted = player_instance.discharge_soldiers(first_colony_key, torbs)
-    await interaction.response.send_message(f"You have {num_torbs_enlisted} soldiers remaining.", ephemeral = True)
+    num_soldiers, num_training = player_instance.discharge_soldiers(first_colony_key, torbs)
+    await interaction.response.send_message(f"You have {num_soldiers} soldiers remaining, with {num_training} in training.", ephemeral = True)
     return
 
 @tree.command(guild=discord.Object(id=guildID))
-async def funerals(interaction: discord.Interaction, torbs: str):
+async def funerals(interaction: discord.Interaction):
     player_instance = Player._instances[interaction.user.id]
     player_instance.hide_dead = True
     await interaction.response.send_message(f"Your Torbs will start preparing funerals, and you will no longer see Dead Torbs in colony_info.", ephemeral = True)
     return
 
 @tree.command(guild=discord.Object(id=guildID))
-async def remembrance(interaction: discord.Interaction, torbs: str):
+async def remembrance(interaction: discord.Interaction):
     player_instance = Player._instances[interaction.user.id]
-    player_instance.hide_dead = True
+    player_instance.hide_dead = False
     await interaction.response.send_message(f"Your Torbs will stop preparing funerals and remember Dead Torbs in colony_info.", ephemeral = True)
     return
 
 @tree.command(guild=discord.Object(id=guildID))
-async def colony_info(interaction: discord.Interaction):
+async def colony(interaction: discord.Interaction):
     print("Trying discord command colony_info")
     try:
         player_instance = Player._instances[interaction.user.id]
