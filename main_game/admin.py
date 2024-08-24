@@ -1,3 +1,6 @@
 from django.contrib import admin
 
-# Register your models here.
+from .models import Torb, Colony
+
+admin.site.register(Torb)
+admin.site.register(Colony)

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colony Page</title>
+    <style>
+        /* Simple modern table styling */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 18px;
+            text-align: left;
+        }
+        table th, table td {
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+        }
+        table th {
+            background-color: #f2f2f2;
+        }
+        table tr:nth-of-type(even) {
+            background-color: #f9f9f9;
+        }
+        table tr:hover {
+            background-color: #f1f1f1;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-top: 20px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>Colony: {{ colony_name }}</h1>
+    <p>Torbs: {{ num_torbs }}</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Generation</th>
+                <th>Name</th>
+                <th>Health</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for torb in torbs %}
+            <tr>
+                <td>{{ torb.private_ID }}</td>
+                <td>{{ torb.generation }}</td>
+                <td>{{ torb.name }}</td>
+                <td>{{ torb.health }}</td>
+                <td>
+                    {% if torb.is_alive %}
+                        Alive
+                    {% else %}
+                        Dead
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4">No Torbs available.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit">New Torb</button>
+    </form>
+</body>
+</html>
