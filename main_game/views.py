@@ -18,11 +18,14 @@ def torb_view_attempt(request):
     return render(request, 'main_game/torb.html', {'private_id': torb.private_ID , 'health': torb.health})
 
 def colony_view(request):
-    colony, created = Colony.objects.get_or_create(id=1)
+    colony = Colony.objects.order_by('id').first()
     
-    if request.method == 'POST':
-        Colony.new_torb(colony)
-        
+    #colony, created = Colony.objects.get_or_create(id=1)
+    
+    """if created:
+        for i in range(colony.game.starting_torbs):
+            Torb.objects.create(private_ID=i+1, generation=0, colony=colony)
+            """
     torbs = colony.torb_set.all()
     
     return render(request, 'main_game/colony.html', {

@@ -10,8 +10,20 @@ class Score(models.Model):
     def __str__(self):
         return str(self.value)
 
+class Game(models.Model):
+    starting_torbs = models.IntegerField(default=4)
+    description = models.CharField(max_length=256, null=True)
+    
+    def __str__(self):
+        return self.description
+    
+    
+    
+
 class Colony(models.Model):
     name = models.CharField(max_length=64, default="DefaultName")
+    game = models.ForeignKey(Game, on_delete=models.CASCADE, null=True)
+    
     
     @property
     def torb_count(self):
@@ -22,6 +34,15 @@ class Colony(models.Model):
         random.shuffle(torb_names)
         name = torb_names[0]
         Torb.objects.create(colony = self, private_ID=next_ID, name=name)
+        
+    def init_torbs(self):
+        for i in range(self.game.starting_torbs):
+            self.new_torb()
+        
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.init_torbs()
+        
 
 class Torb(models.Model):
     private_ID = models.IntegerField(default=0)
