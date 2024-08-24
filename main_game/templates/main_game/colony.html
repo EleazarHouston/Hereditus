@@ -39,15 +39,30 @@
         button:hover {
             background-color: #45a049;
         }
+        button:disabled {
+            background-color: #A9A9A9;
+            cursor: not-allowed;
+        }
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
     <h1>Colony: {{ colony_name }}</h1>
     <p>Torbs: {{ num_torbs }}</p>
 
+    <form method="post" action="{% url 'colony_view' %}">
+        {% csrf_token %}
+        <button type="submit" name="action" value="breed" disabled id="breed-button">Breed</button>
+        <button type="submit" name="action" value="gather">Gather</button>
+
     <table>
         <thead>
             <tr>
+                <th>Select</th>
                 <th>ID</th>
                 <th>Generation</th>
                 <th>Name</th>
@@ -58,6 +73,7 @@
         <tbody>
             {% for torb in torbs %}
             <tr>
+                <td><input type="checkbox" name="selected_torbs" value="{{ torb.id }}" class="torb-checkbox"></td>
                 <td>{{ torb.private_ID }}</td>
                 <td>{{ torb.generation }}</td>
                 <td>{{ torb.name }}</td>
@@ -77,6 +93,19 @@
             {% endfor %}
         </tbody>
     </table>
+</form>
+
+<script>
+    const checkboxes = document.querySelectorAll('.torb-checkbox');
+    const breedButton = document.getElementById('breed-button');
+
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', () => {
+            const selectedCount = document.querySelectorAll('.torb-checkbox:checked').length;
+            breedButton.disabled = selectedCount !== 2;
+        });
+    });
+</script>
 
 </body>
 </html>

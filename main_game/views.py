@@ -20,16 +20,23 @@ def torb_view_attempt(request):
 def colony_view(request):
     colony = Colony.objects.order_by('id').first()
     
-    #colony, created = Colony.objects.get_or_create(id=1)
+    if request.method == 'POST':
+        selected_torbs = request.POST.getlist('selected_torbs')
+        action = request.POST.get('action')
+        
+        if action == 'breed' and len(selected_torbs) == 2:
+            torb1 = Torb.objects.get(id=selected_torbs[0])
+            torb2 = Torb.objects.get(id=selected_torbs[1])
+            #colony.game.breed(torb1, torb2)
+        elif action == 'gather':
+            pass
+        
     
-    """if created:
-        for i in range(colony.game.starting_torbs):
-            Torb.objects.create(private_ID=i+1, generation=0, colony=colony)
-            """
     torbs = colony.torb_set.all()
     
     return render(request, 'main_game/colony.html', {
         'colony_name': colony.name,
         'num_torbs': colony.torb_count,
-        'torbs': torbs})
+        'torbs': torbs,
+        })
     
