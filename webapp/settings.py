@@ -166,7 +166,7 @@ LOGGING = {
     },
     "formatters": {
         "verbose": {
-            "format": "{asctime} [{levelname:^8s}] - {filename} {funcName} [ln: {lineno}] - {message}",
+            "format": "{asctime} [{levelname:^8s}] - {filename:<12} {funcName:<12} [ln: {lineno:<3}] - {message}",
             "style": "{",
         },
         "simple": {
