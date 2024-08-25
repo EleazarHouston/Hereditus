@@ -19,6 +19,7 @@ def torb_view_attempt(request):
 
 def colony_view(request):
     colony = Colony.objects.order_by('id').first()
+    torbs = colony.torb_set.all().order_by('private_ID')
     
     if request.method == 'POST':
         selected_torbs = request.POST.getlist('selected_torbs')
@@ -33,7 +34,7 @@ def colony_view(request):
         
         return redirect('colony_view')
     
-    torbs = colony.torb_set.all()
+    
     
     if torbs.exists():
         gene_names = list(torbs.first().genes.keys())

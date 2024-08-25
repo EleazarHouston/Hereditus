@@ -6,8 +6,12 @@ table {
     text-align: left;
 }
 table th, table td {
-    padding: 12px 15px;
+    padding: 6px 10px;
     border: 1px solid #ddd;
+    line-height: 1.2;
+}
+table tr {
+    height: auto;
 }
 table th {
     background-color: #f2f2f2;

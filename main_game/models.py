@@ -74,6 +74,12 @@ class EvolutionEngine(models.Model):
         print("1")
         print(genes)
         self.new_torb(generation=generation, colony=colony, genes=genes)
+        torb0.fertile = torb1.fertile = False
+        torb0.action = torb1.action = 'breeding'
+        torb0.action_desc = f"Breeding with {torb1.name}"
+        torb1.action_desc = f"Breeding with {torb0.name}"
+        torb0.save()
+        torb1.save()
     
     def mutate_and_shuffle(self, alleles):
         out_alleles = []
@@ -147,7 +153,8 @@ class Torb(models.Model):
     max_hp = models.IntegerField(default=5)
     fertile = models.BooleanField(default=True)
     starving = models.BooleanField(default=False)
-    #action = models.CharField(max_length=32, choices=TORB_ACTION_OPTIONS, default='gathering',)
+    action = models.CharField(max_length=32, choices=TORB_ACTION_OPTIONS, default='gathering',)
+    action_desc = models.CharField(max_length=256, default='Gathering')
     
     # Genes
     genes = models.JSONField(default=dict)

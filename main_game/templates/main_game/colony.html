@@ -37,7 +37,7 @@
         </thead>
         <tbody>
             {% for torb in torbs %}
-            <tr>
+            <tr data-fertile="{{ torb.fertile }}">
                 <td><input type="checkbox" name="selected_torbs" value="{{ torb.id }}" class="torb-checkbox"></td>
                 <td>{{ torb.private_ID }}</td>
                 <td>{{ torb.generation }}</td>
@@ -51,7 +51,7 @@
                     </td>
                 {% endfor %}
                 <td>{{ torb.status }}</td>
-                <td>{{ torb.action }}</td>
+                <td>{{ torb.action_desc }}</td>
             </tr>
             {% empty %}
             <tr>
@@ -68,9 +68,18 @@
 
     checkboxes.forEach(checkbox => {
         checkbox.addEventListener('change', () => {
-            const selectedCount = document.querySelectorAll('.torb-checkbox:checked').length;
-            breedButton.disabled = selectedCount !== 2;
-        });
+            const selectedTorbs = document.querySelectorAll('.torb-checkbox:checked');
+            let allFertile = true;
+
+            selectedTorbs.forEach(selected => {
+                const row = selected.closest('tr');
+                if (row.dataset.fertile === "False") {
+                    allFertile = false;
+                }
+            });
+
+            breedButton.disabled = selectedTorbs.length !== 2 || !allFertile;
+            });
     });
 </script>
 
