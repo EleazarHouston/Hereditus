@@ -25,9 +25,9 @@ def colony_view(request):
         action = request.POST.get('action')
         
         if action == 'breed' and len(selected_torbs) == 2:
-            torb1 = Torb.objects.get(id=selected_torbs[0])
-            torb2 = Torb.objects.get(id=selected_torbs[1])
-            colony.game.evolution_engine.breed_torbs(torb1, torb2)
+            torb0 = Torb.objects.get(id=selected_torbs[0])
+            torb1 = Torb.objects.get(id=selected_torbs[1])
+            colony.game.evolution_engine.breed_torbs(colony=colony, torb0=torb0, torb1=torb1)
         elif action == 'gather':
             pass
         
