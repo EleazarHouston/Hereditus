@@ -12,7 +12,7 @@
     <div class="container">
     
         <h1>Colony: {{ colony.name }}</h1>
-        <form method="post" action="{% url 'colony_view' %}">
+        <form method="post" action="{% url 'colony_view' colony.id %}">
             <div class="action-console-container">
                 <div class="column">
                     <div class="metrics-container">

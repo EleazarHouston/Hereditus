@@ -1,0 +1,72 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hereditus: The Game</title>
+    <link rel="stylesheet" href="{% static 'main_game/style.css' %}">
+    <style>
+        /* Dark mode background and text color */
+        body {
+            background-color: #121212;
+            color: #e0e0e0;
+            font-family: "Monaco", Monospace;
+        }
+
+        /* Flex container for the boxes */
+        .colony-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px; /* Space between the boxes */
+            justify-content: flex-start;
+        }
+
+        /* Each colony box */
+        .colony-box {
+            background-color: #1e1e1e;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            flex: 0 0 200px; /* Box width, flex-grow is 0, flex-shrink is 0 */
+            text-align: center;
+        }
+
+        /* Colony name styling */
+        .colony-box h2 {
+            color: #ffffff;
+            margin-bottom: 10px;
+        }
+
+        /* Button styling for dark mode */
+        .colony-box button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .colony-box button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>Select a Colony</h1>
+    <div class="colony-container">
+        {% for colony in colonies %}
+            <div class="colony-box">
+                <h2>{{ colony.name }}</h2>
+                <form action="{% url 'colony_view' colony.id %}" method="get">
+                    <button type="submit">Play</button>
+                </form>
+            </div>
+        {% empty %}
+            <p>No colonies available.</p>
+        {% endfor %}
+    </div>
+</body>
+</html>

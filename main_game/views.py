@@ -1,6 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from .models import Torb, Colony, StoryText
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Create your views here.
 
@@ -10,13 +13,13 @@ def torb_view_attempt(request):
     
     return render(request, 'main_game/torb.html', {'private_id': torb.private_ID , 'health': torb.health})
 
-def colony_view(request):
-    colony = Colony.objects.order_by('id').first()
+def colony_view(request, colony_id):
+    colony = get_object_or_404(Colony, id=colony_id)
+        
     torbs = colony.torb_set.all().order_by('private_ID')
     story_texts = StoryText.objects.filter(colony=colony).order_by('timestamp')
     
     if request.method == 'POST':
-        
         selected_torbs = request.POST.getlist('selected_torbs')
         action = request.POST.get('action')
         print(len(selected_torbs))
@@ -31,7 +34,7 @@ def colony_view(request):
             colony.ready = True
             colony.save()
         
-        return redirect('colony_view')
+        return redirect('colony_view', colony_id=colony.id)
     
     
     
@@ -39,6 +42,8 @@ def colony_view(request):
         gene_names = list(torbs.first().genes.keys())
     else:
         gene_names = []
+    
+    logger.debug(f"Rendering colony_view with colony: {colony}, num_torbs: {colony.torb_count}, torbs: {torbs}, gene_names: {gene_names}, story_texts: {story_texts}")
     
     return render(request, 'main_game/colony.html', {
         'colony': colony,
@@ -51,3 +56,7 @@ def colony_view(request):
 def check_ready_status(request):
     colony = Colony.objects.order_by('id').first()
     return JsonResponse({'ready': colony.ready})
+
+def load_colony(request):
+    colonies = Colony.objects.all()
+    return render(request, 'main_game/load_colony.html', {'colonies': colonies})
