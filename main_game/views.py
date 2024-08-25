@@ -16,8 +16,10 @@ def colony_view(request):
     story_texts = StoryText.objects.filter(colony=colony).order_by('timestamp')
     
     if request.method == 'POST':
+        
         selected_torbs = request.POST.getlist('selected_torbs')
         action = request.POST.get('action')
+        print(len(selected_torbs))
         
         if action == 'breed' and len(selected_torbs) == 2:
             torb0 = Torb.objects.get(id=selected_torbs[0])

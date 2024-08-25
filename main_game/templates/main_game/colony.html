@@ -12,169 +12,118 @@
     <div class="container">
     
         <h1>Colony: {{ colony.name }}</h1>
-        <div class="action-console-container">
-            <div class="column">
-                <div class="metrics-container">
-                    <div class="metrics-group">
-                        <div class="metric torbs">
-                            <span class="icon">🐗</span>
-                            Torbs: {{ num_torbs }}
-                        </div>
-                        <div class="metric food">
-                            <span class="icon">🍎</span>
-                            Food: {{ colony.food }}
+        <form method="post" action="{% url 'colony_view' %}">
+            <div class="action-console-container">
+                <div class="column">
+                    <div class="metrics-container">
+                        <div class="metrics-group">
+                            <div class="metric torbs">
+                                <span class="icon">🐗</span>
+                                Torbs: {{ num_torbs }}
+                            </div>
+                            <div class="metric food">
+                                <span class="icon">🍎</span>
+                                Food: {{ colony.food }}
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <form method="post" action="">
-                    {% csrf_token %}
-                    <button
-                        type="submit"
-                        name="action"
-                        value="end_turn"
-                        class="end-turn-button {% if colony.ready %}disabled{% else %}{% endif %}"
-                        {% if colony.ready %}disabled{% endif %}
-                    >
-                        {% if colony.ready %}
-                            Waiting for other players...
-                        {% else %}
-                            End Turn
-                        {% endif %}
-                    </button>
-                </form>
-
-
-                <div class="action-console-container">
-                    <div class="action-buttons">
-                        <form method="post" action="{% url 'colony_view' %}">
-                            {% csrf_token %}
-                            <button type="submit" name="action" value="breed" disabled id="breed-button">Breed</button>
-                            <button type="submit" name="action" value="gather">Gather</button>
-                        </form>
+                    {% comment %} <form method="post" action=""> {% endcomment %}
+                    <div class="end-turn-container"
+                        {% csrf_token %}
+                        <button
+                            type="submit"
+                            name="action"
+                            value="end_turn"
+                            class="end-turn-button {% if colony.ready %}disabled{% else %}{% endif %}"
+                            {% if colony.ready %}disabled{% endif %}
+                        >
+                            {% if colony.ready %}
+                                Waiting for other players...
+                            {% else %}
+                                End Turn
+                            {% endif %}
+                        </button>
                     </div>
-                    
+                    {% comment %} </form> {% endcomment %}
+
+
+                    <div class="action-console-container">
+                        <div class="action-buttons">
+                            {% comment %} <form method="post" action="{% url 'colony_view' %}"> {% endcomment %}
+                                {% csrf_token %}
+                                <button type="submit" name="action" value="breed" disabled id="breed-button">Breed</button>
+                                <button type="submit" name="action" value="gather">Gather</button>
+                            {% comment %} </form> {% endcomment %}
+                        </div>
+                        
+                    </div>
+                </div>
+                <div class="console-display">
+                    {% for story_text in story_texts %}
+                        <p>{{ story_text.story_text }}</p>
+                    {% endfor %}
                 </div>
             </div>
-            <div class="console-display">
-                {% for story_text in story_texts %}
-                    <p>{{ story_text.story_text }}</p>
-                {% endfor %}
-            </div>
-        </div>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>Select</th>
-                    <th>ID</th>
-                    <th>Generation</th>
-                    <th>Name</th>
-                    <th>Health💖</th>
-                    
-                    {% if torbs %}
-                        {% for gene_name in torbs.0.genes.keys %}
-                            <th class="gene-header"><span class="dot"></span>{{ gene_name|capfirst }}🧬</th>
-                        {% endfor %}
-                    {% endif %}
-                    <th>Status⚠️</th>
-                    <th>Action⚡</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for torb in torbs %}
-                    <tr data-fertile="{{ torb.fertile }}">
-                        <td>
-                            <input
-                                type="checkbox"
-                                name="selected_torbs"
-                                value="{{ torb.id }}"
-                                class="torb-checkbox"
-                            >
-                        </td>
-                        <td>{{ torb.private_ID }}</td>
-                        <td>{{ torb.generation }}</td>
-                        <td>{{ torb.name }}</td>
-                        <td>{{ torb.hp }}/{{torb.max_hp }}</td>
-                        {% for gene_name, gene_value in torb.genes.items %}
-                            <td>
-                                {% for allele in gene_value %}
-                                    {{ allele|floatformat:1 }}{% if not forloop.last %} | {% endif %}
-                                {% endfor %}
-                            </td>
-                        {% endfor %}
-                        <td>{{ torb.status }}</td>
-                        <td>{{ torb.action_desc }}</td>
-                    </tr>
-                {% empty %}
+            <table>
+                <thead>
                     <tr>
-                        <td colspan=7>This colony has no Torbs.</td>
+                        <th>Select</th>
+                        <th>ID</th>
+                        <th>Generation</th>
+                        <th>Name</th>
+                        <th>Health💖</th>
+                        
+                        {% if torbs %}
+                            {% for gene_name in torbs.0.genes.keys %}
+                                <th class="gene-header"><span class="dot"></span>{{ gene_name|capfirst }}🧬</th>
+                            {% endfor %}
+                        {% endif %}
+                        <th>Status⚠️</th>
+                        <th>Action⚡</th>
                     </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    {% for torb in torbs %}
+                        <tr data-fertile="{{ torb.fertile }}">
+                            <td>
+                                <input
+                                    type="checkbox"
+                                    name="selected_torbs"
+                                    value="{{ torb.id }}"
+                                    class="torb-checkbox"
+                                >
+                            </td>
+                            <td>{{ torb.private_ID }}</td>
+                            <td>{{ torb.generation }}</td>
+                            <td>{{ torb.name }}</td>
+                            <td>{{ torb.hp }}/{{torb.max_hp }}</td>
+                            {% for gene_name, gene_value in torb.genes.items %}
+                                <td>
+                                    {% for allele in gene_value %}
+                                        {{ allele|floatformat:1 }}{% if not forloop.last %} | {% endif %}
+                                    {% endfor %}
+                                </td>
+                            {% endfor %}
+                            <td>{{ torb.status }}</td>
+                            <td>{{ torb.action_desc }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan=7>This colony has no Torbs.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </form>
 
-        <script>
-
-            const checkboxes = document.querySelectorAll('.torb-checkbox');
-            const breedButton = document.getElementById('breed-button');
-
-            checkboxes.forEach(checkbox => {
-                checkbox.addEventListener('change', () => {
-                    const selectedTorbs = document.querySelectorAll('.torb-checkbox:checked');
-                    let allFertile = true;
-
-                    selectedTorbs.forEach(selected => {
-                        const row = selected.closest('tr');
-                        if (row.dataset.fertile === "False") {
-                            allFertile = false;
-                        }
-                    });
-
-                    breedButton.disabled = selectedTorbs.length !== 2 || !allFertile;
-                    });
-            });
-        </script>
-
-        <script>
-            let isPolling = false;
-
-            function checkReadyStatus() {
-                fetch("{% url 'check_ready_status' %}")
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.ready) {
-                            // If the colony is still ready, continue polling
-                            isPolling = true;
-                        } else {
-                            // If the colony is no longer ready, refresh the page
-                            location.reload();
-                        }
-                    })
-                    .catch(error => console.error('Error checking ready status:', error));
-            }
-
-            function startPolling() {
-                if (!isPolling) {
-                    isPolling = true;
-                    setInterval(checkReadyStatus, 5000);
-                }
-            }
-
-            // Check the initial status when the page loads
-            document.addEventListener('DOMContentLoaded', function() {
-                fetch("{% url 'check_ready_status' %}")
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.ready) {
-                            // Start polling only if the colony is initially ready
-                            startPolling();
-                        }
-                    })
-                    .catch(error => console.error('Error checking initial ready status:', error));
-            });
-
-        </script>
+        
     </div>
+
+    <script src="{% static 'main_game/colony_view.js' %}"></script>
+    <script>
+        const checkReadyStatusUrl = "{% url 'check_ready_status' %}";
+    </script>
 </body>
 </html>

@@ -87,7 +87,7 @@ input[type="checkbox"] {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 20px;
+    margin-bottom: 0px;
     padding: 10px;
     background-color: #1E1E1E;
     border-radius: 10px;
@@ -214,10 +214,16 @@ button.action-button:disabled {
     min-height: 100px;
     flex: 1;
     margin-left: 15px;
+    max-width: 800px;
 }
 
 .column {
     display: flex;
     flex-direction: column;
     flex: 1;
+}
+
+.end-turn-container {
+    text-align: left;
+    margin-top: 10px;
 }
