@@ -132,3 +132,47 @@ STATICFILES_DIRS = [
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+LOGGING = {
+    "version": 1,  # the dictConfig format version
+    "disable_existing_loggers": False,  # retain the default loggers
+    "handlers": {
+        "file": {
+            "class": "logging.FileHandler",
+            "filename": "general.log",
+            "formatter": "verbose"
+        },
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
+            "level": "WARNING",
+        },
+        "hereditus_file": {
+            "class": "logging.FileHandler",
+            "filename": "hereditus.log",
+            "formatter": "verbose"
+        }
+    },
+    "loggers": {
+        "": {
+            "level": "DEBUG",
+            "handlers": ["file", "console"],
+        },
+        "hereditus": {
+            "level": "DEBUG",
+            "handlers": ["hereditus_file", "console"],
+            "propagate": False,
+        }
+    },
+    "formatters": {
+        "verbose": {
+            "format": "{asctime} [{levelname:^8s}] - {filename} {funcName} [ln: {lineno}] - {message}",
+            "style": "{",
+        },
+        "simple": {
+            "format": "{levelname} {message}",
+            "style": "{",
+        },
+    },
+
+}

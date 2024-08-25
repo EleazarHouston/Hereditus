@@ -5,8 +5,9 @@ from django.dispatch import receiver
 from .torb_names import torb_names
 import random
 import numpy as np
+import logging
 
-
+logger = logging.getLogger('hereditus')
 
 class Game(models.Model):
     starting_torbs = models.IntegerField(default=4)
@@ -68,8 +69,6 @@ class EvolutionEngine(models.Model):
                     alleles.append(round(np.mean([p0_gene[i], p1_gene[i]]),4))
             alleles = self.mutate_and_shuffle(alleles)
             genes[gene] = alleles
-        print("1")
-        print(genes)
         self.new_torb(generation=generation, colony=colony, genes=genes)
         torb0.fertile = torb1.fertile = False
         torb0.action = torb1.action = 'breeding'
@@ -92,7 +91,6 @@ class EvolutionEngine(models.Model):
                 
                     
     def new_torb(self, generation, colony, genes):
-        print(genes)
         colony.new_torb(generation=generation, genes=genes)
         
 
@@ -128,6 +126,7 @@ class Colony(models.Model):
         is_new = self.pk is None
         super().save(*args, **kwargs)
         if is_new:
+            logger.info(f"A new colony {self.name} was made.")
             self.init_torbs()
             StoryText.objects.create(colony=self, story_text_type="system", story_text="Welcome to Hereditus!", timestamp=Now())
     
