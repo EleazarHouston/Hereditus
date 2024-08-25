@@ -17,6 +17,12 @@ class Game(models.Model):
     def __str__(self):
         return self.description
     
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+        if is_new:
+            logger.info(f"A new Game '{self.description}' was made.")
+    
 def default_gene_list():
     return ["vitality", "sturdiness", "agility", "strength"]
 
@@ -32,6 +38,12 @@ class EvolutionEngine(models.Model):
     alleles_per_gene =  models.IntegerField(default=2)
     gene_list =         models.JSONField(default=default_gene_alleles)
     
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+        if is_new:
+            logger.info(f"A new EvolutionEngine '{self.pid}' was made for Game {self.game}")
+    
     def check_torb_breedable(self, torb):
         if not torb.fertile:
             return False
@@ -44,11 +56,14 @@ class EvolutionEngine(models.Model):
             for i in range(self.alleles_per_gene):
                 alleles.append(random.randrange(self.random_gene_min, self.random_gene_max))
             genes[gene] = alleles
-        self.new_torb(generation=0, colony=colony, genes=genes)
+        torb = self.new_torb(generation=0, colony=colony, genes=genes)
+        
         
     
     def breed_torbs(self, colony, torb0, torb1):
+        print(1)
         if not self.check_torb_breedable(torb1) or not self.check_torb_breedable(torb1):
+            logger.debug(f"An EvolutionEngine for Colony {colony} in {self.game} tried to breed Torb {torb0.private_ID} '{torb0.name}' and Torb {torb1.private_ID} '{torb1.name}' but one/both weren't breedable")
             return False
         genes = {}
         generation = max(torb0.generation, torb1.generation) + 1
@@ -69,6 +84,7 @@ class EvolutionEngine(models.Model):
                     alleles.append(round(np.mean([p0_gene[i], p1_gene[i]]),4))
             alleles = self.mutate_and_shuffle(alleles)
             genes[gene] = alleles
+        logger.debug(f"An EvolutionEngine for Colony {colony} in {self.game} is breeding Torb {torb0.private_ID} '{torb0.name}' and Torb {torb1.private_ID} '{torb1.name}'")
         self.new_torb(generation=generation, colony=colony, genes=genes)
         torb0.fertile = torb1.fertile = False
         torb0.action = torb1.action = 'breeding'
@@ -91,7 +107,9 @@ class EvolutionEngine(models.Model):
                 
                     
     def new_torb(self, generation, colony, genes):
-        colony.new_torb(generation=generation, genes=genes)
+        torb = colony.new_torb(generation=generation, genes=genes)
+        logger.debug(f"An EvolutionEngine for Colony {colony} in {self.game} created new Torb {torb.private_ID} '{torb.name}' with Genes {genes}")
+        return torb
         
 
 class Colony(models.Model):
@@ -109,7 +127,7 @@ class Colony(models.Model):
         random.shuffle(torb_names)
         name = torb_names[0]
         max_hp = genes['vitality'][0]
-        Torb.objects.create(
+        torb = Torb.objects.create(
             colony=self,
             private_ID=next_ID,
             name=name,
@@ -117,6 +135,7 @@ class Colony(models.Model):
             generation=generation,
             max_hp=max_hp,
             hp=max_hp)
+        return torb
         
     def init_torbs(self):
         for i in range(self.game.starting_torbs):
@@ -126,7 +145,7 @@ class Colony(models.Model):
         is_new = self.pk is None
         super().save(*args, **kwargs)
         if is_new:
-            logger.info(f"A new colony {self.name} was made.")
+            logger.info(f"A new colony '{self.name}' was made.")
             self.init_torbs()
             StoryText.objects.create(colony=self, story_text_type="system", story_text="Welcome to Hereditus!", timestamp=Now())
     
@@ -166,6 +185,9 @@ class Torb(models.Model):
     sturdiness = models.JSONField(default=list)
     agility = models.JSONField(default=list)
     strength = models.JSONField(default=list)
+    
+    def __str__(self):
+        return f"Colony {self.colony} Torb: {self.private_ID} '{self.name}'"
     
     @property
     def status(self):
