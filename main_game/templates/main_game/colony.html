@@ -11,7 +11,7 @@
 <body>
     <div class="container">
         <h1>Colony: {{ colony.name }}</h1>
-        
+
         <div class="metrics-container">
             <div class="metrics-group">
                 <div class="metric torbs">
@@ -55,15 +55,15 @@
                     <th>ID</th>
                     <th>Generation</th>
                     <th>Name</th>
-                    <th>Health</th>
+                    <th>Health💖</th>
                     
                     {% if torbs %}
                         {% for gene_name in torbs.0.genes.keys %}
-                            <th class="gene-header"><span class="dot">&#8226;</span> {{ gene_name|capfirst }}</th>
+                            <th class="gene-header"><span class="dot"></span>{{ gene_name|capfirst }}🧬</th>
                         {% endfor %}
                     {% endif %}
-                    <th>Status</th>
-                    <th>Action</th>
+                    <th>Status⚠️</th>
+                    <th>Action⚡</th>
                 </tr>
             </thead>
             <tbody>

@@ -2,7 +2,7 @@
 body {
     background-color: #121212;
     color: #E0E0E0;
-    font-family: "Monaco", Arial, sans-serif;
+    font-family: "Monaco", Monospace;
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -17,16 +17,18 @@ body {
 table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 30px;
+    margin: 20px 0;
     font-size: 18px;
     text-align: left;
     color: #E0E0E0;
 }
 
 table th, table td {
-    padding: 12px 15px;
+    padding: 8px 12px;
     border: 1px solid #ddd;
     line-height: 1.2;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 table tr {
