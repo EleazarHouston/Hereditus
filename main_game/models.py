@@ -1,15 +1,12 @@
 from django.db import models
 from django.db.models.signals import post_save, post_delete
+from django.db.models.functions import Now
 from django.dispatch import receiver
 from .torb_names import torb_names
 import random
 import numpy as np
 
-class Score(models.Model):
-    value = models.IntegerField(default=0)
-    
-    def __str__(self):
-        return str(self.value)
+
 
 class Game(models.Model):
     starting_torbs = models.IntegerField(default=4)
@@ -132,11 +129,16 @@ class Colony(models.Model):
         super().save(*args, **kwargs)
         if is_new:
             self.init_torbs()
+            StoryText.objects.create(colony=self, story_text_type="system", story_text="Welcome to Hereditus!", timestamp=Now())
     
     def __str__(self):
         return self.name
         
-
+class StoryText(models.Model):
+    colony = models.ForeignKey(Colony, on_delete=models.CASCADE)
+    story_text_type = models.CharField(max_length=32, default="default")
+    story_text = models.CharField(max_length=1028, default="N/A")
+    timestamp = models.DateTimeField()
 
 class Torb(models.Model):
     TORB_ACTION_OPTIONS = [

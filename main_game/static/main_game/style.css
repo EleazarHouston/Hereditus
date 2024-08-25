@@ -29,6 +29,7 @@ table th, table td {
     line-height: 1.2;
     white-space: nowrap;
     text-overflow: ellipsis;
+    overflow: hidden;
 }
 
 table tr {
@@ -91,6 +92,7 @@ input[type="checkbox"] {
     background-color: #1E1E1E;
     border-radius: 10px;
     border: 1px solid #333;
+    width: 100%;
 }
 
 .metrics-group {
@@ -111,6 +113,7 @@ input[type="checkbox"] {
 
 .metric.torbs {
     color: #4CAF50;
+    transition: background-color 0.3s ease;
 }
 
 .metric .icon {
@@ -121,10 +124,11 @@ input[type="checkbox"] {
 .metric.food {
     color: #FF9800;
     background-color: #4f4539;
+    transition: background-color 0.3s ease;
 }
 
 .end-turn-button {
-    padding: 12px 25px;
+    padding: 10px 20x;
     font-size: 1.2em;
     color: white;
     background-color: #0067d5;
@@ -186,4 +190,34 @@ button.action-button:disabled {
 
 .action-buittons {
     margin-bottom: 10px;
+}
+
+.action-console-container {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+.console-display {
+    width: 300px;
+    height: 200px;
+    background-color: #1E1E1E;
+    color: #E0E0E0;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #333;
+    overflow-y: scroll;
+    font-family: monospace;
+    line-height: 1.4;
+    resize: both;
+    min-width: 100px;
+    min-height: 100px;
+    flex: 1;
+    margin-left: 15px;
+}
+
+.column {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
 }

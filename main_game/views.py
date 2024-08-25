@@ -1,17 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
-from .models import Score, Torb, Colony
+from .models import Torb, Colony, StoryText
 
 # Create your views here.
-def score_view(request):
-    score, created = Score.objects.get_or_create(id=1)
-    
-    if request.method == 'POST':
-        score.value += 1
-        score.save()
-        return redirect('score_page')
-    
-    return render(request, 'main_game/score.html', {'score': score})
+
 
 def torb_view_attempt(request):
     torb = get_object_or_404(Torb, id=1)
@@ -21,6 +13,7 @@ def torb_view_attempt(request):
 def colony_view(request):
     colony = Colony.objects.order_by('id').first()
     torbs = colony.torb_set.all().order_by('private_ID')
+    story_texts = StoryText.objects.filter(colony=colony).order_by('timestamp')
     
     if request.method == 'POST':
         selected_torbs = request.POST.getlist('selected_torbs')
@@ -50,6 +43,7 @@ def colony_view(request):
         'num_torbs': colony.torb_count,
         'torbs': torbs,
         'gene_names': gene_names,
+        'story_texts': story_texts,
         })
 
 def check_ready_status(request):

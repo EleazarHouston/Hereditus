@@ -10,44 +10,59 @@
 </head>
 <body>
     <div class="container">
+    
         <h1>Colony: {{ colony.name }}</h1>
-
-        <div class="metrics-container">
-            <div class="metrics-group">
-                <div class="metric torbs">
-                    <span class="icon">🐗</span>
-                    Torbs: {{ num_torbs }}
+        <div class="action-console-container">
+            <div class="column">
+                <div class="metrics-container">
+                    <div class="metrics-group">
+                        <div class="metric torbs">
+                            <span class="icon">🐗</span>
+                            Torbs: {{ num_torbs }}
+                        </div>
+                        <div class="metric food">
+                            <span class="icon">🍎</span>
+                            Food: {{ colony.food }}
+                        </div>
+                    </div>
                 </div>
-                <div class="metric food">
-                <span class="icon">🍎</span>
-                Food: {{ colony.food }}
+
+                <form method="post" action="">
+                    {% csrf_token %}
+                    <button
+                        type="submit"
+                        name="action"
+                        value="end_turn"
+                        class="end-turn-button {% if colony.ready %}disabled{% else %}{% endif %}"
+                        {% if colony.ready %}disabled{% endif %}
+                    >
+                        {% if colony.ready %}
+                            Waiting for other players...
+                        {% else %}
+                            End Turn
+                        {% endif %}
+                    </button>
+                </form>
+
+
+                <div class="action-console-container">
+                    <div class="action-buttons">
+                        <form method="post" action="{% url 'colony_view' %}">
+                            {% csrf_token %}
+                            <button type="submit" name="action" value="breed" disabled id="breed-button">Breed</button>
+                            <button type="submit" name="action" value="gather">Gather</button>
+                        </form>
+                    </div>
+                    
                 </div>
             </div>
-            <form method="post" action="">
-                {% csrf_token %}
-                <button
-                    type="submit"
-                    name="action"
-                    value="end_turn"
-                    class="end-turn-button {% if colony.ready %}disabled{% else %}{% endif %}"
-                    {% if colony.ready %}disabled{% endif %}
-                >
-                    {% if colony.ready %}
-                        Waiting for other players...
-                    {% else %}
-                        End Turn
-                    {% endif %}
-                </button>
-            </form>
+            <div class="console-display">
+                {% for story_text in story_texts %}
+                    <p>{{ story_text.story_text }}</p>
+                {% endfor %}
+            </div>
         </div>
 
-        <div class="action-buttons">
-            <form method="post" action="{% url 'colony_view' %}">
-                {% csrf_token %}
-                <button type="submit" name="action" value="breed" disabled id="breed-button">Breed</button>
-                <button type="submit" name="action" value="gather">Gather</button>
-            </form>
-        </div>
         <table>
             <thead>
                 <tr>
