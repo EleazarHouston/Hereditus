@@ -50,3 +50,35 @@ input[type="checkbox"] {
     margin-right: 5px;
     font-size: 0.8em;
 }
+
+.metrics-container {
+    display: flex;
+    align-items: center;
+    gap: 20px;  /* Dynamic spacing between items */
+    margin-bottom: 20px;
+    padding: 10px;
+    background-color: #f4f4f9;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+}
+
+.metric {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #4CAF50;
+    padding: 10px;
+    background-color: #e9f7ec;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+}
+
+.metric .icon {
+    margin-right: 10px;
+    font-size: 1.2em;
+}
+
+.metric.food {
+    color: #FF9800;
+    background-color: #fff3e0;
+}

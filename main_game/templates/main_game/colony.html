@@ -9,8 +9,17 @@
     <title>Colony Page</title>
 </head>
 <body>
-    <h1>Colony: {{ colony_name }}</h1>
-    <p>Torbs: {{ num_torbs }}</p>
+    <h1>Colony: {{ colony.name }}</h1>
+    <div class="metrics-container">
+        <div class="metric">
+            <span class="icon">🐗</span> <!-- Optional icon for Torbs -->
+            Torbs: {{ num_torbs }}
+        </div>
+        <div class="metric food">
+            <span class="icon">🍎</span> <!-- Optional icon for Food -->
+            Food: {{ colony.food }}
+        </div>
+    </div>
 
     <form method="post" action="{% url 'colony_view' %}">
         {% csrf_token %}

@@ -42,9 +42,9 @@ def colony_view(request):
         gene_names = []
     
     return render(request, 'main_game/colony.html', {
-        'colony_name': colony.name,
+        'colony': colony,
         'num_torbs': colony.torb_count,
         'torbs': torbs,
-        'gene_names': gene_names
+        'gene_names': gene_names,
         })
     

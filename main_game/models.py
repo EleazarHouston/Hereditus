@@ -102,7 +102,7 @@ class EvolutionEngine(models.Model):
 class Colony(models.Model):
     name = models.CharField(max_length=64, default="DefaultName")
     game = models.ForeignKey(Game, on_delete=models.CASCADE, null=True)
-    
+    food = models.IntegerField(default=5)
     
     @property
     def torb_count(self):
