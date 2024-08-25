@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.http import JsonResponse
 from .models import Score, Torb, Colony
 
 # Create your views here.
@@ -50,4 +51,7 @@ def colony_view(request):
         'torbs': torbs,
         'gene_names': gene_names,
         })
-    
+
+def check_ready_status(request):
+    colony = Colony.objects.order_by('id').first()
+    return JsonResponse({'ready': colony.ready})

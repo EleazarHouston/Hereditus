@@ -103,5 +103,45 @@
     });
 </script>
 
+<script>
+    let isPolling = false;
+
+    function checkReadyStatus() {
+        fetch("{% url 'check_ready_status' %}")
+            .then(response => response.json())
+            .then(data => {
+                if (data.ready) {
+                    // If the colony is still ready, continue polling
+                    isPolling = true;
+                } else {
+                    // If the colony is no longer ready, refresh the page
+                    location.reload();
+                }
+            })
+            .catch(error => console.error('Error checking ready status:', error));
+    }
+
+    function startPolling() {
+        if (!isPolling) {
+            isPolling = true;
+            setInterval(checkReadyStatus, 5000);
+        }
+    }
+
+    // Check the initial status when the page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        fetch("{% url 'check_ready_status' %}")
+            .then(response => response.json())
+            .then(data => {
+                if (data.ready) {
+                    // Start polling only if the colony is initially ready
+                    startPolling();
+                }
+            })
+            .catch(error => console.error('Error checking initial ready status:', error));
+    });
+
+</script>
+
 </body>
 </html>
