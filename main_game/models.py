@@ -181,10 +181,7 @@ class Torb(models.Model):
     
     # Genes
     genes = models.JSONField(default=dict)
-    vitality = models.JSONField(default=list)
-    sturdiness = models.JSONField(default=list)
-    agility = models.JSONField(default=list)
-    strength = models.JSONField(default=list)
+
     
     def __str__(self):
         return f"Colony {self.colony} Torb: {self.private_ID} '{self.name}'"
