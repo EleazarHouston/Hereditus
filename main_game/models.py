@@ -53,7 +53,7 @@ class EvolutionEngine(models.Model):
         if not self.check_torb_breedable(torb1) or not self.check_torb_breedable(torb1):
             return False
         genes = {}
-        generation = max(torb0.generation, torb1.generation)
+        generation = max(torb0.generation, torb1.generation) + 1
         for gene in self.gene_list:
             alleles = []
             p0_gene = torb0.genes[gene]
@@ -119,7 +119,7 @@ class Colony(models.Model):
     def init_torbs(self):
         for i in range(self.game.starting_torbs):
             self.game.evolution_engine.protogenesis_torb(colony=self)
-        
+
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         self.init_torbs()

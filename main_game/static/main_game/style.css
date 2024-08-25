@@ -40,3 +40,9 @@ input[type="checkbox"] {
     height: 20px;
     cursor: pointer;
 }
+
+.gene-header .dot {
+    color: #aaa;  /* Light gray for subtlety */
+    margin-right: 5px;
+    font-size: 0.8em;
+}
