@@ -1,52 +1,81 @@
+
+body {
+    background-color: #121212;
+    color: #E0E0E0;
+    font-family: "Monaco", Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
 table {
     width: 100%;
     border-collapse: collapse;
-    margin: 20px 0;
+    margin-bottom: 30px;
     font-size: 18px;
     text-align: left;
+    color: #E0E0E0;
 }
+
 table th, table td {
-    padding: 6px 10px;
+    padding: 12px 15px;
     border: 1px solid #ddd;
     line-height: 1.2;
 }
+
 table tr {
     height: auto;
 }
+
 table th {
-    background-color: #f2f2f2;
+    background-color: #333;
+    color: #E0E0E0;
 }
+
 table tr:nth-of-type(even) {
-    background-color: #f9f9f9;
+    background-color: #2A2A2A;
 }
+
 table tr:hover {
-    background-color: #f1f1f1;
+    background-color: #444;
 }
+
 button {
     padding: 10px 20px;
     font-size: 16px;
     margin-top: 20px;
     cursor: pointer;
-    background-color: #4CAF50;
+    background-color: rgb(59, 132, 62);
     color: white;
     border: none;
     border-radius: 5px;
 }
+
 button:hover {
-    background-color: #45a049;
+    background-color: #306d33;
 }
+
 button:disabled {
-    background-color: #A9A9A9;
+    background-color: #5d5d5d;
     cursor: not-allowed;
 }
+
 input[type="checkbox"] {
     width: 20px;
     height: 20px;
     cursor: pointer;
+    background-color: #333;
+    border: 1px solid #555;
 }
 
 .gene-header .dot {
-    color: #aaa;  /* Light gray for subtlety */
+    color: #888;  /* Light gray for subtlety */
     margin-right: 5px;
     font-size: 0.8em;
 }
@@ -54,48 +83,105 @@ input[type="checkbox"] {
 .metrics-container {
     display: flex;
     align-items: center;
-    gap: 20px;  /* Dynamic spacing between items */
+    justify-content: space-between;
     margin-bottom: 20px;
     padding: 10px;
-    background-color: #f4f4f9;
+    background-color: #1E1E1E;
     border-radius: 10px;
-    border: 1px solid #ddd;
+    border: 1px solid #333;
+}
+
+.metrics-group {
+    display: flex;
+    gap: 20px;
 }
 
 .metric {
     font-size: 1.5em;
     font-weight: bold;
-    color: #4CAF50;
-    padding: 10px;
-    background-color: #e9f7ec;
+    color: #E0E0E0;
+    padding: 10px 15px;
+    background-color: #384436;
     border-radius: 8px;
     display: flex;
     align-items: center;
 }
 
+.metric.torbs {
+    color: #4CAF50;
+}
+
 .metric .icon {
-    margin-right: 10px;
-    font-size: 1.2em;
+    margin-right: 8px;
+    font-size: 1.4em;
 }
 
 .metric.food {
     color: #FF9800;
-    background-color: #fff3e0;
+    background-color: #4f4539;
 }
 
 .end-turn-button {
-    padding: 10px 20px;
+    padding: 12px 25px;
     font-size: 1.2em;
     color: white;
-    background-color: #007BFF;
+    background-color: #0067d5;
     border: none;
     border-radius: 8px;
     cursor: pointer;
     margin-left: auto;
     text-align: center;
+    transition: background-color 0.3s ease;
 }
 
-.end-turn-button.disabled {
-    background-color: #6c757d;  /* Greyed out color */
+.end-turn-button:hover {
+    background-color: #0051a8;
+}
+
+.end-turn-button.disabled,
+.end-turn-button:disabled {
+    background-color: #555;  /* Greyed out color */
     cursor: not-allowed;
+}
+
+button.action-button {
+    padding: 10px 20px;
+    font-size: 1em;
+    background-color: #1E90FF;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-right: 10px;
+    margin-bottom: 10px;
+    transition: background-color 0.3s ease;
+}
+
+button.action-button:hover {
+    background-color: #1C86EE;
+}
+
+button.action-button:disabled {
+    background-color: #555;
+    cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+    .metric {
+        font-size: 1em;
+        padding: 8px 12px;
+    }
+
+    .end-turn-button {
+        padding: 10px 20px;
+        font-size: 1em;
+    }
+
+    table th, table td {
+        padding: 10px 12px;
+    }
+}
+
+.action-buittons {
+    margin-bottom: 10px;
 }
