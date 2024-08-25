@@ -31,6 +31,9 @@ def colony_view(request):
             colony.game.evolution_engine.breed_torbs(colony=colony, torb0=torb0, torb1=torb1)
         elif action == 'gather':
             pass
+        elif action == 'end_turn':
+            colony.ready = True
+            colony.save()
         
         return redirect('colony_view')
     

@@ -6,7 +6,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Colony Page</title>
+    <title>Hereditus: The Game</title>
 </head>
 <body>
     <h1>Colony: {{ colony.name }}</h1>
@@ -19,6 +19,16 @@
             <span class="icon">🍎</span> <!-- Optional icon for Food -->
             Food: {{ colony.food }}
         </div>
+        <form method="post" action="">
+            {% csrf_token %}
+            <button type="submit" name="action" value="end_turn" class="end-turn-button {% if colony.ready %}disabled{% else %}{% endif %}" {% if colony.ready %}disabled{% endif %}>
+                {% if colony.ready %}
+                    Waiting for other players...
+                {% else %}
+                    End Turn
+                {% endif %}
+            </button>
+        </form>
     </div>
 
     <form method="post" action="{% url 'colony_view' %}">
@@ -72,6 +82,7 @@
 </form>
 
 <script>
+
     const checkboxes = document.querySelectorAll('.torb-checkbox');
     const breedButton = document.getElementById('breed-button');
 

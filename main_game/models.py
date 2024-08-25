@@ -103,6 +103,7 @@ class Colony(models.Model):
     name = models.CharField(max_length=64, default="DefaultName")
     game = models.ForeignKey(Game, on_delete=models.CASCADE, null=True)
     food = models.IntegerField(default=5)
+    ready = models.BooleanField(default=False)
     
     @property
     def torb_count(self):
@@ -127,8 +128,10 @@ class Colony(models.Model):
             self.game.evolution_engine.protogenesis_torb(colony=self)
 
     def save(self, *args, **kwargs):
+        is_new = self.pk is None
         super().save(*args, **kwargs)
-        self.init_torbs()
+        if is_new:
+            self.init_torbs()
     
     def __str__(self):
         return self.name

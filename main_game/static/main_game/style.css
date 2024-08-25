@@ -82,3 +82,20 @@ input[type="checkbox"] {
     color: #FF9800;
     background-color: #fff3e0;
 }
+
+.end-turn-button {
+    padding: 10px 20px;
+    font-size: 1.2em;
+    color: white;
+    background-color: #007BFF;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-left: auto;
+    text-align: center;
+}
+
+.end-turn-button.disabled {
+    background-color: #6c757d;  /* Greyed out color */
+    cursor: not-allowed;
+}
