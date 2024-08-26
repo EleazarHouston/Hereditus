@@ -12,7 +12,8 @@ logger = logging.getLogger('hereditus')
 class Game(models.Model):
     starting_torbs = models.IntegerField(default=4)
     description = models.CharField(max_length=256, null=True)
-    evolution_engine = models.OneToOneField('EvolutionEngine', on_delete=models.CASCADE, null=True, blank=True, related_name='game_instance')
+    evolution_engine = models.OneToOneField('EvolutionEngine', on_delete=models.SET_NULL, null=True, blank=True, related_name='game_instance')
+    round_number = models.IntegerField(default=1)
     
     def __str__(self):
         return self.description
@@ -22,6 +23,29 @@ class Game(models.Model):
         super().save(*args, **kwargs)
         if is_new:
             logger.info(f"A new Game '{self.description}' was made.")
+    
+    def next_round(self):
+        
+        # have whatever calls this by default check if all colonies are ready
+        # do combat here
+        
+        for colony in self.colony_set.all():
+            colony.new_round()
+            
+        # Done in a separate loop because web GUIs are updated when ready value is updated
+        for colony in self.colony_set.all():
+            colony.ready = False
+            colony.save()
+        self.round_number += 1
+        self.save()
+        logger.debug(f"Next round processed successfully")
+    
+    def check_ready_status(self):
+        for colony in self.colony_set.all():
+            if not colony.ready:
+                return False
+        logger.debug(f"All colonies are ready for the next round")
+        self.next_round()
     
 def default_gene_list():
     return ["vitality", "sturdiness", "agility", "strength"]
@@ -36,13 +60,13 @@ class EvolutionEngine(models.Model):
     mutation_chance =   models.FloatField(default=0.1)
     mutation_dev =      models.FloatField(default=0.15)
     alleles_per_gene =  models.IntegerField(default=2)
-    gene_list =         models.JSONField(default=default_gene_alleles)
+    gene_list =         models.JSONField(default=default_gene_list)
     
     def save(self, *args, **kwargs):
         is_new = self.pk is None
         super().save(*args, **kwargs)
         if is_new:
-            logger.info(f"A new EvolutionEngine '{self.pid}' was made for Game {self.game}")
+            logger.info(f"A new EvolutionEngine '{self.pk}' was made for Game {self.game}")
     
     def check_torb_breedable(self, torb):
         if not torb.fertile:
@@ -58,11 +82,11 @@ class EvolutionEngine(models.Model):
             genes[gene] = alleles
         torb = self.new_torb(generation=0, colony=colony, genes=genes)
         
-        
+    def __str__(self):
+        return f"EvolutionEngine{self.pk} for Game '{self.game.description}'"
     
     def breed_torbs(self, colony, torb0, torb1):
-        print(1)
-        if not self.check_torb_breedable(torb1) or not self.check_torb_breedable(torb1):
+        if not self.check_torb_breedable(torb0) or not self.check_torb_breedable(torb1):
             logger.debug(f"An EvolutionEngine for Colony {colony} in {self.game} tried to breed Torb {torb0.private_ID} '{torb0.name}' and Torb {torb1.private_ID} '{torb1.name}' but one/both weren't breedable")
             return False
         genes = {}
@@ -88,8 +112,8 @@ class EvolutionEngine(models.Model):
         self.new_torb(generation=generation, colony=colony, genes=genes)
         torb0.fertile = torb1.fertile = False
         torb0.action = torb1.action = 'breeding'
-        torb0.action_desc = f"Breeding with {torb1.name}"
-        torb1.action_desc = f"Breeding with {torb0.name}"
+        #torb0.action_desc = f"Breeding with {torb1.name}"
+        #torb1.action_desc = f"Breeding with {torb0.name}"
         torb0.save()
         torb1.save()
     
@@ -117,10 +141,81 @@ class Colony(models.Model):
     game = models.ForeignKey(Game, on_delete=models.CASCADE, null=True)
     food = models.IntegerField(default=5)
     ready = models.BooleanField(default=False)
+    rest_heal_flat = models.IntegerField(default=2)
+    rest_heal_perc = models.FloatField(default=0.2)
+    gather_rate = models.FloatField(default=1.7)
     
     @property
     def torb_count(self):
         return self.torb_set.count()
+    
+    def new_round(self):
+        self.breed_torbs()
+        self.rest_torbs()
+        
+        self.gather_phase()
+        self.colony_meal()
+        self.reset_torbs_actions("gathering")
+                
+    
+    def breed_torbs(self):
+        checked_torbs = []
+        for torb in self.torb_set.all():
+            if torb.action == "breeding" and torb not in checked_torbs:
+                checked_torbs.append(torb)
+                checked_torbs.append(torb.context_torb)
+                new_torb = self.game.evolution_engine.breed_torbs(colony=self, torb0=torb, torb1=torb.context_torb)
+                StoryText.objects.create(colony=self, story_text_type="breeding", story_text=f"A new Torb, '{new_torb.name}', was born", timestamp=Now())
+        
+
+    def rest_torbs(self):
+        for torb in self.torb_set.all():
+            if torb.action == "resting" and not torb.starving:
+                adjust_amount = round(self.rest_heal_flat + self.rest_heal_perc & torb.max_hp)
+                torb.adjust_hp(adjust_amount, context="resting")
+    
+    def reset_torbs_actions(self, action: str):
+        for torb in self.torb_set.all():
+            torb.action = action
+            torb.context_torb = None
+            torb.save()
+    
+    def gather_phase(self):
+        num_gathering = 0
+        for torb in self.torb_set.all():
+            if torb.action == "gathering":
+                num_gathering += 1
+        food_gathered = round(num_gathering * self.gather_rate)
+        self.food += food_gathered
+        self.save()
+        StoryText.objects.create(colony=self, story_text_type="gathering", story_text=f"Your Torbs gathered {food_gathered} food.", timestamp=Now())
+        
+        
+    def colony_meal(self):
+        living_torbs = [torb for torb in self.torb_set.all() if torb.is_alive]
+        starved_torbs = []
+        
+        if self.food < len(living_torbs):
+            starved_torbs = random.sample(living_torbs, len(living_torbs) - self.food)
+            for torb in starved_torbs:
+                torb.starving = True
+                torb.adjust_hp(-1, context="starvation")
+        
+        for torb in living_torbs:
+            if torb not in starved_torbs:
+                adjust_amount = 1
+                torb.starving = False
+                torb.adjust_hp(1)
+                torb.save()
+                self.food -= 1
+        self.food = max(self.food, 0)
+        self.save()
+            
+    def ready_up(self):
+        self.ready = True
+        self.save()
+        logger.info(f"Colony '{self.name}' readied up")
+        self.game.check_ready_status()
     
     def new_torb(self, genes, generation):
         next_ID = self.torb_count + 1
@@ -145,7 +240,7 @@ class Colony(models.Model):
         is_new = self.pk is None
         super().save(*args, **kwargs)
         if is_new:
-            logger.info(f"A new colony '{self.name}' was made.")
+            logger.info(f"A new colony '{self.name}' was made")
             self.init_torbs()
             StoryText.objects.create(colony=self, story_text_type="system", story_text="Welcome to Hereditus!", timestamp=Now())
     
@@ -178,6 +273,7 @@ class Torb(models.Model):
     starving = models.BooleanField(default=False)
     action = models.CharField(max_length=32, choices=TORB_ACTION_OPTIONS, default='gathering',)
     action_desc = models.CharField(max_length=256, default='Gathering')
+    context_torb = models.ForeignKey("Torb", null=True, blank=True, on_delete=models.SET_NULL)
     
     # Genes
     genes = models.JSONField(default=dict)
@@ -185,6 +281,15 @@ class Torb(models.Model):
     
     def __str__(self):
         return f"Colony {self.colony} Torb: {self.private_ID} '{self.name}'"
+    
+    def adjust_hp(self, adjust_amount, context="an unknown source"):
+        self.hp = min(max(0, self.hp + adjust_amount), self.max_hp)
+        if self.hp == 0:
+            self.is_alive = False
+            self.fertile = False
+            StoryText.objects.create(colony=self, story_text_type="death", story_text=f"'{self.name}' (Torb {self.private_ID}) died from {context}.", timestamp=Now())
+            logger.debug(f"Colony {self.colony.pid} '{self.colony.name}' Torb {self.private_ID} '{self.name}' died, context: {context}")
+        self.save()
     
     @property
     def status(self):
