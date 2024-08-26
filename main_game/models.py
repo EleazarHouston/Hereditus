@@ -6,6 +6,7 @@ from .torb_names import torb_names
 import random
 import numpy as np
 import logging
+import time
 
 logger = logging.getLogger('hereditus')
 
@@ -109,13 +110,14 @@ class EvolutionEngine(models.Model):
             alleles = self.mutate_and_shuffle(alleles)
             genes[gene] = alleles
         logger.debug(f"An EvolutionEngine for Colony {colony} in {self.game} is breeding Torb {torb0.private_ID} '{torb0.name}' and Torb {torb1.private_ID} '{torb1.name}'")
-        self.new_torb(generation=generation, colony=colony, genes=genes)
+        baby_torb = self.new_torb(generation=generation, colony=colony, genes=genes)
         torb0.fertile = torb1.fertile = False
         torb0.action = torb1.action = 'breeding'
         #torb0.action_desc = f"Breeding with {torb1.name}"
         #torb1.action_desc = f"Breeding with {torb0.name}"
         torb0.save()
         torb1.save()
+        return baby_torb
     
     def mutate_and_shuffle(self, alleles):
         out_alleles = []

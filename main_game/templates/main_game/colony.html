@@ -37,6 +37,7 @@
                             value="end_turn"
                             class="end-turn-button {% if colony.ready %}disabled{% else %}{% endif %}"
                             {% if colony.ready %}disabled{% endif %}
+                            id="endTurnButton"
                         >
                             {% if colony.ready %}
                                 Waiting for other players...
@@ -123,7 +124,7 @@
 
     <script src="{% static 'main_game/colony_view.js' %}"></script>
     <script>
-        const checkReadyStatusUrl = "{% url 'check_ready_status' %}";
+        const checkReadyStatusUrl = "{% url 'check_ready_status' colony.id %}";
     </script>
 </body>
 </html>

@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from .models import Torb, Colony, StoryText
 import logging
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -22,8 +23,8 @@ def colony_view(request, colony_id):
     if request.method == 'POST':
         selected_torbs = request.POST.getlist('selected_torbs')
         action = request.POST.get('action')
-        print(len(selected_torbs))
         
+        print(f"POST ACTION: {action}")
         if action == 'breed' and len(selected_torbs) == 2:
             # Should probably be moved to a colony method
             torb0 = Torb.objects.get(id=selected_torbs[0])
@@ -62,8 +63,10 @@ def colony_view(request, colony_id):
         'story_texts': story_texts,
         })
 
-def check_ready_status(request):
-    colony = Colony.objects.order_by('id').first()
+
+
+def check_ready_status(request, colony_id):
+    colony = Colony.objects.get(id=colony_id)
     return JsonResponse({'ready': colony.ready})
 
 def load_colony(request):

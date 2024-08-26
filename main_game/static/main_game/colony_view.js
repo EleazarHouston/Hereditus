@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', function() {
             breedButton.disabled = (selectedTorbs.length !== 2 || !allFertile);
         });
     });
+
 });
 
 let isPolling = false;
@@ -26,20 +27,20 @@ function checkReadyStatus() {
     console.log("Checking ready status...");
 
     fetch(checkReadyStatusUrl)
-        .then(response => response.json())
-        .then(data => {
-            console.log("Polling response received:", data);
-            if (data.ready) {
-                console.log("Colony is ready, continuing polling.");
-                // If the colony is still ready, continue polling
-                isPolling = true;
-            } else {
-                console.log("Colony is not ready, reloading page.");
-                // If the colony is no longer ready, refresh the page
-                location.reload();
-            }
-        })
-        .catch(error => console.error('Error checking ready status:', error));
+    .then(response => response.json())
+    .then(data => {
+        console.log("Polling response received:", data);
+        if (data.ready) {
+            console.log("Colony is ready, continuing polling.");
+// If the colony is still ready, continue polling
+            isPolling = true;
+        } else {
+            console.log("Colony is not ready, reloading page.");
+// If the colony is no longer ready, refresh the page
+            location.reload();
+        }
+    })
+    .catch(error => console.error('Error checking ready status:', error));
 }
 
 function startPolling() {
@@ -67,3 +68,27 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(error => console.error('Error checking initial ready status:', error));
 });
+
+document.addEventListener('DOMContentLoaded', function() {
+    const endTurnButton = document.getElementById('endTurnButton');
+    const form = endTurnButton.closest('form');
+
+    if (form && endTurnButton) {
+        form.addEventListener('submit', function(event) {
+            // Before the form is submitted, ensure the correct action value is set
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = 'action';
+            hiddenInput.value = 'end_turn';
+            form.appendChild(hiddenInput);
+
+            // Disable the button and change its text
+            endTurnButton.disabled = true;
+            endTurnButton.innerText = "Waiting for other players...";
+
+            isPolling = false;
+            startPolling();
+        });
+    }
+});
+
