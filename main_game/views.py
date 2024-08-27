@@ -26,19 +26,8 @@ def colony_view(request, colony_id):
         
         print(f"POST ACTION: {action}")
         if action == 'breed' and len(selected_torbs) == 2:
-            # Should probably be moved to a colony method
-            torb0 = Torb.objects.get(id=selected_torbs[0])
-            torb1 = Torb.objects.get(id=selected_torbs[1])
-            torb0.action = "breeding"
-            torb0.context_torb = torb1
-            torb0.action_desc = f"Breeding with {torb1.name}"
-            torb0.save()
+            colony.set_breed_torbs(selected_torbs)
             
-            torb1.action = "breeding"
-            torb1.context_torb = torb0
-            torb1.action_desc = f"Breeding with {torb0.name}"
-            torb1.save()
-            #colony.game.evolution_engine.breed_torbs(colony=colony, torb0=torb0, torb1=torb1)
         elif action == 'gather':
             pass
         elif action == 'end_turn':
@@ -66,9 +55,13 @@ def colony_view(request, colony_id):
 
 
 def check_ready_status(request, colony_id):
-    colony = Colony.objects.get(id=colony_id)
+    colony = get_object_or_404(Colony, id=colony_id)
     return JsonResponse({'ready': colony.ready})
 
 def load_colony(request):
     colonies = Colony.objects.all()
     return render(request, 'main_game/load_colony.html', {'colonies': colonies})
+
+def army_view(request, colony_id):
+    colony = get_object_or_404(Colony, id=colony_id)
+    return render(request, 'main_game/army.html', {'colony': colony,})

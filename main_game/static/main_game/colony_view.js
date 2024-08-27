@@ -73,9 +73,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const endTurnButton = document.getElementById('endTurnButton');
     const form = endTurnButton.closest('form');
 
-    if (form && endTurnButton) {
-        form.addEventListener('submit', function(event) {
-            // Before the form is submitted, ensure the correct action value is set
+    if (endTurnButton) {
+        endTurnButton.addEventListener('click', function(event) {
+            const form = endTurnButton.closest('form');
+
+            // Prevent form from submitting immediately
+            event.preventDefault();
+
+            // Ensure the correct action value is set
             const hiddenInput = document.createElement('input');
             hiddenInput.type = 'hidden';
             hiddenInput.name = 'action';
@@ -86,9 +91,23 @@ document.addEventListener('DOMContentLoaded', function() {
             endTurnButton.disabled = true;
             endTurnButton.innerText = "Waiting for other players...";
 
+            // Start polling
             isPolling = false;
             startPolling();
+
+            // Submit the form after setting up everything
+            form.submit();
         });
     }
 });
 
+document.addEventListener('DOMContentLoaded', function() {
+    const consoleDisplay = document.querySelector('.console-display');
+    consoleDisplay.scrollTop = consoleDisplay.scrollHeight; // Scroll to the bottom on load
+});
+
+// Optionally, you can also scroll to the bottom whenever new content is added
+function scrollToBottom() {
+    const consoleDisplay = document.querySelector('.console-display');
+    consoleDisplay.scrollTop = consoleDisplay.scrollHeight;
+}

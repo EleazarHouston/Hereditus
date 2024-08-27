@@ -1,130 +1,122 @@
+{% extends 'main_game/base.html' %}
 {% load static %}
-<link rel="stylesheet" href="{% static 'main_game/style.css' %}">
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hereditus: The Game</title>
-</head>
-<body>
-    <div class="container">
-    
-        <h1>Colony: {{ colony.name }}</h1>
-        <form method="post" action="{% url 'colony_view' colony.id %}">
-            <div class="action-console-container">
-                <div class="column">
-                    <div class="metrics-container">
-                        <div class="metrics-group">
-                            <div class="metric torbs">
-                                <span class="icon">🐗</span>
-                                Torbs: {{ num_torbs }}
-                            </div>
-                            <div class="metric food">
-                                <span class="icon">🍎</span>
-                                Food: {{ colony.food }}
-                            </div>
-                        </div>
-                    </div>
+{% block title %}Hereditus: Overview{% endblock %}
 
-                    {% comment %} <form method="post" action=""> {% endcomment %}
-                    <div class="end-turn-container"
-                        {% csrf_token %}
-                        <button
-                            type="submit"
-                            name="action"
-                            value="end_turn"
-                            class="end-turn-button {% if colony.ready %}disabled{% else %}{% endif %}"
-                            {% if colony.ready %}disabled{% endif %}
-                            id="endTurnButton"
-                        >
-                            {% if colony.ready %}
-                                Waiting for other players...
-                            {% else %}
-                                End Turn
-                            {% endif %}
-                        </button>
-                    </div>
-                    {% comment %} </form> {% endcomment %}
+{% block content %}
+     <h1>Colony: {{ colony.name }}</h1>
+     <form method="post" action="{% url 'colony_view' colony.id %}">
+         <div class="action-console-container">
+             <div class="column">
+                 <div class="metrics-container">
+                     <div class="metrics-group">
+                         <div class="metric torbs">
+                             <span class="icon">🐗</span>
+                             Torbs: {{ num_torbs }}
+                         </div>
+                         <div class="metric food">
+                             <span class="icon">🍎</span>
+                             Food: {{ colony.food }}
+                         </div>
+                     </div>
+                 </div>
+ 
+                 <div class="end-turn-container">
+                     {% csrf_token %}
+                     <button
+                         type="submit"
+                         name="action"
+                         value="end_turn"
+                         class="end-turn-button {% if colony.ready %}disabled{% else %}{% endif %}"
+                         {% if colony.ready %}disabled{% endif %}
+                         id="endTurnButton"
+                     >
+                         {% if colony.ready %}
+                             Waiting for other players...
+                         {% else %}
+                             End Turn
+                         {% endif %}
+                     </button>
+                 </div>
+ 
+                 <div class="action-console-container">
+                     <div class="action-buttons">
+                         {% csrf_token %}
+                         <button type="submit" name="action" value="breed" disabled id="breed-button">Breed</button>
+                         <button type="submit" name="action" value="gather">Gather</button>
+                     </div>
+                 </div>
+             </div>
+             <div class="console-display">
+                 {% for story_text in story_texts %}
+                     <p>{{ story_text.story_text }}</p>
+                 {% endfor %}
+             </div>
+         </div>
+ 
+         <table>
+             <thead>
+                 <tr>
+                     <th></th>
+                     <th>ID</th>
+                     <th>Gen.</th>
+                     <th>Name</th>
+                     <th>HP💖</th>
+                     
+                     {% if torbs %}
+                         {% for gene_name in torbs.0.genes.keys %}
+                             <th class="gene-header"><span class="dot"></span>{{ gene_name|capfirst }}🧬</th>
+                         {% endfor %}
+                     {% endif %}
+                     <th>Status⚠️</th>
+                     <th>Action⚡</th>
+                 </tr>
+             </thead>
+             <tbody>
+                 {% for torb in torbs %}
+                     <tr data-fertile="{{ torb.fertile }}">
+                         <td>
+                             <input
+                                 type="checkbox"
+                                 name="selected_torbs"
+                                 value="{{ torb.id }}"
+                                 class="torb-checkbox"
+                             >
+                         </td>
+                         <td>{{ torb.private_ID }}</td>
+                         <td>{{ torb.generation }}</td>
+                         <td>{{ torb.name }}</td>
+                         <td>{{ torb.hp }}/{{torb.max_hp }}</td>
+                         {% for gene_name, gene_value in torb.genes.items %}
+                             <td>
+                                 {% for allele in gene_value %}
+                                     {{ allele|floatformat:1 }}{% if not forloop.last %} | {% endif %}
+                                 {% endfor %}
+                             </td>
+                         {% endfor %}
+                         <td>{{ torb.status }}</td>
+                         <td>{{ torb.action_desc }}</td>
+                     </tr>
+                 {% empty %}
+                     <tr>
+                         <td colspan=7>This colony has no Torbs.</td>
+                     </tr>
+                 {% endfor %}
+             </tbody>
+         </table>
+     </form>
+{% endblock %}
 
-
-                    <div class="action-console-container">
-                        <div class="action-buttons">
-                            {% comment %} <form method="post" action="{% url 'colony_view' %}"> {% endcomment %}
-                                {% csrf_token %}
-                                <button type="submit" name="action" value="breed" disabled id="breed-button">Breed</button>
-                                <button type="submit" name="action" value="gather">Gather</button>
-                            {% comment %} </form> {% endcomment %}
-                        </div>
-                        
-                    </div>
-                </div>
-                <div class="console-display">
-                    {% for story_text in story_texts %}
-                        <p>{{ story_text.story_text }}</p>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <table>
-                <thead>
-                    <tr>
-                        <th>Select</th>
-                        <th>ID</th>
-                        <th>Generation</th>
-                        <th>Name</th>
-                        <th>Health💖</th>
-                        
-                        {% if torbs %}
-                            {% for gene_name in torbs.0.genes.keys %}
-                                <th class="gene-header"><span class="dot"></span>{{ gene_name|capfirst }}🧬</th>
-                            {% endfor %}
-                        {% endif %}
-                        <th>Status⚠️</th>
-                        <th>Action⚡</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for torb in torbs %}
-                        <tr data-fertile="{{ torb.fertile }}">
-                            <td>
-                                <input
-                                    type="checkbox"
-                                    name="selected_torbs"
-                                    value="{{ torb.id }}"
-                                    class="torb-checkbox"
-                                >
-                            </td>
-                            <td>{{ torb.private_ID }}</td>
-                            <td>{{ torb.generation }}</td>
-                            <td>{{ torb.name }}</td>
-                            <td>{{ torb.hp }}/{{torb.max_hp }}</td>
-                            {% for gene_name, gene_value in torb.genes.items %}
-                                <td>
-                                    {% for allele in gene_value %}
-                                        {{ allele|floatformat:1 }}{% if not forloop.last %} | {% endif %}
-                                    {% endfor %}
-                                </td>
-                            {% endfor %}
-                            <td>{{ torb.status }}</td>
-                            <td>{{ torb.action_desc }}</td>
-                        </tr>
-                    {% empty %}
-                        <tr>
-                            <td colspan=7>This colony has no Torbs.</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </form>
-
-        
-    </div>
-
+{% block scripts %}
     <script src="{% static 'main_game/colony_view.js' %}"></script>
     <script>
         const checkReadyStatusUrl = "{% url 'check_ready_status' colony.id %}";
     </script>
-</body>
-</html>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const consoleDisplay = document.querySelector('.console-display');
+            consoleDisplay.scrollTop = consoleDisplay.scrollHeight; // Scroll to the bottom on load
+        });
+    </script>
+{% endblock %}
+
