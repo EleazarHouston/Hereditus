@@ -21,6 +21,7 @@ table {
     font-size: 18px;
     text-align: left;
     color: #E0E0E0;
+    table-layout: auto;
 }
 
 table th, table td {
@@ -30,6 +31,10 @@ table th, table td {
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
+}
+
+td:nth-last-child(2) {
+    width: 100%;
 }
 
 table tr {
@@ -270,3 +275,61 @@ button.action-button:disabled {
     background-color: #4CAF50;
 }
 
+.status-tooltip {
+    position: relative;
+    cursor: pointer;
+    display: inline-block;
+}
+
+.status-tooltip::after {
+    content: attr(data-tooltip);
+    position: fixed;  /* Change from absolute to fixed */
+    bottom: auto;
+    left: auto;
+    top: 0;
+    transform: translate(-50%, -100%);  /* Adjust position to appear above the text */
+    background-color: rgba(0, 0, 0, 0.85);
+    color: #fff;
+    padding: 5px;
+    border-radius: 5px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
+    z-index: 9999;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    pointer-events: none;
+}
+
+.status-tooltip:hover::after {
+    opacity: 1;
+    visibility: visible;
+    top: auto;
+    left: auto;
+    bottom: 125%;  /* Ensure it stays above the hovered element */
+    transform: translateX(-50%);
+}
+
+.dynamic-tooltip {
+    position: fixed;
+    background-color: #333;  /* Dark background */
+    color: #fff;  /* White text */
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);  /* Subtle shadow */
+    border: 1px solid #92ff53;  /* Slight border for contrast */
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
+    pointer-events: none;
+    font-size: 14px;
+    max-width: 200px;  /* Limit the width for better readability */
+    text-align: left;
+    white-space: normal;  /* Allow wrapping of text */
+}
+
+.status-tooltip:hover .dynamic-tooltip {
+    opacity: 1;
+    visibility: visible;
+}

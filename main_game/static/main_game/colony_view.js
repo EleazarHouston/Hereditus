@@ -111,3 +111,32 @@ function scrollToBottom() {
     const consoleDisplay = document.querySelector('.console-display');
     consoleDisplay.scrollTop = consoleDisplay.scrollHeight;
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    const tooltips = document.querySelectorAll('.status-tooltip');
+
+    tooltips.forEach(tooltip => {
+        tooltip.addEventListener('mouseenter', function() {
+            const tooltipText = this.getAttribute('data-tooltip');
+            const tooltipDiv = document.createElement('div');
+            tooltipDiv.className = 'dynamic-tooltip';
+            tooltipDiv.innerHTML = tooltipText;
+
+            document.body.appendChild(tooltipDiv);
+
+            const rect = this.getBoundingClientRect();
+            tooltipDiv.style.top = `${rect.top - tooltipDiv.offsetHeight - 10}px`;
+            tooltipDiv.style.left = `${rect.left + (rect.width / 2) - (tooltipDiv.offsetWidth / 2)}px`;
+
+            tooltipDiv.style.opacity = '1';
+            tooltipDiv.style.visibility = 'visible';
+        });
+
+        tooltip.addEventListener('mouseleave', function() {
+            const tooltipDiv = document.querySelector('.dynamic-tooltip');
+            if (tooltipDiv) {
+                tooltipDiv.remove();
+            }
+        });
+    });
+});

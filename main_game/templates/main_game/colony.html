@@ -68,8 +68,8 @@
                              <th class="gene-header"><span class="dot"></span>{{ gene_name|capfirst }}🧬</th>
                          {% endfor %}
                      {% endif %}
-                     <th>Status⚠️</th>
                      <th>Action⚡</th>
+                     <th>🔍</th>
                  </tr>
              </thead>
              <tbody>
@@ -94,8 +94,13 @@
                                  {% endfor %}
                              </td>
                          {% endfor %}
-                         <td>{{ torb.status }}</td>
                          <td>{{ torb.action_desc }}</td>
+                         <td class="status-column">
+                            <span class="status-tooltip" data-tooltip="{{ torb.status }}">
+                                🛈
+                            </span>
+                        </td>
+                         
                      </tr>
                  {% empty %}
                      <tr>

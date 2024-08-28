@@ -111,12 +111,13 @@ class EvolutionEngine(models.Model):
             genes[gene] = alleles
         logger.debug(f"An EvolutionEngine for Colony {colony} in {self.game} is breeding Torb {torb0.private_ID} '{torb0.name}' and Torb {torb1.private_ID} '{torb1.name}'")
         baby_torb = self.new_torb(generation=generation, colony=colony, genes=genes)
-        torb0.fertile = torb1.fertile = False
-        torb0.action = torb1.action = 'breeding'
-        #torb0.action_desc = f"Breeding with {torb1.name}"
-        #torb1.action_desc = f"Breeding with {torb0.name}"
+        baby_torb.growing = True
+        
+        torb0.fertile = torb1.fertile = baby_torb.fertile = False
         torb0.save()
         torb1.save()
+        baby_torb.save()
+        baby_torb.set_action("growing", "Growing")
         return baby_torb
     
     def mutate_and_shuffle(self, alleles):
@@ -152,23 +153,41 @@ class Colony(models.Model):
         return self.torb_set.count()
     
     def new_round(self):
-        self.breed_torbs()
+        self.reset_fertility()
+        self.grow_torbs()
+        self.call_breed_torbs()
         self.rest_torbs()
         
         self.gather_phase()
         self.colony_meal()
         self.reset_torbs_actions("gathering")
                 
+    def reset_fertility(self):
+        for torb in self.torb_set.all():
+            torb.fertile = True
+            torb.save()
+            
+    def grow_torbs(self):
+        for torb in self.torb_set.all():
+            torb.growing = False
+            torb.save()
     
-    def breed_torbs(self):
+    def call_breed_torbs(self):
         checked_torbs = []
         for torb in self.torb_set.all():
             if torb.action == "breeding" and torb not in checked_torbs:
                 checked_torbs.append(torb)
                 checked_torbs.append(torb.context_torb)
                 new_torb = self.game.evolution_engine.breed_torbs(colony=self, torb0=torb, torb1=torb.context_torb)
-                StoryText.objects.create(colony=self, story_text_type="breeding", story_text=f"A new Torb, '{new_torb.name}', was born", timestamp=Now())
+                if new_torb:
+                    StoryText.objects.create(colony=self, story_text_type="breeding", story_text=f"A new Torb, '{new_torb.name}', was born", timestamp=Now())
         
+    def set_breed_torbs(self, torbs):
+        torb0 = Torb.objects.get(id=torbs[0])
+        torb1 = Torb.objects.get(id=torbs[1])
+        
+        torb0.set_action("breeding", f"Breeding with {torb1.name}", torb1)
+        torb1.set_action("breeding", f"Breeding with {torb0.name}", torb0)
 
     def rest_torbs(self):
         for torb in self.torb_set.all():
@@ -178,9 +197,7 @@ class Colony(models.Model):
     
     def reset_torbs_actions(self, action: str):
         for torb in self.torb_set.all():
-            torb.action = action
-            torb.context_torb = None
-            torb.save()
+            torb.set_action("gathering", "Gathering")
     
     def gather_phase(self):
         num_gathering = 0
@@ -190,7 +207,7 @@ class Colony(models.Model):
         food_gathered = round(num_gathering * self.gather_rate)
         self.food += food_gathered
         self.save()
-        StoryText.objects.create(colony=self, story_text_type="gathering", story_text=f"Your Torbs gathered {food_gathered} food.", timestamp=Now())
+        StoryText.objects.create(colony=self, story_text_type="food", story_text=f"Your Torbs gathered {food_gathered} food.", timestamp=Now())
         
         
     def colony_meal(self):
@@ -202,16 +219,18 @@ class Colony(models.Model):
             for torb in starved_torbs:
                 torb.starving = True
                 torb.adjust_hp(-1, context="starvation")
-        
+        less_food = 0
         for torb in living_torbs:
             if torb not in starved_torbs:
                 adjust_amount = 1
                 torb.starving = False
                 torb.adjust_hp(1)
                 torb.save()
-                self.food -= 1
-        self.food = max(self.food, 0)
+                less_food += 1
+        
+        self.food = max(self.food - less_food, 0)
         self.save()
+        StoryText.objects.create(colony=self, story_text_type="food", story_text=f"Your Torbs ate {less_food} food and {len(starved_torbs)} went hungry.", timestamp=Now())
             
     def ready_up(self):
         self.ready = True
@@ -262,6 +281,7 @@ class Torb(models.Model):
         ('combatting', 'combatting'),
         ('training', 'training'),
         ('resting', 'resting'),
+        ('growing', 'growing'),
     ]
     
     private_ID = models.IntegerField(default=0)
@@ -276,6 +296,8 @@ class Torb(models.Model):
     action = models.CharField(max_length=32, choices=TORB_ACTION_OPTIONS, default='gathering',)
     action_desc = models.CharField(max_length=256, default='Gathering')
     context_torb = models.ForeignKey("Torb", null=True, blank=True, on_delete=models.SET_NULL)
+    growing = models.BooleanField(default=False)
+    
     
     # Genes
     genes = models.JSONField(default=dict)
@@ -292,12 +314,30 @@ class Torb(models.Model):
             StoryText.objects.create(colony=self, story_text_type="death", story_text=f"'{self.name}' (Torb {self.private_ID}) died from {context}.", timestamp=Now())
             logger.debug(f"Colony {self.colony.pid} '{self.colony.name}' Torb {self.private_ID} '{self.name}' died, context: {context}")
         self.save()
+        
+    def set_action(self, action: str, action_desc: str, context_torb=None):
+        if self.growing:
+            return
+        self.action = action
+        self.action_desc = action_desc
+        self.context_torb = context_torb
+        self.save()
     
     @property
     def status(self):
+        out_text = ""
         if not self.is_alive:
-            return "Dead"
+            out_text += "Dead"
         elif self.starving:
-            return "Starving"
+            out_text += "Starving"
         else:
-            return "Alive"
+            out_text += "Alive"
+            
+        # Use <br> for HTML newline
+        if self.fertile:
+            out_text += "<br>Fertile"
+        else:
+            out_text += "<br>Infertile"    
+        
+        return out_text
+        
