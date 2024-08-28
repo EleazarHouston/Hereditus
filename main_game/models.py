@@ -31,7 +31,7 @@ class Game(models.Model):
         # do combat here
         
         for colony in self.colony_set.all():
-            colony.new_round()
+            colony.new_round(round_number = self.round_number)
             
         # Done in a separate loop because web GUIs are updated when ready value is updated
         for colony in self.colony_set.all():
@@ -116,15 +116,16 @@ class EvolutionEngine(models.Model):
         torb0.fertile = torb1.fertile = baby_torb.fertile = False
         torb0.save()
         torb1.save()
-        baby_torb.save()
         baby_torb.set_action("growing", "Growing")
+        baby_torb.save()
+        
         return baby_torb
     
     def mutate_and_shuffle(self, alleles):
         out_alleles = []
         for allele in alleles:
             die_roll = random.uniform(0, 1)
-            if die_roll > 1 - self.mutation_chance:
+            if die_roll >= 1 - self.mutation_chance:
                 allele_hist = allele # To be used in logging: allele mutated from hist to X
                 mutation_amount = np.random.normal(0, self.mutation_dev)
                 allele = round(allele * (1 + mutation_amount), 4)
@@ -152,7 +153,7 @@ class Colony(models.Model):
     def torb_count(self):
         return self.torb_set.count()
     
-    def new_round(self):
+    def new_round(self, round_number: int):
         self.reset_fertility()
         self.grow_torbs()
         self.call_breed_torbs()
@@ -161,6 +162,7 @@ class Colony(models.Model):
         self.gather_phase()
         self.colony_meal()
         self.reset_torbs_actions("gathering")
+        StoryText.objects.create(colony=self, story_text_type="system", story_text=f"It is now year {round_number}.", timestamp=Now())
                 
     def reset_fertility(self):
         for torb in self.torb_set.all():
