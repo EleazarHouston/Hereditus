@@ -75,11 +75,18 @@ def army_view(request, colony_id):
     num_soldiers = len([torb for torb in torbs if torb.action=="soldiering"])
     num_training = len([torb for torb in torbs if torb.action=="training"])
     known_colonies = colony.discovered_colonies.all()
+    all_colonies = colony.game.colony_set.all()
     story_texts = StoryText.objects.filter(colony=colony).order_by('timestamp')
+    
+    if request.method == 'POST':
+        selected_colony = request.POST.getlist('selected_colony')
+        action = request.POST.get('action')
+    
     return render(request, 'main_game/army.html', {
         'colony': colony,
         'story_texts': story_texts,
         'num_soldiers': num_soldiers,
         'num_training': num_training,
-        'known_colonies': known_colonies
+        'known_colonies': known_colonies,
+        'all_colonies': all_colonies
         })

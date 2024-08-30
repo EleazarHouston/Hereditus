@@ -204,7 +204,7 @@ button.action-button:disabled {
 }
 
 .console-display {
-    width: 300px;
+    width: 1000px;
     height: 200px;
     background-color: #1E1E1E;
     color: #E0E0E0;

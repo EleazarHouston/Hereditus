@@ -4,64 +4,112 @@
 {% block title %}Hereditus: Army{% endblock %}
 
 {% block content %}
-    <h1>The Army of {{ colony.name }}</h1>
 
-    <div class="action-console-container">
-        <div class="console-display">
-            {% for story_text in story_texts %}
-                <p>{{ story_text.story_text }}</p>
-            {% endfor %}
-        </div>
-    </div>
+    {% if colony.num_soldiers > 0 %}
+        <h1>The Army of {{ colony.name }}</h1>
 
-    <form method="post" action="{% url 'army_view' colony.id %}">
-        {% csrf_token %}
-        <table>
-            <thead>
-                <tr>
-                    <th>Colony</th>
-                    <th>Soldiers</th>
-                    <th>Total Torbs</th>
-                    <th>Food</th>
-                    <th>Health</th>
-                    <th>Power</th>
-                    <th>Resilience</th>
-                    <th>Scout</th>
-                    <th>Attack</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for known_colony in known_colonies %}
-                    <tr class="{% if known_colony.id == colony.id %} player-colony {% endif %}">
-                        <td>{{ known_colony.name }}</td>
-                        <td>{{ known_colony.num_soldiers }}</td>
-                        <td>{{ known_colony.torb_count }}</td>
-                        <td>{{ known_colony.food }}</td>
-                        <td>{{ known_colony.army_health }}</td>
-                        <td>{{ known_colony.army_power }}</td>
-                        <td>{{ known_colony.army_resilience }}</td>
-                        <td>
-                            <input type="hidden" name="selected_colony" value="{{ known_colony.id }}">
-                            <button type="submit" name="action" value="scout">Scout</button>
-                        </td>
-                        <td>
-                            <input type="hidden" name="selected_colony" value="{{ known_colony.id }}">
-                            <button type="submit" name="action" value="attack">Attack</button>
-                        </td>
-                    </tr>
-                {% empty %}
-                    <tr>
-                        <td colspan="9">No known colonies available.</td>
-                    </tr>
+        <div class="action-console-container">
+            <div class="console-display">
+                {% for story_text in story_texts %}
+                    <p>{{ story_text.story_text }}</p>
                 {% endfor %}
-            </tbody>
-        </table>
-    </form>
+            </div>
+        </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const consoleDisplay = document.querySelector('.console-display');
-            consoleDisplay.scrollTop = consoleDisplay.scrollHeight; // Scroll to the bottom on load
-        });
-    </script>
+        <form method="post" action="{% url 'army_view' colony.id %}">
+            {% csrf_token %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Colony</th>
+                        <th>Soldiers</th>
+                        <th>Total Torbs</th>
+                        <th>Food</th>
+                        <th>Health</th>
+                        <th>Power</th>
+                        <th>Resilience</th>
+                        <th>Scout</th>
+                        <th>Attack</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for colony in all_colonies %}
+                        <tr class="{% if colony.id == player_colony.id %} player-colony {% endif %}">
+                            <td>
+                                {% if colony in known_colonies %}
+                                    {{ colony.name }}
+                                {% else %}
+                                    ???
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if colony in known_colonies %}
+                                    {{ colony.num_soldiers }}
+                                {% else %}
+                                    ???
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if colony in known_colonies %}
+                                    {{ colony.torb_count }}
+                                {% else %}
+                                    ???
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if colony in known_colonies %}
+                                    {{ colony.food }}
+                                {% else %}
+                                    ???
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if colony in known_colonies %}
+                                    {{ colony.army_health }}
+                                {% else %}
+                                    ???
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if colony in known_colonies %}
+                                    {{ colony.army_power }}
+                                {% else %}
+                                    ???
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if colony in known_colonies %}
+                                    {{ colony.army_resilience }}
+                                {% else %}
+                                    ???
+                                {% endif %}
+                            </td>
+                            <td>
+                                <input type="hidden" name="selected_colony" value="{{ colony.id }}">
+                                <button type="submit" name="action" value="scout">Scout</button>
+                            </td>
+                            <td>
+                                <input type="hidden" name="selected_colony" value="{{ colony.id }}">
+                                <button type="submit" name="action" value="attack" {% if colony not in known_colonies %}disabled{% endif %}>Attack</button>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="9">No colonies available.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </form>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const consoleDisplay = document.querySelector('.console-display');
+                consoleDisplay.scrollTop = consoleDisplay.scrollHeight; // Scroll to the bottom on load
+            });
+        </script>
+    {% else %}
+        <h1>{{ colony.name }} doesn't have an army.</h1>
+    {% endif %}
+
 {% endblock %}
