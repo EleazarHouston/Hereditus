@@ -148,6 +148,7 @@ class Colony(models.Model):
     rest_heal_flat = models.IntegerField(default=2)
     rest_heal_perc = models.FloatField(default=0.2)
     gather_rate = models.FloatField(default=1.7)
+    discovered_colonies = models.ManyToManyField('self', symmetrical=False, related_name='discoverers', blank=True)
     
     @property
     def torb_count(self):
@@ -158,7 +159,7 @@ class Colony(models.Model):
         self.grow_torbs()
         self.call_breed_torbs()
         self.rest_torbs()
-        
+        self.train_soldiers()
         self.gather_phase()
         self.colony_meal()
         self.reset_torbs_actions("gathering")
@@ -175,6 +176,7 @@ class Colony(models.Model):
             torb.save()
     
     def call_breed_torbs(self):
+        
         checked_torbs = []
         for torb in self.torb_set.all():
             if torb.action == "breeding" and torb not in checked_torbs:
@@ -185,6 +187,9 @@ class Colony(models.Model):
                     StoryText.objects.create(colony=self, story_text_type="breeding", story_text=f"A new Torb, '{new_torb.name}', was born", timestamp=Now())
         
     def set_breed_torbs(self, torbs):
+        self.discovered_colonies.add(self)
+        print(self.discovered_colonies.all())
+        logger.debug(f"{self.name}'s discovered colonies: {self.discovered_colonies.all()}")
         torb0 = Torb.objects.get(id=torbs[0])
         torb1 = Torb.objects.get(id=torbs[1])
         
@@ -211,6 +216,12 @@ class Colony(models.Model):
         self.save()
         StoryText.objects.create(colony=self, story_text_type="food", story_text=f"Your Torbs gathered {food_gathered} food.", timestamp=Now())
         
+    def train_soldiers(self):
+        for torb in self.torb_set.all():
+            if torb.action == "training":
+                torb.trained = True
+                torb.set_action("soldiering", "Soldiering")
+                torb.save()
         
     def colony_meal(self):
         living_torbs = [torb for torb in self.torb_set.all() if torb.is_alive]
@@ -239,6 +250,7 @@ class Colony(models.Model):
         self.save()
         logger.info(f"Colony '{self.name}' readied up")
         self.game.check_ready_status()
+        logger.debug(f"{self.name}'s discovered colonies: {self.discovered_colonies.all()}")
     
     def new_torb(self, genes, generation):
         next_ID = self.torb_count + 1
@@ -265,8 +277,10 @@ class Colony(models.Model):
         if is_new:
             logger.info(f"A new colony '{self.name}' was made")
             self.init_torbs()
+            self.discovered_colonies.add(self)
+            logger.debug(f"{self.name}'s discovered colonies: {self.discovered_colonies.all()}")
             StoryText.objects.create(colony=self, story_text_type="system", story_text="Welcome to Hereditus!", timestamp=Now())
-    
+
     def __str__(self):
         return self.name
         
@@ -280,7 +294,7 @@ class Torb(models.Model):
     TORB_ACTION_OPTIONS = [
         ('gathering', 'gathering'),
         ('breeding', 'breeding'),
-        ('combatting', 'combatting'),
+        ('soldiering', 'soldiering'),
         ('training', 'training'),
         ('resting', 'resting'),
         ('growing', 'growing'),
@@ -299,6 +313,7 @@ class Torb(models.Model):
     action_desc = models.CharField(max_length=256, default='Gathering')
     context_torb = models.ForeignKey("Torb", null=True, blank=True, on_delete=models.SET_NULL)
     growing = models.BooleanField(default=False)
+    trained = models.BooleanField(default=False)
     
     
     # Genes

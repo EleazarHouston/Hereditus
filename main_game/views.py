@@ -16,6 +16,7 @@ def torb_view_attempt(request):
 
 def colony_view(request, colony_id):
     colony = get_object_or_404(Colony, id=colony_id)
+    colony.discovered_colonies.add(colony)
         
     torbs = colony.torb_set.all().order_by('private_ID')
     story_texts = StoryText.objects.filter(colony=colony).order_by('timestamp')
@@ -29,7 +30,11 @@ def colony_view(request, colony_id):
             colony.set_breed_torbs(selected_torbs)
             
         elif action == 'gather':
-            pass
+            for torb in selected_torbs:
+                torb.set_action("gathering", "Gathering")
+        elif action == 'enlist':
+            for torb in selected_torbs:
+                torb.set_action("training", "Training")
         elif action == 'end_turn':
             colony.ready_up()
         
@@ -64,4 +69,15 @@ def load_colony(request):
 
 def army_view(request, colony_id):
     colony = get_object_or_404(Colony, id=colony_id)
-    return render(request, 'main_game/army.html', {'colony': colony,})
+    torbs = colony.torb_set.all()
+    num_soldiers = len([torb for torb in torbs if torb.action=="soldiering"])
+    num_training = len([torb for torb in torbs if torb.action=="training"])
+    known_colonies = colony.discovered_colonies.all()
+    story_texts = StoryText.objects.filter(colony=colony).order_by('timestamp')
+    return render(request, 'main_game/army.html', {
+        'colony': colony,
+        'story_texts': story_texts,
+        'num_soldiers': num_soldiers,
+        'num_training': num_training,
+        'known_colonies': known_colonies
+        })
