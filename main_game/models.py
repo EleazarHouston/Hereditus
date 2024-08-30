@@ -118,6 +118,7 @@ class EvolutionEngine(models.Model):
         torb1.save()
         baby_torb.set_action("growing", "Growing")
         baby_torb.save()
+        print(baby_torb.action)
         
         return baby_torb
     
@@ -183,10 +184,12 @@ class Colony(models.Model):
             if torb.action == "breeding" and torb not in checked_torbs:
                 checked_torbs.append(torb)
                 checked_torbs.append(torb.context_torb)
+                torb1 = torb.context_torb
                 new_torb = self.game.evolution_engine.breed_torbs(colony=self, torb0=torb, torb1=torb.context_torb)
                 if new_torb:
                     StoryText.objects.create(colony=self, story_text_type="breeding", story_text=f"A new Torb, '{new_torb.name}', was born", timestamp=Now())
                 torb.set_action("gathering", "Gathering")
+                torb1.set_action("gathering", "Gathering")
         
     def set_breed_torbs(self, torbs):
         self.discovered_colonies.add(self)
