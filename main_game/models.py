@@ -155,6 +155,26 @@ class Colony(models.Model):
     def torb_count(self):
         return self.torb_set.count()
     
+    @property
+    def num_soldiers(self):
+        return len([torb for torb in self.torb_set.all() if torb.action == "soldiering"])
+    
+    @property
+    def num_training(self):
+        return len([torb for torb in self.torb_set.all() if torb.action == "training"])
+    
+    @property
+    def army_health(self):
+        return sum([torb.hp for torb in self.torb_set.all() if torb.action == "soldiering"])
+    
+    @property
+    def army_power(self):
+        return sum([torb.power for torb in self.torb_set.all() if torb.action == "soldiering"])
+    
+    @property
+    def army_resilience(self):
+        return sum([torb.resilience for torb in self.torb_set.all() if torb.action == "soldiering"])
+    
     def new_round(self, round_number: int):
         self.reset_fertility()
         self.grow_torbs()
@@ -324,6 +344,20 @@ class Torb(models.Model):
     # Genes
     genes = models.JSONField(default=dict)
 
+
+    @property
+    def power(self):
+        strength_allele = random.choice(self.genes['strength'])
+        agility_allele = random.choice(self.genes['agility'])
+        power = round((strength_allele * agility_allele)**0.5,2)
+        return power
+    
+    @property
+    def resilience(self):
+        vitality_allele = random.choice(self.genes['vitality'])
+        sturdiness_allele = random.choice(self.genes['sturdiness'])
+        resilience = round((vitality_allele * sturdiness_allele)**0.5,2)
+        return resilience
     
     def __str__(self):
         return f"Colony {self.colony} Torb: {self.private_ID} '{self.name}'"
