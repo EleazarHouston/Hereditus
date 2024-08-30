@@ -117,7 +117,7 @@ class EvolutionEngine(models.Model):
         torb0.save()
         torb1.save()
         baby_torb.set_action("growing", "Growing")
-        baby_torb.save()
+        #baby_torb.save()
         print(baby_torb.action)
         
         return baby_torb
@@ -339,6 +339,9 @@ class Torb(models.Model):
         
     def set_action(self, action: str, action_desc: str, context_torb=None):
         if self.growing:
+            self.action = "growing"
+            self.action_desc = "Growing"
+            self.save()
             return
         self.action = action
         self.action_desc = action_desc
@@ -359,7 +362,10 @@ class Torb(models.Model):
         if self.fertile:
             out_text += "<br>Fertile"
         else:
-            out_text += "<br>Infertile"    
+            out_text += "<br>Infertile"
+        
+        if self.growing:
+            out_text += "<br>Juvenile"
         
         return out_text
         
