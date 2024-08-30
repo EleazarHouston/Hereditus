@@ -30,10 +30,12 @@ def colony_view(request, colony_id):
             colony.set_breed_torbs(selected_torbs)
             
         elif action == 'gather':
-            for torb in selected_torbs:
+            for torb_id in selected_torbs:
+                torb = Torb.objects.get(id=torb_id)
                 torb.set_action("gathering", "Gathering")
         elif action == 'enlist':
-            for torb in selected_torbs:
+            for torb_id in selected_torbs:
+                torb = Torb.objects.get(id=torb_id)
                 torb.set_action("training", "Training")
         elif action == 'end_turn':
             colony.ready_up()

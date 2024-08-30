@@ -162,7 +162,8 @@ class Colony(models.Model):
         self.train_soldiers()
         self.gather_phase()
         self.colony_meal()
-        self.reset_torbs_actions("gathering")
+        
+        #self.reset_torbs_actions("gathering")
         StoryText.objects.create(colony=self, story_text_type="system", story_text=f"It is now year {round_number}.", timestamp=Now())
                 
     def reset_fertility(self):
@@ -185,6 +186,7 @@ class Colony(models.Model):
                 new_torb = self.game.evolution_engine.breed_torbs(colony=self, torb0=torb, torb1=torb.context_torb)
                 if new_torb:
                     StoryText.objects.create(colony=self, story_text_type="breeding", story_text=f"A new Torb, '{new_torb.name}', was born", timestamp=Now())
+                torb.set_action("gathering", "Gathering")
         
     def set_breed_torbs(self, torbs):
         self.discovered_colonies.add(self)
