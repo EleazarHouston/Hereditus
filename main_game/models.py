@@ -197,6 +197,34 @@ class Colony(models.Model):
             torb.growing = False
             torb.save()
     
+    
+    def scout_colony(self, colony_to_scout):
+        if self.num_soldiers == 0:
+            StoryText.objects.create(colony=self, story_text_type="system", story_text=f"You ordered your Torbs to scout, but without training all they found was {self.name}.", timestamp=Now())
+            return False
+        if colony_to_scout.num_soldiers == 0:
+            self.discovered_colonies.add(colony_to_scout)
+            StoryText.objects.create(colony=self, story_text_type="system", story_text=f"Your scouts found {colony_to_scout.name}.", timestamp=Now())
+            return True
+        random_enemy_torb_power = random.choice([torb.power for torb in colony_to_scout.torb_set.all() if torb.action == "soldiering"])
+        random_ally_soldier = random.choice([torb for torb in self.torb_set.all() if torb.action == "soldiering"])
+        random_ally_torb_resilience = random_ally_soldier.resilience
+        if random_ally_torb_resilience > random_enemy_torb_power:
+            self.discovered_colonies.add(colony_to_scout)
+            StoryText.objects.create(colony=self, story_text_type="system", story_text=f"An enemy soldier at {colony_to_scout.name} tried to repell your scout, but {random_ally_soldier.name} was too nimble.", timestamp=Now())
+            return True
+        if random.uniform(0, 1) > (random_enemy_torb_power / random_ally_torb_resilience):
+            self.discovered_colonies.add(colony_to_scout)
+            StoryText.objects.create(colony=self, story_text_type="system", story_text=f"Your scout was lucky and wasn't caught by a soldier at {colony_to_scout.name}.", timestamp=Now())
+            return True
+        damage_to_take = random.randint(0, round(random_enemy_torb_power - random_ally_torb_resilience,0))
+        if colony_to_scout in self.discovered_colonies:
+            StoryText.objects.create(colony=self, story_text_type="system", story_text=f"Your scout was attacked when trying to scout {colony_to_scout.name} and didn't get any new information.", timestamp=Now())
+        else:
+            StoryText.objects.create(colony=self, story_text_type="system", story_text=f"Your scout was attacked when trying to scout an unknown colony and didn't get any information.", timestamp=Now())
+        random_ally_soldier.adjust_hp(-1 * damage_to_take)
+        return False
+        
     def call_breed_torbs(self):
         
         checked_torbs = []

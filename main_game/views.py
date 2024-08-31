@@ -25,7 +25,6 @@ def colony_view(request, colony_id):
         selected_torbs = request.POST.getlist('selected_torbs')
         action = request.POST.get('action')
         
-        print(f"POST ACTION: {action}")
         if action == 'breed' and len(selected_torbs) == 2:
             colony.set_breed_torbs(selected_torbs)
             
@@ -81,6 +80,9 @@ def army_view(request, colony_id):
     if request.method == 'POST':
         selected_colony = request.POST.getlist('selected_colony')
         action = request.POST.get('action')
+        
+        
+        return redirect('army_view', colony_id=colony.id)
     
     return render(request, 'main_game/army.html', {
         'colony': colony,
