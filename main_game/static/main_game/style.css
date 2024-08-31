@@ -333,3 +333,87 @@ button.action-button:disabled {
     opacity: 1;
     visibility: visible;
 }
+
+input[type="text"], input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #555;
+    border-radius: 5px;
+    background-color: #333;
+    color: #E0E0E0;
+    font-size: 1em;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+h1 {
+    font-size: 4em;
+    margin-bottom: 20px;
+    color: #FF9800;
+}
+
+a {
+    color: #FF9800;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+p {
+    margin: 15px 0;
+    font-size: 1.5em;
+}
+
+.modern-button {
+    padding: 10px 20px;
+    font-size: 18px;
+    color: white;
+    background-color: #3B82F6; /* A modern blue color */
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.modern-button:hover {
+    background-color: #2563EB; /* Slightly darker on hover */
+    transform: translateY(-2px);
+}
+
+.modern-button:disabled {
+    background-color: #6B7280; /* Greyed out color */
+    cursor: not-allowed;
+}
+
+.modern-button:active {
+    transform: translateY(0); /* Slight button press effect */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.modern-button-group {
+    display: flex;
+    gap: 20px;
+    justify-content: center; /* Centers the buttons horizontally */
+    margin-top: 30px;
+}
+
+.modern-container {
+    text-align: center;
+    padding: 50px;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+form ul li {
+    font-size: 1.4em;
+    line-height: 1.5;
+    text-align: left;
+}

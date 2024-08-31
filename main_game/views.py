@@ -1,5 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
+from django.contrib.auth import authenticate, login, logout, get_user_model
+
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.decorators import login_required
 from .models import Torb, Colony, StoryText
 import logging
 import json
@@ -64,6 +68,7 @@ def check_ready_status(request, colony_id):
     colony = get_object_or_404(Colony, id=colony_id)
     return JsonResponse({'ready': colony.ready})
 
+@login_required
 def load_colony(request):
     colonies = Colony.objects.all()
     return render(request, 'main_game/load_colony.html', {'colonies': colonies})
@@ -98,3 +103,54 @@ def army_view(request, colony_id):
         'known_colonies': known_colonies,
         'all_colonies': all_colonies
         })
+    
+def main_page(request):
+    if request.user.is_authenticated:
+        return redirect('load_colony')
+    return render(request, 'main_game/main_page.html')
+
+class RegisterForm(UserCreationForm):
+    usable_password = None
+    class Meta:
+        model = get_user_model()
+        fields = ["username", "password1", "password2"]
+
+
+def register(request):
+    if request.user.is_authenticated:
+        return redirect('load_colony')
+    if request.method == 'POST':
+        form = RegisterForm(request.POST)
+        if form.is_valid():
+            form.save()
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password1')
+            user = authenticate(username=username, password=password)
+            login(request, user)
+            return redirect('load_colony')
+    else:
+        form = RegisterForm()
+    return render(request, 'main_game/register.html', {'form': form})
+
+def login_view(request):
+    if request.user.is_authenticated:
+        return redirect('load_colony')
+    
+    if request.method == "POST":
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password')
+            user = authenticate(username=username, password=password)
+            if user is not None:
+                login(request, user)
+                return redirect('load_colony')
+    else:
+        form = AuthenticationForm()
+    
+    return render(request, 'main_game/login.html', {'form': form})
+
+@login_required
+def logout_view(request):
+    logout(request)
+    return redirect('main_page')

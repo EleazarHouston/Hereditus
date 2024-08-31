@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 from django.db.models.signals import post_save, post_delete
 from django.db.models.functions import Now
 from django.dispatch import receiver
@@ -142,6 +143,7 @@ class EvolutionEngine(models.Model):
         
 
 class Colony(models.Model):
+    player = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=64, default="DefaultName")
     game = models.ForeignKey(Game, on_delete=models.CASCADE, null=True)
     food = models.IntegerField(default=5)

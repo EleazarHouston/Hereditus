@@ -1,10 +1,12 @@
+
 {% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hereditus: Load Colony</title>
+    <title>Hereditus: Create/Load Colony</title>
     <link rel="stylesheet" href="{% static 'main_game/style.css' %}">
     <style>
         /* Dark mode background and text color */
@@ -55,18 +57,20 @@
     </style>
 </head>
 <body>
-    <h1>Select a Colony</h1>
-    <div class="colony-container">
-        {% for colony in colonies %}
-            <div class="colony-box">
-                <h2>{{ colony.name }}</h2>
-                <form action="{% url 'colony_view' colony.id %}" method="get">
-                    <button type="submit">Play</button>
-                </form>
-            </div>
-        {% empty %}
-            <p>No colonies available.</p>
-        {% endfor %}
+    <div class="container">
+        <h1>Select a Colony</h1>
+        <div class="colony-container">
+            {% for colony in colonies %}
+                <div class="colony-box">
+                    <h2>{{ colony.name }}</h2>
+                    <form action="{% url 'colony_view' colony.id %}" method="get">
+                        <button type="submit">Play</button>
+                    </form>
+                </div>
+            {% empty %}
+                <p>No colonies available.</p>
+            {% endfor %}
+        </div>
     </div>
 </body>
 </html>
