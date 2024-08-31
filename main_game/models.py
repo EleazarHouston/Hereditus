@@ -151,6 +151,10 @@ class Colony(models.Model):
     gather_rate = models.FloatField(default=1.7)
     discovered_colonies = models.ManyToManyField('self', symmetrical=False, related_name='discoverers', blank=True)
     
+    # TODO: Implement
+    scout_target = models.ForeignKey('self', blank=True, null=True, on_delete=models.SET_NULL, related_name='scouting_colonies')
+    attack_target= models.ForeignKey('self', blank=True, null=True, on_delete=models.SET_NULL, related_name='attacking_colonies')
+    
     @property
     def torb_count(self):
         return self.torb_set.count()
@@ -182,6 +186,7 @@ class Colony(models.Model):
         self.rest_torbs()
         self.train_soldiers()
         self.gather_phase()
+        self.scout_colony()
         self.colony_meal()
         
         #self.reset_torbs_actions("gathering")
@@ -197,14 +202,14 @@ class Colony(models.Model):
             torb.growing = False
             torb.save()
     
-    
-    def scout_colony(self, colony_to_scout):
+    def scout_colony(self):
+        colony_to_scout = self.scout_target
         if self.num_soldiers == 0:
             StoryText.objects.create(colony=self, story_text_type="system", story_text=f"You ordered your Torbs to scout, but without training all they found was {self.name}.", timestamp=Now())
             return False
         if colony_to_scout.num_soldiers == 0:
             self.discovered_colonies.add(colony_to_scout)
-            StoryText.objects.create(colony=self, story_text_type="system", story_text=f"Your scouts found {colony_to_scout.name}.", timestamp=Now())
+            StoryText.objects.create(colony=self, story_text_type="system", story_text=f"Your scout found {colony_to_scout.name} and they reported that it appears undefended.", timestamp=Now())
             return True
         random_enemy_torb_power = random.choice([torb.power for torb in colony_to_scout.torb_set.all() if torb.action == "soldiering"])
         random_ally_soldier = random.choice([torb for torb in self.torb_set.all() if torb.action == "soldiering"])
@@ -241,8 +246,6 @@ class Colony(models.Model):
         
     def set_breed_torbs(self, torbs):
         self.discovered_colonies.add(self)
-        print(self.discovered_colonies.all())
-        logger.debug(f"{self.name}'s discovered colonies: {self.discovered_colonies.all()}")
         torb0 = Torb.objects.get(id=torbs[0])
         torb1 = Torb.objects.get(id=torbs[1])
         

@@ -78,9 +78,15 @@ def army_view(request, colony_id):
     story_texts = StoryText.objects.filter(colony=colony).order_by('timestamp')
     
     if request.method == 'POST':
-        selected_colony = request.POST.getlist('selected_colony')
+        selected_colony = request.POST.get('selected_colony')
+        print(selected_colony)
         action = request.POST.get('action')
+        print(action)
         
+        if action == "scout":
+            colony.scout_target = Colony.objects.get(id=selected_colony)
+        elif action == "attack":
+            colony.attack_target = Colony.objects.get(id=selected_colony)
         
         return redirect('army_view', colony_id=colony.id)
     
