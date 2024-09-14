@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='evolutionengine',
             name='gene_list',
-            field=models.JSONField(default=main_game.models.default_gene_alleles),
+            field=models.JSONField(default=main_game.models.evolution_engine.default_gene_alleles),
         ),
     ]

@@ -21,7 +21,7 @@ class Migration(migrations.Migration):
                 ('mutation_chance', models.FloatField(default=0.1)),
                 ('mutation_dev', models.FloatField(default=0.15)),
                 ('alleles_per_gene', models.IntegerField(default=2)),
-                ('gene_list', models.JSONField(default=main_game.models.default_gene_list)),
+                ('gene_list', models.JSONField(default=main_game.models.evolution_engine.default_gene_list)),
                 ('game', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='main_game.game')),
             ],
         ),
