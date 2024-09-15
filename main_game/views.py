@@ -21,7 +21,7 @@ def torb_view_attempt(request):
 def colony_view(request, colony_id):
     colony = get_object_or_404(Colony, id=colony_id)
     colony.discovered_colonies.add(colony)
-        
+    
     torbs = colony.torb_set.all().order_by('private_ID')
     story_texts = StoryText.objects.filter(colony=colony).order_by('timestamp')
     
@@ -78,8 +78,8 @@ def army_view(request, colony_id):
     torbs = colony.torb_set.all()
     num_soldiers = len([torb for torb in torbs if torb.action=="soldiering"])
     num_training = len([torb for torb in torbs if torb.action=="training"])
-    known_colonies = colony.discovered_colonies.all()
-    all_colonies = colony.game.colony_set.all()
+    known_colonies = colony.discovered_colonies.all().order_by('id')
+    all_colonies = colony.game.colony_set.all().order_by('id')
     story_texts = StoryText.objects.filter(colony=colony).order_by('timestamp')
     
     if request.method == 'POST':
@@ -89,14 +89,16 @@ def army_view(request, colony_id):
         print(action)
         
         if action == "scout":
-            colony.scout_target = Colony.objects.get(id=selected_colony)
+            colony.set_scout_target(selected_colony)
         elif action == "attack":
             colony.attack_target = Colony.objects.get(id=selected_colony)
+            colony.save()
         
         return redirect('army_view', colony_id=colony.id)
-    
+    print(colony.id)
     return render(request, 'main_game/army.html', {
         'colony': colony,
+        'player_colony': colony,
         'story_texts': story_texts,
         'num_soldiers': num_soldiers,
         'num_training': num_training,

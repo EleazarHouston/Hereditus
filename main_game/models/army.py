@@ -18,6 +18,9 @@ class Army(models.Model):
     def army_resilience(self):
         return sum(army_torb.resilience for army_torb in self.army_torbs.all())
     
+    def __str__(self):
+        return f"Army of {self.colony.name}"
+    
 
 # Makes sense to have ArmyTorb in same file as Army
 class ArmyTorb(models.Model):
@@ -44,10 +47,12 @@ class ArmyTorb(models.Model):
         return cls.objects.create(
             army=army,
             torb=torb,
-            strength_allele=strength_allele,
-            agility_allele=agility_allele,
-            vitality_allele=vitality_allele,
-            sturdiness_allele=sturdiness_allele
+            active_alleles = {
+                'strength': strength_allele,
+                'agility': agility_allele,
+                'vitality': vitality_allele,
+                'sturdiness': sturdiness_allele
+            }
         )
 
     def remove_from_army(self):

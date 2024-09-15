@@ -5,10 +5,10 @@
 
 {% block content %}
 
-    {% if colony.num_soldiers > 0 %}
-        <h1>The Army of {{ colony.name }}</h1>
+    {% if player_colony.num_soldiers > 0 %}
+        <h1>The Army of {{ player_colony.name }}</h1>
 
-        <div class="action-console-container">
+        <div class="action-console-container army-console">
             <div class="console-display">
                 {% for story_text in story_texts %}
                     <p>{{ story_text.story_text }}</p>
@@ -16,91 +16,95 @@
             </div>
         </div>
 
-        <form method="post" action="{% url 'army_view' colony.id %}">
-            {% csrf_token %}
-            <table>
-                <thead>
-                    <tr>
-                        <th>Colony</th>
-                        <th>Soldiers</th>
-                        <th>Total Torbs</th>
-                        <th>Food</th>
-                        <th>Health</th>
-                        <th>Power</th>
-                        <th>Resilience</th>
-                        <th>Scout</th>
-                        <th>Attack</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for colony in all_colonies %}
-                        <tr class="{% if colony.id == player_colony.id %} player-colony {% endif %}">
-                            <td>
-                                {% if colony in known_colonies %}
-                                    {{ colony.name }}
-                                {% else %}
-                                    ???
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if colony in known_colonies %}
-                                    {{ colony.num_soldiers }}
-                                {% else %}
-                                    ???
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if colony in known_colonies %}
-                                    {{ colony.torb_count }}
-                                {% else %}
-                                    ???
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if colony in known_colonies %}
-                                    {{ colony.food }}
-                                {% else %}
-                                    ???
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if colony in known_colonies %}
-                                    {{ colony.army_health }}
-                                {% else %}
-                                    ???
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if colony in known_colonies %}
-                                    {{ colony.army_power }}
-                                {% else %}
-                                    ???
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if colony in known_colonies %}
-                                    {{ colony.army_resilience }}
-                                {% else %}
-                                    ???
-                                {% endif %}
-                            </td>
-                            <td>
+
+        <table class="army-table">
+            <thead>
+                <tr>
+                    <th>Colony</th>
+                    <th>Soldiers</th>
+                    <th>Total Torbs</th>
+                    <th>Food</th>
+                    <th>Health</th>
+                    <th>Power</th>
+                    <th>Resilience</th>
+                    <th>Scout</th>
+                    <th>Attack</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for colony in all_colonies %}
+                    <tr class="{% if colony.id == player_colony.id %} player-colony {% endif %}">
+                        <td>
+                            {% if colony in known_colonies %}
+                                {{ colony.name }}
+                            {% else %}
+                                ???
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if colony in known_colonies %}
+                                {{ colony.num_soldiers }}
+                            {% else %}
+                                ???
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if colony in known_colonies %}
+                                {{ colony.torb_count }}
+                            {% else %}
+                                ???
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if colony in known_colonies %}
+                                {{ colony.food }}
+                            {% else %}
+                                ???
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if colony in known_colonies %}
+                                {{ colony.army.army_health }}
+                            {% else %}
+                                ???
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if colony in known_colonies %}
+                                {{ colony.army.army_power }}
+                            {% else %}
+                                ???
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if colony in known_colonies %}
+                                {{ colony.army.army_resilience }}
+                            {% else %}
+                                ???
+                            {% endif %}
+                        </td>
+                        <td>
+                            <form method="post" action="{% url 'army_view' player_colony.id %}">
+                                {% csrf_token %}
                                 <input type="hidden" name="selected_colony" value="{{ colony.id }}">
                                 <button type="submit" name="action" value="scout">Scout</button>
-                            </td>
-                            <td>
+                            </form>
+                        </td>
+                        <td>
+                            <form method="post" action="{% url 'army_view' player_colony.id %}">
+                                {% csrf_token %}
                                 <input type="hidden" name="selected_colony" value="{{ colony.id }}">
                                 <button type="submit" name="action" value="attack" {% if colony not in known_colonies %}disabled{% endif %}>Attack</button>
-                            </td>
-                        </tr>
-                    {% empty %}
-                        <tr>
-                            <td colspan="9">No colonies available.</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </form>
+                            </form>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="9">No colonies available.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
 
         <script>
             document.addEventListener('DOMContentLoaded', function() {

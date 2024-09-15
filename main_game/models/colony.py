@@ -65,6 +65,8 @@ class Colony(models.Model):
         self.scout_colony()
         self.colony_meal()
         self.purge_soldiers()
+        self.scout_target = None
+        self.save()
         
         #self.reset_torbs_actions("gathering")
         StoryText.objects.create(colony=self, story_text_type="system", story_text=f"It is now year {round_number}.", timestamp=Now())
@@ -75,14 +77,31 @@ class Colony(models.Model):
             torb.save()
             
     def grow_torbs(self):
-        for torb in self.torb_set.all():
-            torb.growing = False
-            torb.save()
-            torb.set_action("gathering", "🌾 Gathering")
+        growing_torbs = self.torb_set.filter(growing=True)
+        for torb in growing_torbs:
+            if torb.growing:
+                torb.growing = False
+                torb.set_action("gathering", "🌾 Gathering")
+                torb.save()
+    
+    def set_scout_target(self, scout_target):
+        scout_target_colony = Colony.objects.get(id=scout_target)
+        logger.debug(f"{self.name}: Set scout_target as {scout_target_colony.name}")
+        if scout_target_colony == self:
+            StoryText.objects.create(colony=self, story_text_type="system", story_text=f"We likely won't get any new information trying to scout ourselves.", timestamp=Now())
+            return
+        if self.scout_target:
+            StoryText.objects.create(colony=self, story_text_type="system", story_text=f"Our new scout target is {scout_target_colony.name}.", timestamp=Now())
+        else:
+            StoryText.objects.create(colony=self, story_text_type="system", story_text=f"Our scout target is {scout_target_colony.name}.", timestamp=Now())
+        self.scout_target = scout_target_colony
+        self.save()
+        
     
     def scout_colony(self):
         colony_to_scout = self.scout_target
         if not colony_to_scout:
+            logger.debug(f"{self.name}: No colony to scout target")
             return False
         
         if self.num_soldiers == 0:
@@ -91,6 +110,7 @@ class Colony(models.Model):
         
         if colony_to_scout.num_soldiers == 0:
             self.discovered_colonies.add(colony_to_scout)
+            self.save()
             StoryText.objects.create(colony=self, story_text_type="system", story_text=f"Your scout found {colony_to_scout.name} and they reported that it appears undefended.", timestamp=Now())
             return True
         
@@ -100,11 +120,13 @@ class Colony(models.Model):
         
         if random_ally_torb_resilience > random_enemy_torb_power:
             self.discovered_colonies.add(colony_to_scout)
-            StoryText.objects.create(colony=self, story_text_type="system", story_text=f"An enemy soldier at {colony_to_scout.name} tried to repell your scout, but {random_ally_soldier.name} was too nimble.", timestamp=Now())
+            self.save()
+            StoryText.objects.create(colony=self, story_text_type="system", story_text=f"An enemy soldier at {colony_to_scout.name} tried to repell your scout, but {random_ally_soldier.torb.name} was too nimble.", timestamp=Now())
             return True
         
         if random.uniform(0, 1) > (random_enemy_torb_power / random_ally_torb_resilience):
             self.discovered_colonies.add(colony_to_scout)
+            self.save()
             StoryText.objects.create(colony=self, story_text_type="system", story_text=f"Your scout was lucky and wasn't caught by a soldier at {colony_to_scout.name}.", timestamp=Now())
             return True
         
@@ -162,9 +184,11 @@ class Colony(models.Model):
         StoryText.objects.create(colony=self, story_text_type="food", story_text=f"Your Torbs gathered {food_gathered} food.", timestamp=Now())
         
     def train_soldiers(self):
-        from army import Army, ArmyTorb
-        if not hasattr(self, 'army'):
-            self.army = Army.objects.create(colony=self)
+        from .army import Army, ArmyTorb
+        army, created = Army.objects.get_or_create(colony=self)
+        if created or not self.army:
+            self.army = army
+            self.save()
         
         for torb in self.torb_set.all():
             if torb.action == "training":
@@ -172,7 +196,7 @@ class Colony(models.Model):
                 torb.set_action("soldiering", "🏹 Soldiering")
                 torb.save()
 
-                ArmyTorb.add_to_army(self.army, torb)
+                ArmyTorb.add_to_army(army, torb)
         
     def colony_meal(self):
         living_torbs = [torb for torb in self.torb_set.all() if torb.is_alive]
@@ -202,6 +226,8 @@ class Colony(models.Model):
         logger.info(f"Colony '{self.name}' readied up")
         self.game.check_ready_status()
         logger.debug(f"{self.name}'s discovered colonies: {self.discovered_colonies.all()}")
+        if self.army:
+            logger.debug(f"{self.name}'s army: {self.army.army_power}")
     
     def new_torb(self, genes, generation):
         from .torb import Torb
@@ -242,7 +268,7 @@ class Colony(models.Model):
                 self.remove_torb_from_army(torb)
     
     def remove_torb_from_army(self, torb):
-        from army import ArmyTorb
+        from .army import ArmyTorb
         army_torb = ArmyTorb.objects.filter(army=self.army, torb=torb).first()
         if army_torb:
             army_torb.remove_from_army()
