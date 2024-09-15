@@ -22,6 +22,7 @@ class Colony(models.Model):
     rest_heal_perc = models.FloatField(default=0.2)
     gather_rate = models.FloatField(default=1.7)
     discovered_colonies = models.ManyToManyField('self', symmetrical=False, related_name='discoverers', blank=True)
+    army = models.OneToOneField('main_game.Army', on_delete=models.SET_NULL, null=True, blank=True, related_name='colony_army')
     
     # TODO: Implement
     scout_target = models.ForeignKey('self', blank=True, null=True, on_delete=models.SET_NULL, related_name='scouting_colonies')
@@ -31,6 +32,7 @@ class Colony(models.Model):
     def torb_count(self):
         return self.torb_set.count()
     
+    
     @property
     def num_soldiers(self):
         return len([torb for torb in self.torb_set.all() if torb.action == "soldiering"])
@@ -39,6 +41,8 @@ class Colony(models.Model):
     def num_training(self):
         return len([torb for torb in self.torb_set.all() if torb.action == "training"])
     
+    
+    # TODO: Delete, should pull from Army
     @property
     def army_health(self):
         return sum([torb.hp for torb in self.torb_set.all() if torb.action == "soldiering"])
@@ -60,6 +64,7 @@ class Colony(models.Model):
         self.gather_phase()
         self.scout_colony()
         self.colony_meal()
+        self.purge_soldiers()
         
         #self.reset_torbs_actions("gathering")
         StoryText.objects.create(colony=self, story_text_type="system", story_text=f"It is now year {round_number}.", timestamp=Now())
@@ -78,36 +83,42 @@ class Colony(models.Model):
         colony_to_scout = self.scout_target
         if not colony_to_scout:
             return False
+        
         if self.num_soldiers == 0:
             StoryText.objects.create(colony=self, story_text_type="system", story_text=f"You ordered your Torbs to scout, but without training all they found was {self.name}.", timestamp=Now())
             return False
+        
         if colony_to_scout.num_soldiers == 0:
             self.discovered_colonies.add(colony_to_scout)
             StoryText.objects.create(colony=self, story_text_type="system", story_text=f"Your scout found {colony_to_scout.name} and they reported that it appears undefended.", timestamp=Now())
             return True
-        random_enemy_torb_power = random.choice([torb.power for torb in colony_to_scout.torb_set.all() if torb.action == "soldiering"])
-        random_ally_soldier = random.choice([torb for torb in self.torb_set.all() if torb.action == "soldiering"])
+        
+        random_enemy_torb_power = random.choice([soldier.power for soldier in colony_to_scout.army.army_torbs.all()])
+        random_ally_soldier = random.choice([soldier for soldier in self.army.army_torbs.all()])
         random_ally_torb_resilience = random_ally_soldier.resilience
+        
         if random_ally_torb_resilience > random_enemy_torb_power:
             self.discovered_colonies.add(colony_to_scout)
             StoryText.objects.create(colony=self, story_text_type="system", story_text=f"An enemy soldier at {colony_to_scout.name} tried to repell your scout, but {random_ally_soldier.name} was too nimble.", timestamp=Now())
             return True
+        
         if random.uniform(0, 1) > (random_enemy_torb_power / random_ally_torb_resilience):
             self.discovered_colonies.add(colony_to_scout)
             StoryText.objects.create(colony=self, story_text_type="system", story_text=f"Your scout was lucky and wasn't caught by a soldier at {colony_to_scout.name}.", timestamp=Now())
             return True
+        
         damage_to_take = random.randint(0, round(random_enemy_torb_power - random_ally_torb_resilience,0))
         if colony_to_scout in self.discovered_colonies:
             StoryText.objects.create(colony=self, story_text_type="system", story_text=f"Your scout was attacked when trying to scout {colony_to_scout.name} and didn't get any new information.", timestamp=Now())
         else:
             StoryText.objects.create(colony=self, story_text_type="system", story_text=f"Your scout was attacked when trying to scout an unknown colony and didn't get any information.", timestamp=Now())
+        
         random_ally_soldier.adjust_hp(-1 * damage_to_take)
         self.scout_target = None
         self.save()
         return False
         
     def call_breed_torbs(self):
-        
         checked_torbs = []
         for torb in self.torb_set.all():
             if torb.action == "breeding" and torb not in checked_torbs:
@@ -150,11 +161,17 @@ class Colony(models.Model):
         StoryText.objects.create(colony=self, story_text_type="food", story_text=f"Your Torbs gathered {food_gathered} food.", timestamp=Now())
         
     def train_soldiers(self):
+        from army import Army, ArmyTorb
+        if not hasattr(self, 'army'):
+            self.army = Army.objects.create(colony=self)
+        
         for torb in self.torb_set.all():
             if torb.action == "training":
                 torb.trained = True
                 torb.set_action("soldiering", "Soldiering")
                 torb.save()
+
+                ArmyTorb.add_to_army(self.army, torb)
         
     def colony_meal(self):
         living_torbs = [torb for torb in self.torb_set.all() if torb.is_alive]
@@ -217,3 +234,14 @@ class Colony(models.Model):
 
     def __str__(self):
         return self.name
+    
+    def purge_soldiers(self):
+        for torb in self.torb_set.all():
+            if torb.action != "soldiering":
+                self.remove_torb_from_army(torb)
+    
+    def remove_torb_from_army(self, torb):
+        from army import ArmyTorb
+        army_torb = ArmyTorb.objects.filter(army=self.army, torb=torb).first()
+        if army_torb:
+            army_torb.remove_from_army()

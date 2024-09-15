@@ -32,6 +32,7 @@ class Torb(models.Model):
     growing = models.BooleanField(default=False)
     trained = models.BooleanField(default=False)
     genes = models.JSONField(default=dict)
+    army = models.ForeignKey('main_game.Army', on_delete=models.SET_NULL, null=True, blank=True)
 
     @property
     def power(self):
