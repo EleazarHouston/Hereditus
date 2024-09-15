@@ -27,7 +27,7 @@ class Torb(models.Model):
     fertile = models.BooleanField(default=True)
     starving = models.BooleanField(default=False)
     action = models.CharField(max_length=32, choices=TORB_ACTION_OPTIONS, default='gathering',)
-    action_desc = models.CharField(max_length=256, default='Gathering')
+    action_desc = models.CharField(max_length=256, default='🌾 Gathering')
     context_torb = models.ForeignKey("Torb", null=True, blank=True, on_delete=models.SET_NULL)
     growing = models.BooleanField(default=False)
     trained = models.BooleanField(default=False)
