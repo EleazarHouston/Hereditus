@@ -1,3 +1,6 @@
+# DEPRECATED
+# THIS IS FROM THE OLD DISCORD VERSION OF THE GAME, BEFORE THE WEB-SERVER VERSION CHANGE
+
 from email import message
 import discord
 from discord import app_commands

@@ -1,3 +1,6 @@
+# DEPRECATED
+# THIS IS FROM THE OLD DISCORD VERSION OF THE GAME, BEFORE THE WEB-SERVER VERSION CHANGE
+
 from torb import *
 from colony import *
 from gene import *
