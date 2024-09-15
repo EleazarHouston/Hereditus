@@ -35,11 +35,11 @@ def colony_view(request, colony_id):
         elif action == 'gather':
             for torb_id in selected_torbs:
                 torb = Torb.objects.get(id=torb_id)
-                torb.set_action("gathering", "Gathering")
+                torb.set_action("gathering", "🌾 Gathering")
         elif action == 'enlist':
             for torb_id in selected_torbs:
                 torb = Torb.objects.get(id=torb_id)
-                torb.set_action("training", "Training")
+                torb.set_action("training", "🎯 Training")
         elif action == 'end_turn':
             colony.ready_up()
         

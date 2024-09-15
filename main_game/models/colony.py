@@ -78,6 +78,7 @@ class Colony(models.Model):
         for torb in self.torb_set.all():
             torb.growing = False
             torb.save()
+            torb.set_action("gathering", "🌾 Gathering")
     
     def scout_colony(self):
         colony_to_scout = self.scout_target
@@ -128,8 +129,8 @@ class Colony(models.Model):
                 new_torb = self.game.evolution_engine.breed_torbs(colony=self, torb0=torb, torb1=torb.context_torb)
                 if new_torb:
                     StoryText.objects.create(colony=self, story_text_type="breeding", story_text=f"A new Torb, '{new_torb.name}', was born", timestamp=Now())
-                torb.set_action("gathering", "Gathering")
-                torb1.set_action("gathering", "Gathering")
+                torb.set_action("gathering", "🌾 Gathering")
+                torb1.set_action("gathering", "🌾 Gathering")
         
     def set_breed_torbs(self, torbs):
         from .torb import Torb
@@ -137,8 +138,8 @@ class Colony(models.Model):
         torb0 = Torb.objects.get(id=torbs[0])
         torb1 = Torb.objects.get(id=torbs[1])
         
-        torb0.set_action("breeding", f"Breeding with {torb1.name}", torb1)
-        torb1.set_action("breeding", f"Breeding with {torb0.name}", torb0)
+        torb0.set_action("breeding", f"💦 Breeding with {torb1.name}", torb1)
+        torb1.set_action("breeding", f"💦 Breeding with {torb0.name}", torb0)
 
     def rest_torbs(self):
         for torb in self.torb_set.all():
@@ -148,7 +149,7 @@ class Colony(models.Model):
     
     def reset_torbs_actions(self, action: str):
         for torb in self.torb_set.all():
-            torb.set_action("gathering", "Gathering")
+            torb.set_action("gathering", "🌾 Gathering")
     
     def gather_phase(self):
         num_gathering = 0
@@ -168,7 +169,7 @@ class Colony(models.Model):
         for torb in self.torb_set.all():
             if torb.action == "training":
                 torb.trained = True
-                torb.set_action("soldiering", "Soldiering")
+                torb.set_action("soldiering", "🏹 Soldiering")
                 torb.save()
 
                 ArmyTorb.add_to_army(self.army, torb)

@@ -64,7 +64,7 @@ class Torb(models.Model):
     def set_action(self, action: str, action_desc: str, context_torb=None):
         if self.growing:
             self.action = "growing"
-            self.action_desc = "Growing"
+            self.action_desc = "Growing 🍼"
             self.save()
             return
         self.action = action
