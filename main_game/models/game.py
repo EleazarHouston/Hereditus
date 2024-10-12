@@ -6,7 +6,6 @@ logger = logging.getLogger('hereditus')
 class Game(models.Model):
     starting_torbs = models.IntegerField(default=4)
     description = models.CharField(max_length=256, null=True)
-    #evolution_engine = models.OneToOneField('EvolutionEngine', on_delete=models.SET_NULL, null=True, blank=True, related_name='game_instance')
     round_number = models.IntegerField(default=1)
     
     def __str__(self):
