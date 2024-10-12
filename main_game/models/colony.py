@@ -88,7 +88,11 @@ class Colony(models.Model):
                 torb1 = torb.context_torb
                 new_torb = self.game.evolution_engine_instance.breed_torbs(colony=self, torb0=torb, torb1=torb.context_torb)
                 if new_torb:
-                    StoryText.objects.create(colony=self, story_text_type="breeding", story_text=f"A new Torb, '{new_torb.name}', was born", timestamp=Now())
+                    StoryText.objects.create(
+                        colony=self,
+                        story_text_type="breeding",
+                        story_text=f"A new Torb, '{new_torb.name}', was born",
+                        timestamp=Now())
                 torb.set_action("gathering", "🌾 Gathering")
                 torb1.set_action("gathering", "🌾 Gathering")
         
@@ -119,22 +123,11 @@ class Colony(models.Model):
         food_gathered = round(num_gathering * self.gather_rate)
         self.food += food_gathered
         self.save()
-        StoryText.objects.create(colony=self, story_text_type="food", story_text=f"Your Torbs gathered {food_gathered} food.", timestamp=Now())
-        
-    def train_soldiers(self):
-        from .army import Army, ArmyTorb
-        army, created = Army.objects.get_or_create(colony=self)
-        if created or not self.army:
-            self.army = army
-            self.save()
-        
-        for torb in self.torb_set.all():
-            if torb.action == "training":
-                torb.trained = True
-                torb.set_action("soldiering", "🏹 Soldiering")
-                torb.save()
-
-                ArmyTorb.add_to_army(army, torb)
+        StoryText.objects.create(
+            colony=self,
+            story_text_type="food",
+            story_text=f"Your Torbs gathered {food_gathered} food.",
+            timestamp=Now())
         
     def colony_meal(self):
         living_torbs = [torb for torb in self.torb_set.all() if torb.is_alive]
@@ -153,19 +146,19 @@ class Colony(models.Model):
                 torb.adjust_hp(1)
                 torb.save()
                 less_food += 1
-        
         self.food = max(self.food - less_food, 0)
         self.save()
-        StoryText.objects.create(colony=self, story_text_type="food", story_text=f"Your Torbs ate {less_food} food and {len(starved_torbs)} went hungry.", timestamp=Now())
+        StoryText.objects.create(
+            colony=self,
+            story_text_type="food",
+            story_text=f"Your Torbs ate {less_food} food and {len(starved_torbs)} went hungry.",
+            timestamp=Now())
             
     def ready_up(self):
         self.ready = True
         self.save()
         logger.info(f"Colony '{self.name}' readied up")
         self.game.check_ready_status()
-        logger.debug(f"{self.name}'s discovered colonies: {self.discovered_colonies.all()}")
-        if self.army:
-            logger.debug(f"{self.name}'s army: {self.army.army_power}")
     
     def new_torb(self, genes, generation):
         from .torb import Torb
@@ -184,7 +177,7 @@ class Colony(models.Model):
         return torb
         
     def init_torbs(self):
-        for i in range(self.game.starting_torbs):
+        for _ in range(self.game.starting_torbs):
             self.game.evolution_engine_instance.protogenesis_torb(colony=self)
 
     def save(self, *args, **kwargs):
@@ -199,19 +192,13 @@ class Colony(models.Model):
             logger.info(f"A new colony '{self.name}' was made")
             self.init_torbs()
             self.discovered_colonies.add(self)
-            logger.debug(f"{self.name}'s discovered colonies: {self.discovered_colonies.all()}")
-            StoryText.objects.create(colony=self, story_text_type="system", story_text="Welcome to Hereditus!", timestamp=Now())
-
+            StoryText.objects.create(
+                colony=self,
+                story_text_type="system",
+                story_text="Welcome to Hereditus!",
+                timestamp=Now())
+            
     def __str__(self):
         return self.name
     
-    def purge_soldiers(self):
-        for torb in self.torb_set.all():
-            if torb.action != "soldiering":
-                self.remove_torb_from_army(torb)
     
-    def remove_torb_from_army(self, torb):
-        from .army import ArmyTorb
-        army_torb = ArmyTorb.objects.filter(army=self.army, torb=torb).first()
-        if army_torb:
-            army_torb.remove_from_army()
