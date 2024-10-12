@@ -148,7 +148,7 @@ class Colony(models.Model):
                 checked_torbs.append(torb)
                 checked_torbs.append(torb.context_torb)
                 torb1 = torb.context_torb
-                new_torb = self.game.evolution_engine.breed_torbs(colony=self, torb0=torb, torb1=torb.context_torb)
+                new_torb = self.game.evolution_engine_instance.breed_torbs(colony=self, torb0=torb, torb1=torb.context_torb)
                 if new_torb:
                     StoryText.objects.create(colony=self, story_text_type="breeding", story_text=f"A new Torb, '{new_torb.name}', was born", timestamp=Now())
                 torb.set_action("gathering", "🌾 Gathering")
@@ -247,7 +247,7 @@ class Colony(models.Model):
         
     def init_torbs(self):
         for i in range(self.game.starting_torbs):
-            self.game.evolution_engine.protogenesis_torb(colony=self)
+            self.game.evolution_engine_instance.protogenesis_torb(colony=self)
 
     def save(self, *args, **kwargs):
         is_new = self.pk is None
