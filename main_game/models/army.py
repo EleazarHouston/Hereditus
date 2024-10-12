@@ -30,11 +30,11 @@ class ArmyTorb(models.Model):
     
     @property
     def power(self):
-        return round((self.active_alleles['strength'] * self.active_alleles['agility']**0.5), 2)
+        return round((self.active_alleles['strength'] * self.active_alleles['agility'])**0.5, 2)
     
     @property
     def resilience(self):
-        return round((self.active_alleles['vitality'] * self.active_alleles['sturdiness']**0.5), 2)
+        return round((self.active_alleles['vitality'] * self.active_alleles['sturdiness'])**0.5, 2)
     
     @classmethod
     def add_to_army(cls, army, torb):
