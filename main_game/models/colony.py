@@ -79,10 +79,9 @@ class Colony(models.Model):
     def grow_torbs(self):
         growing_torbs = self.torb_set.filter(growing=True)
         for torb in growing_torbs:
-            if torb.growing:
-                torb.growing = False
-                torb.set_action("gathering", "🌾 Gathering")
-                torb.save()
+            torb.growing = False
+            torb.set_action("gathering", "🌾 Gathering")
+            torb.save()
     
     def set_scout_target(self, scout_target):
         scout_target_colony = Colony.objects.get(id=scout_target)
@@ -99,11 +98,10 @@ class Colony(models.Model):
         self.scout_target = scout_target_colony
         self.save()
         
-    
     def scout_colony(self):
         colony_to_scout = self.scout_target
         if not colony_to_scout:
-            logger.debug(f"{self.name}: No colony to scout target")
+            logger.debug(f"{self.name}: No target colony to scout")
             return False
         
         if self.num_soldiers == 0:
