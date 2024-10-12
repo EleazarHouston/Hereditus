@@ -89,10 +89,10 @@ def army_view(request, colony_id):
         print(action)
         
         if action == "scout":
-            colony.set_scout_target(selected_colony)
+            colony.army.set_scout_target(selected_colony)
         elif action == "attack":
-            colony.attack_target = Colony.objects.get(id=selected_colony)
-            colony.save()
+            colony.army.set_attack_target(selected_colony)
+
         
         return redirect('army_view', colony_id=colony.id)
     print(colony.id)
