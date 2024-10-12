@@ -1,12 +1,12 @@
-from django.db import models
-from django.contrib.auth.models import User
 import logging
 import random
-from .game import Game
 
-from .story_text import StoryText
+from django.contrib.auth.models import User
+from django.db import models
 from django.db.models.functions import Now
 
+from .game import Game
+from .story_text import StoryText
 from .torb_names import torb_names
 
 logger = logging.getLogger('hereditus')
