@@ -54,15 +54,28 @@ class Torb(models.Model):
     def adjust_hp(self, adjust_amount, context="an unknown source"):
         from .story_text import StoryText
         self.hp = min(max(0, self.hp + adjust_amount), self.max_hp)
-        if self.hp == 0:
-            self.is_alive = False
-            self.fertile = False
-            StoryText.objects.create(colony=self.colony, story_text_type="death", story_text=f"'{self.name}' (Torb {self.private_ID}) died from {context}.", timestamp=Now())
-            logger.debug(f"Colony {self.colony.id} '{self.colony.name}' Torb {self.private_ID} '{self.name}' died, context: {context}")
+        if self.hp > 0:
+            self.save()
+            return
+        self.is_alive = False
+        self.fertile = False
+        StoryText.objects.create(
+            colony=self.colony,
+            story_text_type="death",
+            story_text=f"'{self.name}' (Torb {self.private_ID}) died from {context}.",
+            timestamp=Now())
+        logger.debug(f"Colony {self.colony.id} '{self.colony.name}' Torb {self.private_ID} '{self.name}' died, context: {context}")
         self.save()
+        self.set_action("dead", "💀 Dead")
         
     # TODO: Make dictionary of actions and action strings defined in one place
     def set_action(self, action: str, action_desc: str, context_torb=None):
+        if not self.is_alive:
+            self.action = "dead"
+            self.action_desc = "💀 Dead"
+            self.save()
+            return
+        
         if self.growing:
             self.action = "growing"
             self.action_desc = "🍼 Growing"

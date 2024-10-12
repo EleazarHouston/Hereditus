@@ -68,7 +68,7 @@ class Colony(models.Model):
             timestamp=Now())
                 
     def reset_fertility(self):
-        for torb in self.torb_set.all():
+        for torb in self.torb_set.filter(is_alive=True, growing=False):
             torb.fertile = True
             torb.save()
             
