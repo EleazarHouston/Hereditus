@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 import secrets
-SECRET_KEY = SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", default="django-insecure-XY") 
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", default="django-insecure-XY") 
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -178,5 +178,4 @@ LOGGING = {
             "style": "{",
         },
     },
-
 }
