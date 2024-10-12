@@ -61,12 +61,19 @@ class Torb(models.Model):
             logger.debug(f"Colony {self.colony.id} '{self.colony.name}' Torb {self.private_ID} '{self.name}' died, context: {context}")
         self.save()
         
+    # TODO: Make dictionary of actions and action strings defined in one place
     def set_action(self, action: str, action_desc: str, context_torb=None):
         if self.growing:
             self.action = "growing"
             self.action_desc = "🍼 Growing"
             self.save()
             return
+        
+        # If prior action was breeding, ensure paired torb is also no longer breeding
+        if self.action == "breeding" and self.context_torb and action != "breeding":
+            self.context_torb.context_torb = None
+            self.context_torb.set_action("gathering", "🌾 Gathering")
+        
         self.action = action
         self.action_desc = action_desc
         self.context_torb = context_torb
