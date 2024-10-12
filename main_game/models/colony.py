@@ -61,7 +61,7 @@ class Colony(models.Model):
         self.call_breed_torbs()
         self.rest_torbs()
         self.train_soldiers()
-        self.gather_phase()
+        self.gather_phase() # TODO: Fix gather order, currently doesn't make sense
         self.scout_colony()
         self.colony_meal()
         self.purge_soldiers()
@@ -90,10 +90,12 @@ class Colony(models.Model):
         if scout_target_colony == self:
             StoryText.objects.create(colony=self, story_text_type="system", story_text=f"We likely won't get any new information trying to scout ourselves.", timestamp=Now())
             return
-        if self.scout_target:
+        if self.scout_target and self.scout_target in self.discovered_colonies.all():
             StoryText.objects.create(colony=self, story_text_type="system", story_text=f"Our new scout target is {scout_target_colony.name}.", timestamp=Now())
-        else:
+        elif self.scout_target in self.discovered_colonies.all():
             StoryText.objects.create(colony=self, story_text_type="system", story_text=f"Our scout target is {scout_target_colony.name}.", timestamp=Now())
+        else:
+            StoryText.objects.create(colony=self, story_text_type="system", story_text=f"Our scouts will go out and learn about the as-yet-unknown colony.", timestamp=Now())
         self.scout_target = scout_target_colony
         self.save()
         
@@ -122,21 +124,27 @@ class Colony(models.Model):
             self.discovered_colonies.add(colony_to_scout)
             self.save()
             StoryText.objects.create(colony=self, story_text_type="system", story_text=f"An enemy soldier at {colony_to_scout.name} tried to repell your scout, but {random_ally_soldier.torb.name} was too nimble.", timestamp=Now())
+            StoryText.objects.create(colony=colony_to_scout, story_text_type="combat", story_text=f"Your soldiers tried to repel a scout from {self.name}, but they were too quick and got away.", timestamp=Now())
             return True
         
         if random.uniform(0, 1) > (random_enemy_torb_power / random_ally_torb_resilience):
             self.discovered_colonies.add(colony_to_scout)
             self.save()
             StoryText.objects.create(colony=self, story_text_type="system", story_text=f"Your scout was lucky and wasn't caught by a soldier at {colony_to_scout.name}.", timestamp=Now())
+            StoryText.objects.create(colony=colony_to_scout, story_text_type="combat", story_text=f"An enemy soldier was seen scouting your colony and was too quick to be identified.", timestamp=Now())
             return True
         
         damage_to_take = random.randint(0, round(random_enemy_torb_power - random_ally_torb_resilience,0))
-        if colony_to_scout in self.discovered_colonies:
+        if colony_to_scout in self.discovered_colonies.all():
             StoryText.objects.create(colony=self, story_text_type="system", story_text=f"Your scout was attacked when trying to scout {colony_to_scout.name} and didn't get any new information.", timestamp=Now())
         else:
             StoryText.objects.create(colony=self, story_text_type="system", story_text=f"Your scout was attacked when trying to scout an unknown colony and didn't get any information.", timestamp=Now())
         
-        random_ally_soldier.adjust_hp(-1 * damage_to_take)
+        random_ally_soldier.torb.adjust_hp(-1 * damage_to_take, context="an enemy soldier while scouting")
+        if not random_ally_soldier.torb.is_alive:
+            StoryText.objects.create(colony=colony_to_scout, story_text_type="combat", story_text=f"Your soldiers fended off and killed a scout from {self.colony.name}.", timestamp=Now())
+        else:
+            StoryText.objects.create(colony=colony_to_scout, story_text_type="combat", story_text=f"Your soldiers damaged an enemy scout from {self.colony.name}, but weren't able to finish the job.", timestamp=Now())
         self.scout_target = None
         self.save()
         return False
