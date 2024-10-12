@@ -27,7 +27,7 @@ import secrets
 SECRET_KEY = SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", default="django-insecure-XY") 
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['localhost', '192.168.2.106']
 
