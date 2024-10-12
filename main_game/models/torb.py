@@ -57,14 +57,14 @@ class Torb(models.Model):
         if self.hp == 0:
             self.is_alive = False
             self.fertile = False
-            StoryText.objects.create(colony=self, story_text_type="death", story_text=f"'{self.name}' (Torb {self.private_ID}) died from {context}.", timestamp=Now())
-            logger.debug(f"Colony {self.colony.pid} '{self.colony.name}' Torb {self.private_ID} '{self.name}' died, context: {context}")
+            StoryText.objects.create(colony=self.colony, story_text_type="death", story_text=f"'{self.name}' (Torb {self.private_ID}) died from {context}.", timestamp=Now())
+            logger.debug(f"Colony {self.colony.id} '{self.colony.name}' Torb {self.private_ID} '{self.name}' died, context: {context}")
         self.save()
         
     def set_action(self, action: str, action_desc: str, context_torb=None):
         if self.growing:
             self.action = "growing"
-            self.action_desc = "Growing 🍼"
+            self.action_desc = "🍼 Growing"
             self.save()
             return
         self.action = action
