@@ -68,7 +68,7 @@ class Torb(models.Model):
         self.save()
         self.set_action("dead", "💀 Dead")
         
-    # TODO: Make dictionary of actions and action strings defined in one place
+    # TODO: Make dictionary of actions and action_desc strings defined in one place
     def set_action(self, action: str, action_desc: str, context_torb=None):
         if not self.is_alive:
             self.action = "dead"
