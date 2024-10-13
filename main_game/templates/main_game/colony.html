@@ -4,113 +4,113 @@
 {% block title %}Hereditus: Overview{% endblock %}
 
 {% block content %}
-     <h1>Colony: {{ colony.name }}</h1>
-     <form method="post" action="{% url 'colony_view' colony.id %}">
-         <div class="action-console-container">
-             <div class="column">
-                 <div class="metrics-container">
-                     <div class="metrics-group">
-                         <div class="metric torbs">
-                             <span class="icon">🐗</span>
-                             Torbs: {{ num_torbs }}
-                         </div>
-                         <div class="metric food">
-                             <span class="icon">🍎</span>
-                             Food: {{ colony.food }}
-                         </div>
-                     </div>
-                 </div>
- 
-                 <div class="end-turn-container">
-                     {% csrf_token %}
-                     <button
-                         type="submit"
-                         name="action"
-                         value="end_turn"
-                         class="end-turn-button {% if colony.ready %}disabled{% else %}{% endif %}"
-                         {% if colony.ready %}disabled{% endif %}
-                         id="endTurnButton"
-                     >
-                         {% if colony.ready %}
-                             Waiting for other players...
-                         {% else %}
-                             End Turn
-                         {% endif %}
-                     </button>
-                 </div>
- 
-                 <div class="action-console-container">
-                     <div class="action-buttons">
-                         {% csrf_token %}
-                         <button type="submit" name="action" value="breed" disabled id="breed-button">Breed</button>
-                         <button type="submit" name="action" value="gather">Gather</button>
-                         <button type="submit" name="action" value="enlist">Enlist</button>
-                     </div>
-                 </div>
-             </div>
-             <div class="console-display">
-                 {% for story_text in story_texts %}
-                     <p>{{ story_text.story_text }}</p>
-                 {% endfor %}
-             </div>
-         </div>
- 
-         <table>
-             <thead>
-                 <tr>
-                     <th></th>
-                     <th>ID</th>
-                     <th>Gen.</th>
-                     <th>Name</th>
-                     <th>HP💖</th>
-                     
-                     {% if torbs %}
-                         {% for gene_name in torbs.0.genes.keys %}
-                             <th class="gene-header"><span class="dot"></span>{{ gene_name|capfirst }}🧬</th>
-                         {% endfor %}
-                     {% endif %}
-                     <th>Action⚡</th>
-                     <th>🔍</th>
-                 </tr>
-             </thead>
-             <tbody>
-                 {% for torb in torbs %}
-                     <tr data-fertile="{{ torb.fertile }}">
-                         <td>
-                             <input
-                                 type="checkbox"
-                                 name="selected_torbs"
-                                 value="{{ torb.id }}"
-                                 class="torb-checkbox"
-                             >
-                         </td>
-                         <td>{{ torb.private_ID }}</td>
-                         <td>{{ torb.generation }}</td>
-                         <td>{{ torb.name }}</td>
-                         <td>{{ torb.hp }}/{{torb.max_hp }}</td>
-                         {% for gene_name, gene_value in torb.genes.items %}
-                             <td>
-                                 {% for allele in gene_value %}
-                                     {{ allele|floatformat:1 }}{% if not forloop.last %} | {% endif %}
-                                 {% endfor %}
-                             </td>
-                         {% endfor %}
-                         <td>{{ torb.action_desc }}</td>
-                         <td class="status-column">
-                            <span class="status-tooltip" data-tooltip="{{ torb.status }}">
-                                🛈
-                            </span>
+    <h1>Colony: {{ colony.name }}</h1>
+    <form method="post" action="{% url 'colony_view' colony.id %}">
+        <div class="action-console-container">
+            <div class="column">
+                <div class="metrics-container">
+                    <div class="metrics-group">
+                        <div class="metric torbs">
+                            <span class="icon">🐗</span>
+                            Torbs: {{ num_torbs }}
+                        </div>
+                        <div class="metric food">
+                            <span class="icon">🍎</span>
+                            Food: {{ colony.food }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="end-turn-container">
+                    {% csrf_token %}
+                    <button
+                        type="submit"
+                        name="action"
+                        value="end_turn"
+                        class="end-turn-button {% if colony.ready %}disabled{% else %}{% endif %}"
+                        {% if colony.ready %}disabled{% endif %}
+                        id="endTurnButton"
+                    >
+                        {% if colony.ready %}
+                            Waiting for other players...
+                        {% else %}
+                            End Turn
+                        {% endif %}
+                    </button>
+                </div>
+
+                <div class="action-console-container">
+                    <div class="action-buttons">
+                        {% csrf_token %}
+                        <button type="submit" name="action" value="breed" disabled id="breed-button">Breed</button>
+                        <button type="submit" name="action" value="gather">Gather</button>
+                        <button type="submit" name="action" value="enlist">Enlist</button>
+                    </div>
+                </div>
+            </div>
+            <div class="console-display">
+                {% for story_text in story_texts %}
+                    <p>{{ story_text.story_text }}</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>ID</th>
+                    <th>Gen.</th>
+                    <th>Name</th>
+                    <th>HP💖</th>
+                    
+                    {% if torbs %}
+                        {% for gene_name in torbs.0.genes.keys %}
+                            <th class="gene-header"><span class="dot"></span>{{ gene_name|capfirst }}🧬</th>
+                        {% endfor %}
+                    {% endif %}
+                    <th>Action⚡</th>
+                    <th>🔍</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for torb in torbs %}
+                    <tr data-fertile="{{ torb.fertile }}">
+                        <td>
+                            <input
+                                type="checkbox"
+                                name="selected_torbs"
+                                value="{{ torb.id }}"
+                                class="torb-checkbox"
+                            >
                         </td>
-                         
-                     </tr>
-                 {% empty %}
-                     <tr>
-                         <td colspan=7>This colony has no Torbs.</td>
-                     </tr>
-                 {% endfor %}
-             </tbody>
-         </table>
-     </form>
+                        <td>{{ torb.private_ID }}</td>
+                        <td>{{ torb.generation }}</td>
+                        <td>{{ torb.name }}</td>
+                        <td>{{ torb.hp }}/{{torb.max_hp }}</td>
+                        {% for gene_name, gene_value in torb.genes.items %}
+                            <td>
+                                {% for allele in gene_value %}
+                                    {{ allele|floatformat:1 }}{% if not forloop.last %} | {% endif %}
+                                {% endfor %}
+                            </td>
+                        {% endfor %}
+                        <td>{{ torb.action_desc }}</td>
+                        <td class="status-column">
+                        <span class="status-tooltip" data-tooltip="{{ torb.status }}">
+                            🛈
+                        </span>
+                    </td>
+                        
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan=7>This colony has no Torbs.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </form>
 {% endblock %}
 
 {% block scripts %}
