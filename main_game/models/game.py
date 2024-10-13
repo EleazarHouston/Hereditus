@@ -35,7 +35,7 @@ class Game(models.Model):
     
     def check_ready_status(self):
         logger.debug(f"Checking colonies ready statuses")
-            if not colony.ready:
-                return False
+        if self.colony_set.filter(ready=False).count() >= 1:
+            return False
         logger.debug(f"All colonies are ready for the next round")
         self.next_round()
