@@ -63,9 +63,9 @@ class EvolutionEngine(models.Model):
                 # The first allele is a randomly chosen one from the parents
                 # subsequent alleles are avg of random alleles from each parent, non-replacing
                 if i == 0:
-                    alleles.append(random.choice([p0_gene[i], p1_gene[i]]))
+                    alleles.append(max(random.choice([p0_gene[i], p1_gene[i]]),1))
                 else:
-                    alleles.append(round(np.mean([p0_gene[i], p1_gene[i]]),4))
+                    alleles.append(max(round(np.mean([p0_gene[i], p1_gene[i]]),4),1))
             alleles = self.mutate_and_shuffle(alleles)
             genes[gene] = alleles
         logger.debug(f"An EvolutionEngine for Colony {colony} in {self.game} is breeding Torb {torb0.private_ID} '{torb0.name}' and Torb {torb1.private_ID} '{torb1.name}'")
