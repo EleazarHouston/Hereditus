@@ -5,3 +5,5 @@ class StoryText(models.Model):
     story_text_type = models.CharField(max_length=32, default="default")
     story_text = models.CharField(max_length=1028, default="N/A")
     timestamp = models.DateTimeField()
+    
+    # TODO: Add StoryText to logger whenever created
