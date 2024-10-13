@@ -22,7 +22,7 @@ class Game(models.Model):
         # have whatever calls this by default check if all colonies are ready
         # do combat here
         
-        for colony in self.colony_set.all():
+        for colony in self.colony_set.all().order_by('?'):
             colony.new_round(round_number = self.round_number)
             
         # Done in a separate loop because web GUIs are updated when ready value is updated
