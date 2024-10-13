@@ -82,10 +82,15 @@ class Torb(models.Model):
             self.save()
             return
         
+        logger.debug(f"Colony {self.colony.id} '{self.colony.name}' Torb {self.private_ID} setting action {action} context torb: {context_torb}")
         # If prior action was breeding, ensure paired torb is also no longer breeding
-        if self.action == "breeding" and self.context_torb and action != "breeding":
+        if self.action == "breeding" and self.context_torb:
+            logger.debug(f"Colony {self.colony.id} '{self.colony.name}' Torb {self.private_ID} Already breeding with {self.context_torb}")
             self.context_torb.context_torb = None
-            self.context_torb.set_action("gathering", "🌾 Gathering")
+            self.context_torb.action = "gathering"
+            self.context_torb.action_desc = "🌾 Gathering"
+            self.context_torb.save()
+            
         
         self.action = action
         self.action_desc = action_desc
