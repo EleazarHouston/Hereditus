@@ -85,6 +85,8 @@ def army_view(request, colony_id):
             colony.army.set_scout_target(selected_colony)
         elif action == "attack":
             colony.army.set_attack_target(selected_colony)
+        elif action == 'end_turn':
+            colony.ready_up()
 
         
         return redirect('army_view', colony_id=colony.id)
