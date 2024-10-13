@@ -52,6 +52,7 @@ class Torb(models.Model):
         return f"Colony {self.colony} Torb: {self.private_ID} '{self.name}'"
     
     def adjust_hp(self, adjust_amount, context="an unknown source"):
+        adjust_amount = int(adjust_amount)
         from .story_text import StoryText
         self.hp = min(max(0, self.hp + adjust_amount), self.max_hp)
         if self.hp > 0:
