@@ -107,14 +107,18 @@ class Colony(models.Model):
             if torb.action == "gathering":
                 num_gathering += 1
         food_gathered = round(num_gathering * self.gather_rate)
-        self.food += food_gathered
-        self.save()
+        self.adjust_food(food_gathered)
         StoryText.objects.create(
             colony=self,
             story_text_type="food",
             story_text=f"Your Torbs gathered {food_gathered} food.",
             timestamp=Now())
-        
+    
+    def adjust_food(self, adjust_amount):
+        adjust_amount = int(adjust_amount)
+        self.food = max(self.food + adjust_amount, 0)
+        self.save()
+    
     def colony_meal(self):
         living_torbs = [torb for torb in self.torb_set.all() if torb.is_alive]
         starved_torbs = []
@@ -127,13 +131,12 @@ class Colony(models.Model):
         less_food = 0
         for torb in living_torbs:
             if torb not in starved_torbs:
-                adjust_amount = 1
+                food_meal_amount = 1
                 torb.starving = False
                 torb.adjust_hp(1)
                 torb.save()
-                less_food += 1
-        self.food = max(self.food - less_food, 0)
-        self.save()
+                less_food += food_meal_amount
+        self.adjust_food(-1 * less_food)
         StoryText.objects.create(
             colony=self,
             story_text_type="food",
