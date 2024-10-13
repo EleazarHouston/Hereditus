@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import JsonResponse
+from django.http import JsonResponse, Http404
 from django.contrib.auth import authenticate, login, logout, get_user_model
 
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
@@ -19,8 +19,10 @@ def torb_view_attempt(request):
     return render(request, 'main_game/torb.html', {'private_id': torb.private_ID , 'health': torb.health})
 
 def colony_view(request, colony_id):
-    colony = get_object_or_404(Colony, id=colony_id)
-    colony.discovered_colonies.add(colony)
+    try:
+        colony = get_object_or_404(Colony, id=colony_id)
+    except Http404:
+        return redirect('main_page')
     
     torbs = colony.torb_set.all().order_by('private_ID')
     story_texts = StoryText.objects.filter(colony=colony).order_by('timestamp')
@@ -31,7 +33,6 @@ def colony_view(request, colony_id):
         
         if action == 'breed' and len(selected_torbs) == 2:
             colony.set_breed_torbs(selected_torbs)
-            
         elif action == 'gather':
             for torb_id in selected_torbs:
                 torb = Torb.objects.get(id=torb_id)
@@ -42,18 +43,13 @@ def colony_view(request, colony_id):
                 torb.set_action("training", "🎯 Training")
         elif action == 'end_turn':
             colony.ready_up()
-        
         return redirect('colony_view', colony_id=colony.id)
-    
-    
     
     if torbs.exists():
         gene_names = list(torbs.first().genes.keys())
     else:
         gene_names = []
-    
     logger.debug(f"Rendering colony_view with colony: {colony}, num_torbs: {colony.torb_count}, torbs: {torbs}, gene_names: {gene_names}, story_texts: {story_texts}")
-    
     return render(request, 'main_game/colony.html', {
         'colony': colony,
         'num_torbs': colony.torb_count,
@@ -62,15 +58,14 @@ def colony_view(request, colony_id):
         'story_texts': story_texts,
         })
 
-
-
 def check_ready_status(request, colony_id):
     colony = get_object_or_404(Colony, id=colony_id)
     return JsonResponse({'ready': colony.ready})
 
 @login_required
 def load_colony(request):
-    colonies = Colony.objects.all()
+    user = request.user
+    colonies = Colony.objects.filter(player=user)
     return render(request, 'main_game/load_colony.html', {'colonies': colonies})
 
 def army_view(request, colony_id):
@@ -84,9 +79,7 @@ def army_view(request, colony_id):
     
     if request.method == 'POST':
         selected_colony = request.POST.get('selected_colony')
-        print(selected_colony)
         action = request.POST.get('action')
-        print(action)
         
         if action == "scout":
             colony.army.set_scout_target(selected_colony)
@@ -95,7 +88,6 @@ def army_view(request, colony_id):
 
         
         return redirect('army_view', colony_id=colony.id)
-    print(colony.id)
     return render(request, 'main_game/army.html', {
         'colony': colony,
         'player_colony': colony,
