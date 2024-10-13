@@ -67,6 +67,8 @@ class Torb(models.Model):
         logger.debug(f"Colony {self.colony.id} '{self.colony.name}' Torb {self.private_ID} '{self.name}' died, context: {context}")
         self.save()
         self.set_action("dead", "💀 Dead")
+        if self.army_torb.first():
+            self.army_torb.first().remove_from_army()
         
     # TODO: Make dictionary of actions and action_desc strings defined in one place
     def set_action(self, action: str, action_desc: str, context_torb=None):
