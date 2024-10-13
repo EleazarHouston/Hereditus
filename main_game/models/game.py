@@ -15,7 +15,7 @@ class Game(models.Model):
         is_new = self.pk is None
         super().save(*args, **kwargs)
         if is_new:
-            logger.info(f"A new Game '{self.description}' was made.")
+            logger.info(f"A new Game '{self.description}' was made")
     
     def next_round(self):
         
@@ -34,7 +34,7 @@ class Game(models.Model):
         logger.debug(f"Next round processed successfully")
     
     def check_ready_status(self):
-        for colony in self.colony_set.all():
+        logger.debug(f"Checking colonies ready statuses")
             if not colony.ready:
                 return False
         logger.debug(f"All colonies are ready for the next round")
