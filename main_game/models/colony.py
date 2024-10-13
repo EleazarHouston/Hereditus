@@ -35,21 +35,7 @@ class Colony(models.Model):
     
     @property
     def num_training(self):
-        return len([torb for torb in self.torb_set.all() if torb.action == "training"])
-    
-    
-    # TODO: Delete, should pull from Army
-    @property
-    def army_health(self):
-        return sum([torb.hp for torb in self.torb_set.all() if torb.action == "soldiering"])
-    
-    @property
-    def army_power(self):
-        return sum([torb.power for torb in self.torb_set.all() if torb.action == "soldiering"])
-    
-    @property
-    def army_resilience(self):
-        return sum([torb.resilience for torb in self.torb_set.all() if torb.action == "soldiering"])
+        return len([torb for torb in self.torb_set.all() if torb.action == "training" and torb.is_alive])
     
     def new_round(self, round_number: int):
         self.reset_fertility()
@@ -197,6 +183,11 @@ class Colony(models.Model):
                 story_text_type="system",
                 story_text="Welcome to Hereditus!",
                 timestamp=Now())
+        from .army import Army
+        army, created = Army.objects.get_or_create(colony=self)
+        if created or not self.army:
+            self.army = army
+            self.save()
             
     def __str__(self):
         return self.name
