@@ -31,7 +31,7 @@ class Colony(models.Model):
     
     @property
     def num_soldiers(self):
-        return len([torb for torb in self.torb_set.all() if torb.action == "soldiering"])
+        return len([torb for torb in self.torb_set.all() if torb.action == "soldiering" and torb.is_alive])
     
     @property
     def num_training(self):
@@ -167,13 +167,9 @@ class Colony(models.Model):
             self.game.evolution_engine_instance.protogenesis_torb(colony=self)
 
     def save(self, *args, **kwargs):
-        from .army import Army
-        army, created = Army.objects.get_or_create(colony=self)
-        if created or not self.army:
-            self.army = army
-        
         is_new = self.pk is None
         super().save(*args, **kwargs)
+        
         if is_new:
             logger.info(f"A new colony '{self.name}' was made")
             self.init_torbs()
