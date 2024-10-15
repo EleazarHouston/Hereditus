@@ -24,6 +24,18 @@
             justify-content: flex-start;
         }
 
+        .new-colony-input" form="new-colony-form-{{ game.id }},
+        .new-colony-button" form="new-colony-form-{{ game.id}} {
+            padding: 0px;
+            background-color: #a45d00;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+
         /* Each colony box */
         .colony-box {
             background-color: #1e1e1e;
@@ -40,6 +52,17 @@
             margin-bottom: 10px;
         }
 
+        .new-colony-input {
+            background-color: #333;
+            color: #a45d00;
+            width: calc(100% - 20px);
+            margin-bottom: 10px;
+            max-width: 89%;
+            text-align: center;
+            cursor: text;
+        }
+
+        
         /* Button styling for dark mode */
         .colony-box button {
             margin-top: 10px;
@@ -74,30 +97,7 @@
             display: none;
             overflow: hidden;
             padding: 0 15px;
-        }
-
-
-        /* New Colony button styling */
-        .new-colony.box {
-            background-color: #1e1e1e;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-            flex: 0 0 200px;
-            text-aligh: center;
-            position: relative;
-        }
-
-        .new-colony-button {
-            margin-top: 10px;
-            padding: 10px 20px;
-            background-color: #a45d00;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            position: relative;
-        }
+        }        
 
         .new-colony-button.disabled {
             background-color: #777;
@@ -144,12 +144,16 @@
                     {% empty %}
                         <p>No colonies available.</p>
                     {% endfor %}
-                    <div class="new-colony-box">
-                        <button class="new-colony-button {% if game.closed %}disabled{% endif %}" {% if game.open %}disabled{% endif %}>
-                            New Colony
-                            {% if game.closed %}
-                                <span class="tooltip">This game is closed to new colonies</span>
-                            {% endif %}
+                    <div class="colony-box">
+                        <form action="{% url 'load_colony' %}" method="post" id="new-colony-form-{{ game.id }}">
+                            {% csrf_token %}
+                            <input type="hidden" name="game_id" value="{{ game.id }}">
+                            <input type="text" name="colony_name" class="new-colony-input" maxlength="63" placeholder="Colony Name" required>
+                            <button type="submit" class="new-colony-button {% if game.closed %}disabled{% endif %}" {% if game.open %}disabled{% endif %}>
+                                New Colony
+                                {% if game.closed %}
+                                    <span class="tooltip">This game is closed to new colonies</span>
+                                {% endif %}
                         </button>
                     </div> 
                 </div>
