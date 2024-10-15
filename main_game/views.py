@@ -4,7 +4,7 @@ from django.contrib.auth import authenticate, login, logout, get_user_model
 
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.decorators import login_required
-from .models import Torb, Colony, StoryText
+from .models import Torb, Colony, StoryText, Game
 import logging
 import json
 
@@ -66,7 +66,10 @@ def check_ready_status(request, colony_id):
 def load_colony(request):
     user = request.user
     colonies = Colony.objects.filter(player=user)
-    return render(request, 'main_game/load_colony.html', {'colonies': colonies})
+    games = Game.objects.filter(private=False) | Game.objects.filter(allowed_players__in=[user])
+    return render(request, 'main_game/load_colony.html',
+                  {'colonies': colonies,
+                   'games': games})
 
 def army_view(request, colony_id):
     colony = get_object_or_404(Colony, id=colony_id)

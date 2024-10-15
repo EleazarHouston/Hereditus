@@ -54,23 +54,125 @@
         .colony-box button:hover {
             background-color: #45a049;
         }
+
+        /* Collapsible container styling */
+        .collapsible {
+            background-color: #333;
+            color: white;
+            cursor: pointer;
+            padding: 15px;
+            border: none;
+            text-align: left;
+            outline: none;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            width: 100%;
+            display: block;
+        }
+
+        .content {
+            display: none;
+            overflow: hidden;
+            padding: 0 15px;
+        }
+
+
+        /* New Colony button styling */
+        .new-colony.box {
+            background-color: #1e1e1e;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            flex: 0 0 200px;
+            text-aligh: center;
+            position: relative;
+        }
+
+        .new-colony-button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: #a45d00;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .new-colony-button.disabled {
+            background-color: #777;
+            cursor: not-allowed;
+        }
+
+        .tooltip {
+            visibility: hidden;
+            width: 220px;
+            background-color: black;
+            color: #fff;
+            text-align: center;
+            border-radius: 5px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -110px;
+        }
+
+        .new-colony-button:hover .tooltip {
+            visibility: visible;
+        }
+
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Select a Colony</h1>
-        <div class="colony-container">
-            {% for colony in colonies %}
-                <div class="colony-box">
-                    <h2>{{ colony.name }}</h2>
-                    <form action="{% url 'colony_view' colony.id %}" method="get">
-                        <button type="submit">Play</button>
-                    </form>
+        {% for game in games %}
+            <button class="collapsible">{{ game.description }}</button>
+            <div class="content">
+                <div class="colony-container">
+                    {% for colony in colonies %}
+                        {% if colony.game.id == game.id %}
+                            <div class="colony-box">
+                                <h2>{{ colony.name }}</h2>
+                                <form action="{% url 'colony_view' colony.id %}" method="get">
+                                    <button type="submit">Play</button>
+                                </form>
+                            </div>
+                        {% endif %}
+                    {% empty %}
+                        <p>No colonies available.</p>
+                    {% endfor %}
+                    <div class="new-colony-box">
+                        <button class="new-colony-button {% if game.closed %}disabled{% endif %}" {% if game.open %}disabled{% endif %}>
+                            New Colony
+                            {% if game.closed %}
+                                <span class="tooltip">This game is closed to new colonies</span>
+                            {% endif %}
+                        </button>
+                    </div> 
                 </div>
-            {% empty %}
-                <p>No colonies available.</p>
-            {% endfor %}
-        </div>
+            </div>
+        {% endfor %}
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const collapsibles = document.querySelectorAll('.collapsible');
+            collapsibles.forEach(collapsible => {
+                collapsible.addEventListener('click', function() {
+                    this.classList.toggle('active');
+                    const content = this.nextElementSibling;
+                    if (content.style.display === "block") {
+                        content.style.display = "none";
+                    } else {
+                        content.style.display = "block";
+                    }
+                });
+            });
+        });
+    </script>
+
 </body>
 </html>

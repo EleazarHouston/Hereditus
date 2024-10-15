@@ -1,5 +1,7 @@
-from django.db import models
 import logging
+
+from django.contrib.auth.models import User
+from django.db import models
 
 logger = logging.getLogger('hereditus')
 
@@ -7,6 +9,8 @@ class Game(models.Model):
     starting_torbs = models.IntegerField(default=4)
     description = models.CharField(max_length=256, null=True)
     round_number = models.IntegerField(default=1)
+    private = models.BooleanField(default=False)
+    allowed_players = models.ManyToManyField(User, blank=True)
     
     def __str__(self):
         return self.description
