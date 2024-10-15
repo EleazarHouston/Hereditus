@@ -31,10 +31,10 @@ class Army(models.Model):
         return f"Army of {self.colony.name}"
     
     def new_round(self):
-        self.train_soldiers()
+        self.purge_soldiers()
         self.scout_colony()
         self.attack_colony()
-        self.purge_soldiers()
+        self.train_soldiers()
 
     def train_soldiers(self):
         for torb in self.colony.torb_set.all():
