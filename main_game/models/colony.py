@@ -28,7 +28,6 @@ class Colony(models.Model):
     def torb_count(self):
         return self.torb_set.count()
     
-    
     @property
     def num_soldiers(self):
         return len([torb for torb in self.torb_set.all() if torb.action == "soldiering" and torb.is_alive])
@@ -142,7 +141,7 @@ class Colony(models.Model):
             story_text_type="food",
             story_text=f"Your Torbs ate {less_food} food and {len(starved_torbs)} went hungry.",
             timestamp=Now())
-            
+    
     def ready_up(self):
         self.ready = True
         self.save()
