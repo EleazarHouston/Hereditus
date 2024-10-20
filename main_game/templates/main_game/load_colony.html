@@ -123,6 +123,11 @@
 </head>
 <body>
     <div class="container">
+        {% if error_message %}
+            <div class="error-message" style="color: red; margin-bottom: 20px; font-size: 1.5em;">
+                {{ error_message }}
+            </div>
+        {% endif %}
         <h1>Select a Colony</h1>
         {% for game in games %}
             <button class="collapsible">{{ game.description }}</button>

@@ -61,12 +61,16 @@ def check_ready_status(request, colony_id):
 @login_required
 def load_colony(request):
     user = request.user
-    
+    error_message = None
     if request.method == 'POST':
         game_id = request.POST.get('game_id')
         colony_name = request.POST.get('colony_name')
         game = Game.objects.get(pk=game_id)
-        if game and (not game.closed or user in game.allowed_players):
+        
+        can_make_new_game = game.colony_set.filter(player=user).count() < game.max_colonies_per_player
+        if not can_make_new_game:
+            error_message = "You already have the max number of colonies for this game."
+        elif game and (not game.closed or user in game.allowed_players):
             Colony.objects.create(
                 player=user,
                 name=colony_name,
@@ -76,7 +80,8 @@ def load_colony(request):
     games = Game.objects.filter(private=False) | Game.objects.filter(allowed_players__in=[user])
     return render(request, 'main_game/load_colony.html',
                   {'colonies': colonies,
-                   'games': games})
+                   'games': games,
+                  'error_message': error_message})
 
 @login_required
 def army_view(request, colony_id):

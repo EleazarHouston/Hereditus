@@ -12,6 +12,7 @@ class Game(models.Model):
     private = models.BooleanField(default=False)
     allowed_players = models.ManyToManyField(User, blank=True)
     closed = models.BooleanField(default=False)
+    max_colonies_per_player = models.IntegerField(default=1)
     
     def __str__(self):
         return self.description
