@@ -150,7 +150,8 @@ class Colony(models.Model):
     
     def new_torb(self, genes, generation):
         from .torb import Torb
-        next_ID = self.torb_count + 1
+        next_ID = Torb.objects.filter(colony=self).aggregate(max_id=models.Max('private_ID'))['max_id']
+        next_ID = next_ID + 1 if next_ID is not None else 1
         random.shuffle(torb_names)
         name = torb_names[0]
         max_hp = genes['vitality'][0]
