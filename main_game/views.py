@@ -17,6 +17,9 @@ def colony_view(request, colony_id):
     except Http404:
         return redirect('main_page')
     
+    if request.user != colony.player:
+        return redirect('main_page')
+    
     torbs = colony.torb_set.all().order_by('private_ID')
     story_texts = StoryText.objects.filter(colony=colony).order_by('timestamp')
     
@@ -75,8 +78,13 @@ def load_colony(request):
                   {'colonies': colonies,
                    'games': games})
 
+@login_required
 def army_view(request, colony_id):
     colony = get_object_or_404(Colony, id=colony_id)
+    
+    if request.user != colony.player:
+        return redirect('main_page')
+    
     torbs = colony.torb_set.all()
     num_soldiers = len([torb for torb in torbs if torb.action=="soldiering"])
     num_training = len([torb for torb in torbs if torb.action=="training"])
