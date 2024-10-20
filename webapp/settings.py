@@ -1,4 +1,5 @@
 # python manage.py runserver 0.0.0.0:8000
+# cloudflared tunnel run hereditus
 
 """
 Django settings for webapp project.
