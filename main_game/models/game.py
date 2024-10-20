@@ -11,6 +11,7 @@ class Game(models.Model):
     round_number = models.IntegerField(default=1)
     private = models.BooleanField(default=False)
     allowed_players = models.ManyToManyField(User, blank=True)
+    closed = models.BooleanField(default=False)
     
     def __str__(self):
         return self.description

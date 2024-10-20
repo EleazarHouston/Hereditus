@@ -65,6 +65,17 @@ def check_ready_status(request, colony_id):
 @login_required
 def load_colony(request):
     user = request.user
+    
+    if request.method == 'POST':
+        game_id = request.POST.get('game_id')
+        colony_name = request.POST.get('colony_name')
+        game = Game.objects.get(pk=game_id)
+        if game and (not game.closed or user in game.allowed_players):
+            Colony.objects.create(
+                player=user,
+                name=colony_name,
+                game=game)
+    
     colonies = Colony.objects.filter(player=user)
     games = Game.objects.filter(private=False) | Game.objects.filter(allowed_players__in=[user])
     return render(request, 'main_game/load_colony.html',
