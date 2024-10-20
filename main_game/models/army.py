@@ -35,6 +35,9 @@ class Army(models.Model):
         self.scout_colony()
         self.attack_colony()
         self.train_soldiers()
+        self.scout_target = None
+        self.attack_target = None
+        self.save()
 
     def train_soldiers(self):
         for torb in self.colony.torb_set.all():
