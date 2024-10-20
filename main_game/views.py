@@ -39,6 +39,7 @@ def colony_view(request, colony_id):
                 torb.set_action("training", "🎯 Training")
         elif action == 'end_turn':
             colony.ready_up()
+            # TODO: Add un_ready up button
         return redirect('colony_view', colony_id=colony.id)
     
     if torbs.exists():
