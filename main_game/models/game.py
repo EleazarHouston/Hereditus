@@ -22,6 +22,10 @@ class Game(models.Model):
         super().save(*args, **kwargs)
         if is_new:
             logger.info(f"A new Game '{self.description}' was made")
+            
+    @property
+    def unready_colonies(self):
+        return self.colony_set.filter(ready=False).count()
     
     def next_round(self):
         
