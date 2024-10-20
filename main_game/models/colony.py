@@ -26,7 +26,7 @@ class Colony(models.Model):
     
     @property
     def torb_count(self):
-        return self.torb_set.count()
+        return self.torb_set.filter(is_alive=True).count()
     
     @property
     def num_soldiers(self):
