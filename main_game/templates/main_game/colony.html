@@ -55,22 +55,23 @@
             </div>
         </div>
 
-        <table>
+        <table id="torb-table">
             <thead>
                 <tr>
                     <th></th>
-                    <th>ID</th>
-                    <th>Gen.</th>
-                    <th>Name</th>
-                    <th>HP💖</th>
-                    
+                    <th onclick="sortTable(1)">ID</th>
+                    <th onclick="sortTable(2)">Gen.</th>
+                    <th onclick="sortTable(3)">Name</th>
+                    <th onclick="sortTable(4)">HP💖</th>
                     {% if torbs %}
                         {% for gene_name in torbs.0.genes.keys %}
-                            <th class="gene-header"><span class="dot"></span>{{ gene_name|capfirst }}🧬</th>
+                            <th onclick="sortTable({{ forloop.counter0|add:5 }})" class="gene-header">
+                                <span class="dot"></span>{{ gene_name|capfirst }}🧬
+                            </th>
                         {% endfor %}
                     {% endif %}
-                    <th>Action⚡</th>
-                    <th>🔍</th>
+                    <th onclick="sortTable(-2)">Action⚡</th>
+                    <th onclick="sortTable(-1)">🔍</th>
                 </tr>
             </thead>
             <tbody>
@@ -123,6 +124,50 @@
             const consoleDisplay = document.querySelector('.console-display');
             consoleDisplay.scrollTop = consoleDisplay.scrollHeight; // Scroll to the bottom on load
         });
+    </script>
+
+    <script>
+        function sortTable(columnIndex) {
+            const table = document.getElementById("torb-table");
+            let rows, switching, i, x, y, shouldSwitch, direction, switchCount = 0;
+    
+            switching = true;
+            direction = "asc"; 
+    
+            while (switching) {
+                switching = false;
+                rows = table.rows;
+    
+                for (i = 1; i < rows.length - 1; i++) {
+                    shouldSwitch = false;
+                    x = rows[i].getElementsByTagName("TD")[columnIndex];
+                    y = rows[i + 1].getElementsByTagName("TD")[columnIndex];
+    
+                    if (direction === "asc") {
+                        if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    } else if (direction === "desc") {
+                        if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    }
+                }
+    
+                if (shouldSwitch) {
+                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                    switching = true;
+                    switchCount++;
+                } else {
+                    if (switchCount === 0 && direction === "asc") {
+                        direction = "desc";
+                        switching = true;
+                    }
+                }
+            }
+        }
     </script>
 {% endblock %}
 
