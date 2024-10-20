@@ -52,6 +52,7 @@ class Torb(models.Model):
         return f"Colony {self.colony} Torb: {self.private_ID} '{self.name}'"
     
     def adjust_hp(self, adjust_amount, context="an unknown source"):
+        logger.debug(f"Colony {self.colony.id} '{self.colony.name}' Torb {self.private_ID} '{self.name}' adjusted hp amt {adjust_amount} context: {context}")
         adjust_amount = int(adjust_amount)
         from .story_text import StoryText
         self.hp = min(max(0, self.hp + adjust_amount), self.max_hp)
