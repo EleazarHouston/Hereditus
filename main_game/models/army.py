@@ -263,13 +263,12 @@ class Army(models.Model):
         self.save()
 
     def _attack_successful(self, enemy_colony):
-        # TODO: adjust food stolen amount
         stolen_food_amount = 0
         
-        min_steal_amount = min(enemy_colony.food, self.colony.num_soldiers)
+        min_steal_amount = min(enemy_colony.food, self.power)
         
         if enemy_colony.food > 0:
-            stolen_food_amount = random.randrange(0, enemy_colony.food)
+            stolen_food_amount = random.randrange(min_steal_amount, enemy_colony.food)
             self.colony.adjust_food(stolen_food_amount)
             enemy_colony.adjust_food(-1 * stolen_food_amount)
         StoryText.objects.create(
