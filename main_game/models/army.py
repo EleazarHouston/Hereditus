@@ -211,7 +211,7 @@ class Army(models.Model):
     def battle_army(self, enemy_army) -> bool:
         ally_enough_morale = True
         ally_enough_morale = self.morale > random.randrange(1, 50)
-        while self.colony.num_soldiers > 1 and enemy_army.colony.num_soldiers > 1 and ally_enough_morale:
+        while self.colony.num_soldiers > 0 and enemy_army.colony.num_soldiers > 0 and ally_enough_morale:
             ally_army_torb = self.army_torbs.all().order_by('?').first()
             enemy_army_torb = enemy_army.army_torbs.all().order_by('?').first()
             
@@ -223,13 +223,20 @@ class Army(models.Model):
             return False
     
     def torb_fight(self, ally_army_torb, enemy_army_torb):
+        logger.debug(f"{self.colony.name}: Torb {ally_army_torb} is fighting {enemy_army_torb.torb.colony}'s {enemy_army_torb}")
         ally_army_torb_attack   = random.uniform(1, ally_army_torb.power)
         ally_army_torb_defense  = random.uniform(1, ally_army_torb.resilience)
+        
         enemy_army_torb_attack  = random.uniform(1, enemy_army_torb.power)
         enemy_army_torb_defense = random.uniform(1, enemy_army_torb.resilience)
         
         ally_army_torb_speed    = random.uniform(1, ally_army_torb.active_alleles['agility'])
         enemy_army_torb_speed   = random.uniform(1, enemy_army_torb.active_alleles['agility'])
+        logger.debug(f"{self.colony.name}: Torb {ally_army_torb} has speed: {ally_army_torb_speed}, attack: {ally_army_torb_attack} and defense: {ally_army_torb_defense}")
+        logger.debug(f"{enemy_army_torb.torb.colony}: Torb {enemy_army_torb} has speed: {enemy_army_torb_speed}, attack: {enemy_army_torb_attack} and defense: {enemy_army_torb_defense}")
+        
+        ally_hp_adjust = 0
+        enemy_hp_adjust = 0
         
         if ally_army_torb_speed > enemy_army_torb_speed:
             enemy_hp_adjust = round(min(0, enemy_army_torb_defense - ally_army_torb_attack),0)
@@ -256,7 +263,11 @@ class Army(models.Model):
         self.save()
 
     def _attack_successful(self, enemy_colony):
+        # TODO: adjust food stolen amount
         stolen_food_amount = 0
+        
+        min_steal_amount = min(enemy_colony.food, self.colony.num_soldiers)
+        
         if enemy_colony.food > 0:
             stolen_food_amount = random.randrange(0, enemy_colony.food)
             self.colony.adjust_food(stolen_food_amount)
