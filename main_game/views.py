@@ -10,14 +10,7 @@ import json
 
 logger = logging.getLogger(__name__)
 
-# Create your views here.
-
-
-def torb_view_attempt(request):
-    torb = get_object_or_404(Torb, id=1)
-    
-    return render(request, 'main_game/torb.html', {'private_id': torb.private_ID , 'health': torb.health})
-
+@login_required
 def colony_view(request, colony_id):
     try:
         colony = get_object_or_404(Colony, id=colony_id)
