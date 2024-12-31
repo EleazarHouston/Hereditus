@@ -265,7 +265,7 @@ class Army(models.Model):
     def _attack_successful(self, enemy_colony):
         stolen_food_amount = 0
         
-        min_steal_amount = min(enemy_colony.food, self.power)
+        min_steal_amount = min(enemy_colony.food, round(self.army_power))
         
         if enemy_colony.food > 0:
             stolen_food_amount = random.randrange(min_steal_amount, enemy_colony.food)
