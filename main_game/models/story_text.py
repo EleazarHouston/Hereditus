@@ -10,11 +10,13 @@ class StoryText(models.Model):
     story_text_type = models.CharField(max_length=32, default="default")
     story_text = models.CharField(max_length=1028, default="N/A")
     timestamp = models.DateTimeField(default=now)
-    is_new = models.BooleanField(default=True)
     game_round = models.IntegerField(default=-1)
     
     # TODO: Add StoryText to logger whenever created
     
+    @property
+    def is_new(self):
+        return self.game_round + 1 >= self.colony.game.round_number
     
     def save(self, *args, **kwargs):
         is_new = self.pk is None
