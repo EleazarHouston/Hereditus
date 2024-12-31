@@ -32,7 +32,7 @@
                         id="endTurnButton"
                     >
                         {% if colony.ready %}
-                            Waiting for other players...
+                            Waiting for {{ colony.game.unready_colonies }} other players...
                         {% else %}
                             End Turn
                         {% endif %}
@@ -48,9 +48,18 @@
                     </div>
                 </div>
             </div>
-            <div class="console-display">
+            <div class="console-display" style="display: flex; flex-direction: column; width: 100%;">
                 {% for story_text in story_texts %}
-                    <p>{{ story_text.story_text }}</p>
+                    <div class="console-entry" style="display: flex; width: 100%;">
+                        <div class="console-entry-round" style="padding-right: 10px; font-size: 1.2em; white-space: nowrap;" >
+                            <span>Y{{ story_text.game_round }}</span>
+                        </div>
+                        <div class="console-entry-text" style="flex-grow: 1;">
+                            <p style="color: {% if not story_text.is_new %}#888{% else %}#fff{% endif %}; margin: 0; font-size: 1.2em;">
+                                {{ story_text.story_text }}
+                            </p>
+                        </div>
+                    </div>
                 {% endfor %}
             </div>
         </div>
