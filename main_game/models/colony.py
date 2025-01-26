@@ -90,6 +90,12 @@ class Colony(models.Model):
         torb0.set_action("breeding", f"💦 Breeding with {torb1.name}", torb1)
         torb1.set_action("breeding", f"💦 Breeding with {torb0.name}", torb0)
 
+    def assign_torbs_action(self, torb_ids, action, description):
+        from .torb import Torb
+        torbs = Torb.objects.filter(id__in=torb_ids, colony=self)
+        for torb in torbs:
+            torb.set_action(action, description)
+
     def rest_torbs(self):
         for torb in self.torb_set.all():
             if torb.action == "resting" and not torb.starving:
@@ -190,5 +196,3 @@ class Colony(models.Model):
             
     def __str__(self):
         return self.name
-    
-    
