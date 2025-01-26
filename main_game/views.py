@@ -14,10 +14,11 @@ logger = logging.getLogger(__name__)
 def colony_view(request, colony_id):
     try:
         colony = get_object_or_404(Colony, id=colony_id)
+        player = colony.player
     except Http404:
         return redirect('main_page')
     
-    if request.user != colony.player:
+    if player.user != request.user:
         return redirect('main_page')
     
     torbs = colony.torb_set.all().order_by('private_ID')
@@ -26,20 +27,12 @@ def colony_view(request, colony_id):
     if request.method == 'POST':
         selected_torbs = request.POST.getlist('selected_torbs')
         action = request.POST.get('action')
-        
-        if action == 'breed' and len(selected_torbs) == 2:
-            colony.set_breed_torbs(selected_torbs)
-        elif action == 'gather':
-            for torb_id in selected_torbs:
-                torb = Torb.objects.get(id=torb_id)
-                torb.set_action("gathering", "🌾 Gathering")
-        elif action == 'enlist':
-            for torb_id in selected_torbs:
-                torb = Torb.objects.get(id=torb_id)
-                torb.set_action("training", "🎯 Training")
-        elif action == 'end_turn':
-            colony.ready_up()
-            # TODO: Add un_ready up button
+
+        try:
+            player.perform_action(colony=colony, action=action, torb_ids=selected_torbs)
+        except ValueError as e:
+            logger.error(f"Invalid action: {e}")
+            
         return redirect('colony_view', colony_id=colony.id)
     
     if torbs.exists():
