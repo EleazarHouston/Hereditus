@@ -101,17 +101,14 @@ def army_view(request, colony_id):
     story_texts = StoryText.objects.filter(colony=colony).order_by('timestamp')
     
     if request.method == 'POST':
-        selected_colony = request.POST.get('selected_colony')
+        selected_colony_id = request.POST.get('selected_colony')
         action = request.POST.get('action')
-        
-        if action == "scout":
-            colony.army.set_scout_target(selected_colony)
-        elif action == "attack":
-            colony.army.set_attack_target(selected_colony)
-        elif action == 'end_turn':
-            colony.ready_up()
 
-        
+        try:
+            player.perform_action(colony=colony, action=action, target_colony_id=selected_colony_id)
+        except ValueError as e:
+            logger.error(f"Invalid action: {e}")
+
         return redirect('army_view', colony_id=colony.id)
     return render(request, 'main_game/army.html', {
         'colony': colony,

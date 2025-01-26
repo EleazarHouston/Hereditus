@@ -57,9 +57,9 @@ class Army(models.Model):
         if army_torb:
             army_torb.remove_from_army()
             
-    def set_scout_target(self, scout_target):
+    def set_scout_target(self, scout_target_id):
         from .colony import Colony
-        if not scout_target:
+        if not scout_target_id:
             self.scout_target = None
             self.save()
             StoryText.objects.create(
@@ -69,7 +69,7 @@ class Army(models.Model):
                 timestamp=Now())
             return
         
-        scout_target_colony = Colony.objects.get(id=scout_target)
+        scout_target_colony = Colony.objects.get(id=scout_target_id)
         logger.debug(f"{self.colony.name}: Set scout_target as {scout_target_colony}")
         if scout_target_colony == self.colony:
             StoryText.objects.create(
@@ -134,9 +134,9 @@ class Army(models.Model):
         return False
     
     # DRY, definitely a better way to do this, repeats a lot of set_scout_target
-    def set_attack_target(self, attack_target):
+    def set_attack_target(self, attack_target_id):
         from .colony import Colony
-        if not attack_target:
+        if not attack_target_id:
             self.attack_target = None
             self.save()
             StoryText.objects.create(
@@ -145,7 +145,7 @@ class Army(models.Model):
                 story_text=f"Our attack plans have been canceled.",
                 timestamp=Now())
             return
-        attack_target_colony = Colony.objects.get(id=attack_target)
+        attack_target_colony = Colony.objects.get(id=attack_target_id)
         logger.debug(f"{self.colony.name}: Set attack_target as {attack_target_colony}")
         if attack_target_colony == self.colony:
             StoryText.objects.create(
