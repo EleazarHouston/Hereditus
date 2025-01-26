@@ -13,7 +13,7 @@ logger = logging.getLogger('hereditus')
 
 class Colony(models.Model):
     from .torb import Torb
-    player = models.ForeignKey(User, on_delete=models.CASCADE, default=None, null=True, blank=True)
+    player = models.OneToOneField('Player', null=True, blank=True, default=None, on_delete=models.SET_NULL, related_name='colony')
     name = models.CharField(max_length=64, default="DefaultName")
     game = models.ForeignKey('main_game.Game', on_delete=models.CASCADE, null=True)
     food = models.IntegerField(default=5)
