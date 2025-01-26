@@ -35,10 +35,7 @@ def colony_view(request, colony_id):
             
         return redirect('colony_view', colony_id=colony.id)
     
-    if torbs.exists():
-        gene_names = list(torbs.first().genes.keys())
-    else:
-        gene_names = []
+    gene_names = list(torbs.first().genes.keys()) if torbs.exists() else []
     logger.debug(f"Rendering colony_view with colony: {colony}, num_torbs: {colony.torb_count}, torbs: {torbs}, gene_names: {gene_names}, story_texts: {story_texts}")
 
     return render(request, 'main_game/colony.html', {
