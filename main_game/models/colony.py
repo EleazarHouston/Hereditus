@@ -44,12 +44,12 @@ class Colony(models.Model):
         self.rest_torbs()
         self.army.new_round()
         self.colony_meal()
-        self.scout_target = None
+        #self.scout_target = None # Moved to army
         self.save()
         StoryText.objects.create(
             colony=self,
             story_text_type="system",
-            story_text=f"It is now year {round_number}.",
+            story_text=f"It is now year {round_number+1}.",
             timestamp=Now())
                 
     def reset_fertility(self):
