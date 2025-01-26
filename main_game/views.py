@@ -58,29 +58,33 @@ def load_colony(request):
     if request.method == 'POST':
         game_id = request.POST.get('game_id')
         colony_name = request.POST.get('colony_name')
-        game = Game.objects.get(pk=game_id)
+        game = get_object_or_404(Game, pk=game_id)
         
-        can_make_new_game = game.colony_set.filter(player=user).count() < game.max_colonies_per_player
+        can_make_new_game = game.colony_set.filter(player__user=user).count() < game.max_colonies_per_player
+
         if not can_make_new_game:
             error_message = "You already have the max number of colonies for this game."
-        elif game and (not game.closed or user in game.allowed_players):
-            Colony.objects.create(
-                player=user,
-                name=colony_name,
-                game=game)
-    
-    colonies = Colony.objects.filter(player=user)
+        elif not game.closed or user in game.allowed_players:
+            colony = Colony.objects.create(name=colony_name, game=game)
+            player, _ = Player.objects.get_or_create(user=user)
+            colony.player = player
+            colony.save()
+
+    colonies = Colony.objects.filter(player__user=user)
     games = Game.objects.filter(private=False) | Game.objects.filter(allowed_players__in=[user])
-    return render(request, 'main_game/load_colony.html',
-                  {'colonies': colonies,
-                   'games': games,
-                  'error_message': error_message})
+
+    return render(request, 'main_game/load_colony.html', {
+        'colonies': colonies,
+        'games': games,
+        'error_message': error_message,
+        })
 
 @login_required
 def army_view(request, colony_id):
     colony = get_object_or_404(Colony, id=colony_id)
-    
-    if request.user != colony.player:
+    player = colony.player
+
+    if player.user != request.user:
         return redirect('main_page')
 
     torbs = colony.torb_set.all()
