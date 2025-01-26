@@ -22,6 +22,8 @@ class Game(models.Model):
         super().save(*args, **kwargs)
         if is_new:
             logger.info(f"A new Game '{self.description}' was made")
+            from .evolution_engine import EvolutionEngine
+            EvolutionEngine.objects.create(game=self)
             
     @property
     def unready_colonies(self):
