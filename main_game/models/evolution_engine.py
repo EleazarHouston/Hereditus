@@ -77,8 +77,6 @@ class EvolutionEngine(models.Model):
         torb1.save()
         baby_torb.set_action("growing", "Growing")
         #baby_torb.save()
-        print(baby_torb.action)
-        
         return baby_torb
     
     def mutate_and_shuffle(self, alleles):
