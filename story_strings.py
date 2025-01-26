@@ -1,3 +1,6 @@
+# DEPRECATED
+# THIS IS FROM THE OLD DISCORD VERSION OF THE GAME, BEFORE THE WEB-SERVER VERSION CHANGE
+
 import random
 
 def player_strings(name):
@@ -58,11 +61,52 @@ def torb_names():
 
 def AI_names(type):
     #types = ["weak", "strong", "aggressive", "passive", "retributive"]
-    weak = ["Smallville", "Smallsville", "Droughttown", "Foodfree", "Weaklings", "Scraplings"]
-    strong = ["Bulkland", "Gainstown", "Lifters", "Pressers", "Giants"]
-    aggressive = ["Chasers", "Romans", "Barbarians"]
-    passive = ["Sleepers", "Sleepyville", "Watchers", "Waiters", "Observers"]
-    retributive = ["Elephants", "Brutusites", "Backtoyou", "Postals"]
+    weak = ["Fragileton", 
+            "Faintville",
+            "Droughttown",
+            "Foodfree",
+            "Weaklings",
+            "Scraplings",
+            "Brittleburg",
+            "Meekshire",
+            "Tenderland"]
+    
+    strong = ["Bulkland",
+              "Gainstown",
+              "Lifters",
+              "Pressers",
+              "Giants",
+              "Ironhold",
+              "Steelhaven",
+              "Rockgard",
+              "Fortitude"]
+    
+    aggressive = ["Chasers",
+                  "Romans",
+                  "Barbarians",
+                  "Warland",
+                  "Furytown",
+                  "Raidridge",
+                  "Blitzville",
+                  "Strikefield"]
+    
+    passive = ["Sleepers",
+               "Sleepyville",
+               "Watchers",
+               "Waiters",
+               "Observers",
+               "Quietude",
+               "Peaceville",
+               "Calmharbor",
+               "Breezefield"]
+    
+    retributive = ["Elephants",
+                   "Brutusites",
+                   "Backtoyou",
+                   "Postals",
+                   "Grudgehaven",
+                   "Vengefort"]
+    
     all = weak + strong + aggressive + passive + retributive
     all_dispositions = {"weak": weak,
            "strong": strong,
@@ -71,10 +115,11 @@ def AI_names(type):
            "retributive": retributive}
     
     if type == "random":
-        type = random.choice(all_dispositions)
-    random.shuffle(all_dispositions[type])
-    print(f"Returning AI_name {all_dispositions[type][0]}")
-    return all_dispositions[type][0]
+        type = random.choice(list(all_dispositions.keys()))
+    out = random.choice(all_dispositions[type])
+    print(f"Returning AI_name {out}")
+    return out
+    
 
 def random_event():
     # These have no impact, they are merely fluff
@@ -166,8 +211,21 @@ def loser_adjectives():
         "fearful",
         "unimpressive",
         "underprepared",
-        "unexperienced",
-        "lead-footed"
+        "inexperienced",
+        "lead-footed",
+        "puny",
+        "outmatched",
+        "overwhelmed",
+        "disorganized",
+        "frail",
+        "disheartened",
+        "weakened",
+        "panicked",
+        "inept",
+        "clumsy",
+        "battered",
+        "subdued",
+        "beleaguered"        
     ]
     random.shuffle(possibilities)
     return possibilities[0]

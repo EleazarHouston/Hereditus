@@ -1,0 +1,24 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hereditus: Welcome</title>
+    <link rel="stylesheet" href="{% static 'main_game/style.css' %}">
+</head>
+<body>
+    <div class="modern-container">
+        <h1>Welcome to Hereditus</h1>
+        <div class="modern-button-group">
+            <form action="{% url 'login' %}" method="get">
+                <button type="submit" class="modern-button">Login</button>
+            </form>
+            <form action="{% url 'register' %}" method="get">
+                <button type="submit" class="modern-button">Register</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

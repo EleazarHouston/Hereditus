@@ -1,0 +1,194 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hereditus: Create/Load Colony</title>
+    <link rel="stylesheet" href="{% static 'main_game/style.css' %}">
+    <style>
+        /* Dark mode background and text color */
+        body {
+            background-color: #121212;
+            color: #e0e0e0;
+            font-family: "Monaco", Monospace;
+        }
+
+        /* Flex container for the boxes */
+        .colony-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px; /* Space between the boxes */
+            justify-content: flex-start;
+        }
+
+        .new-colony-button {
+            padding: 0px;
+            background-color: #a45d00;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        /* Each colony box */
+        .colony-box {
+            background-color: #1e1e1e;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            flex: 0 0 200px; /* Box width, flex-grow is 0, flex-shrink is 0 */
+            text-align: center;
+        }
+
+        /* Colony name styling */
+        .colony-box h2 {
+            color: #ffffff;
+            margin-bottom: 10px;
+        }
+
+        .new-colony-input {
+            background-color: #333;
+            color: #a45d00;
+            width: calc(100% - 20px);
+            margin-bottom: 10px;
+            max-width: 89%;
+            text-align: center;
+            cursor: text;
+        }
+
+        /* Button styling for dark mode */
+        .colony-box button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .colony-box button:hover {
+            background-color: #45a049;
+        }
+
+        /* Collapsible container styling */
+        .collapsible {
+            background-color: #333;
+            color: white;
+            cursor: pointer;
+            padding: 15px;
+            border: none;
+            text-align: left;
+            outline: none;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            width: 100%;
+            display: block;
+        }
+
+        .content {
+            display: none;
+            overflow: hidden;
+            padding: 0 15px;
+        }        
+
+        .new-colony-button.disabled {
+            background-color: #777;
+            cursor: not-allowed;
+        }
+
+        .tooltip {
+            visibility: hidden;
+            width: 220px;
+            background-color: black;
+            color: #fff;
+            text-align: center;
+            border-radius: 5px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -110px;
+        }
+
+        .new-colony-button:hover .tooltip {
+            visibility: visible;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        {% if error_message %}
+            <div class="error-message" style="color: red; margin-bottom: 20px; font-size: 1.5em;">
+                {{ error_message }}
+            </div>
+        {% endif %}
+        <h1>Select a Colony</h1>
+        {% for game in games %}
+            <button class="collapsible">{{ game.description }}</button>
+            <div class="content">
+                <div class="colony-container">
+                    {% for colony in colonies %}
+                        {% if colony.game.id == game.id %}
+                            <div class="colony-box">
+                                <h2>{{ colony.name }}</h2>
+                                <form action="{% url 'colony_view' colony.id %}" method="get">
+                                    <button type="submit">Play</button>
+                                </form>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                    <div class="colony-box">
+                        <form action="{% url 'load_colony' %}" method="post" class="new-colony-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="game_id" value="{{ game.id }}">
+                            <input type="text" name="colony_name" class="new-colony-input" maxlength="63" placeholder="Colony Name" required>
+                            <button type="submit" class="new-colony-button {% if game.closed %}disabled{% endif %}" {% if game.closed %}disabled{% endif %}>
+                                New Colony
+                                {% if game.closed %}
+                                    <span class="tooltip">This game is closed to new colonies</span>
+                                {% endif %}
+                            </button>
+                        </form>
+                    </div> 
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const collapsibles = document.querySelectorAll('.collapsible');
+            collapsibles.forEach(collapsible => {
+                collapsible.addEventListener('click', function() {
+                    this.classList.toggle('active');
+                    const content = this.nextElementSibling;
+                    if (content.style.display === "block") {
+                        content.style.display = "none";
+                    } else {
+                        content.style.display = "block";
+                    }
+                });
+            });
+        });
+    </script>
+
+    <script>
+        document.querySelectorAll('.new-colony-form').forEach(form => {
+            form.addEventListener('submit', function(event) {
+                const input = form.querySelector('.new-colony-input');
+                if (input.value.trim() === '') {
+                    event.preventDefault();
+                    input.focus();
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>

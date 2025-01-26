@@ -1,0 +1,170 @@
+{% extends 'main_game/base.html' %}
+{% load static %}
+
+{% block title %}Hereditus: Army{% endblock %}
+
+{% block content %}
+    {% if player_colony.num_soldiers > 0 %}
+        <h1>The Army of {{ player_colony.name }}</h1>
+        <div class="action-console-container">
+            <div class="column">
+                <form method="post" action="{% url 'army_view' colony.id %}">
+                    <div class="end-turn-container">
+                        {% csrf_token %}
+                        <button
+                            type="submit"
+                            name="action"
+                            value="end_turn"
+                            class="end-turn-button {% if colony.ready %}disabled{% else %}{% endif %}"
+                            {% if colony.ready %}disabled{% endif %}
+                            id="endTurnButton"
+                        >
+                            {% if colony.ready %}
+                                Waiting for {{ colony.game.unready_colonies }} other players...
+                            {% else %}
+                                End Turn
+                            {% endif %}
+                        </button>
+                    </div>
+                </form>
+                <form method="post" action="{% url 'army_view' player_colony.id  %}">
+                    {% csrf_token %}
+                    <button type="submit" name="action" value="scout" class="cancel-scout-button">Cancel Scout</button>
+                    <button type="submit" name="action" value="attack" class="cancel-attack-button">Cancel Attack</button>
+                </form>
+            </div>
+            <div class="column">
+                <div class="action-console-container army-console">
+                    <div class="console-display" style="display: flex; flex-direction: column; max-width: 100%; overflow-x: auto;">
+                        {% for story_text in story_texts %}
+                            <div class="console-entry" style="display: flex; width: 100%;">
+                                <div class="console-entry-round" style="padding-right: 10px; font-size: 1.2em; white-space: nowrap;" >
+                                    <span>Y{{ story_text.game_round }}</span>
+                                </div>
+                                <div class="console-entry-text" style="flex-grow: 1;">
+                                    <p style="color: {% if not story_text.is_new %}#888{% else %}#fff{% endif %}; margin: 0;">
+                                        {{ story_text.story_text }}
+                                    </p>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <table class="army-table">
+            <thead>
+                <tr>
+                    <th>Colony</th>
+                    <th>Total Torbs</th>
+                    <th>Soldiers</th>
+                    <th>Morale</th>
+                    <th>Food</th>
+                    <th>Health</th>
+                    <th>Power</th>
+                    <th>Resilience</th>
+                    <th>Scout</th>
+                    <th>Attack</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for colony in all_colonies %}
+                    <tr class="{% if colony.id == player_colony.id %} player-colony {% endif %}">
+                        <td>
+                            {% if colony in known_colonies %}
+                                {{ colony.name }}
+                            {% else %}
+                                ???
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if colony in known_colonies %}
+                                {{ colony.torb_count }}
+                            {% else %}
+                                ???
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if colony in known_colonies %}
+                                {{ colony.num_soldiers }}
+                            {% else %}
+                                ???
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if colony in known_colonies %}
+                                {{ colony.army.morale }}
+                            {% else %}
+                                ???
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if colony in known_colonies %}
+                                {{ colony.food }}
+                            {% else %}
+                                ???
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if colony in known_colonies %}
+                                {{ colony.army.army_health }}
+                            {% else %}
+                                ???
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if colony in known_colonies %}
+                                {{ colony.army.army_power }}
+                            {% else %}
+                                ???
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if colony in known_colonies %}
+                                {{ colony.army.army_resilience }}
+                            {% else %}
+                                ???
+                            {% endif %}
+                        </td>
+                        <td>
+                            <form method="post" action="{% url 'army_view' player_colony.id %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="selected_colony" value="{{ colony.id }}">
+                                <button type="submit" name="action" value="scout" class="scout-button {% if player_colony.army.scout_target == colony %}target{% endif %}">Scout</button>
+                            </form>
+                        </td>
+                        <td>
+                            <form method="post" action="{% url 'army_view' player_colony.id %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="selected_colony" value="{{ colony.id }}">
+                                <button type="submit" name="action" value="attack" class="attack-button {% if player_colony.army.attack_target  == colony %}target{% endif %}" {% if colony not in known_colonies %}disabled{% endif %}>Attack</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="9">No colonies available.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const consoleDisplay = document.querySelector('.console-display');
+                consoleDisplay.scrollTop = consoleDisplay.scrollHeight; // Scroll to the bottom on load
+            });
+        </script>
+    {% else %}
+        <h1>{{ colony.name }} doesn't have an army.</h1>
+    {% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+    <script src="{% static 'main_game/colony_view.js' %}"></script>
+    <script>
+        const checkReadyStatusUrl = "{% url 'check_ready_status' colony.id %}";
+    </script>
+{% endblock %}

@@ -1,7 +1,9 @@
+# DEPRECATED
+# THIS IS FROM THE OLD DISCORD VERSION OF THE GAME, BEFORE THE WEB-SERVER VERSION CHANGE
+
 from __future__ import annotations
 import logging
 
-#from exceptions import *
 from gene import Gene
 
 logging.basicConfig(level=logging.DEBUG,format='{asctime} ({filename}) [{levelname:^8s}] {message}', style='{')
@@ -56,13 +58,22 @@ class Torb:
         self.fertile = True
         self.alive = True
         self.starving = False
-        
+        self.poisoned = False
+        self.inbred = 0.0
+        self.ancestry = []
+        self.mutagen_resistance = 1
         self.EE = EvolutionEngine._instances[EEID]
         logging.debug(f"{self.log_head()}: Basic attributes set")
         
         self.start_genes(parents, genes)
         self.max_hp = round(getattr(self,"health").get_allele(is_random=True))
         self.hp = self.max_hp
+        
+        if len(self.parents) == 2:
+            logging.debug(f"{self.log_head()}: Setting ancestry and determining inbred value")
+            self.init_ancestry()
+            self.inbred = self.det_inbred()
+        
         self.UID = Torb._next_UID
         logging.info(f"{self.log_head()}: Successfully instantiated")
         Torb._next_UID += 1
@@ -80,6 +91,50 @@ class Torb:
             self.random_genes()
         return
 
+    def init_ancestry(self, generations: int = 4):
+        if len(self.parents) != 2:
+            return
+        
+        gen_size = 2
+        parent0 = self.parents[0]
+        parent1 = self.parents[1]
+        ancestry = [parent0, parent1]
+
+        for i in range(generations):
+            logging.debug(f"{self.log_head()}: Checking Torb ancestor gen {i}")
+            if i * gen_size < len(parent0.ancestry):
+                logging.debug(f"{self.log_head()}: Parent0 ancestry {parent0.ancestry}")
+                p0_ancestors = parent0.ancestry[i*gen_size:(i+1)*gen_size]
+            else:
+                p0_ancestors = []
+            if i * gen_size < len(parent1.ancestry):
+                logging.debug(f"{self.log_head()}: Parent1 ancestry {parent1.ancestry}")
+                p1_ancestors = parent1.ancestry[i*gen_size:(i+1)*gen_size]
+            else:
+                p1_ancestors = []
+            
+            ancestry.extend(p0_ancestors + p1_ancestors)
+            gen_size *= 2
+        self.ancestors = ancestry
+        logging.debug(f"{self.log_head()}: Ancestry set to {ancestry}")
+        return
+
+    def det_inbred(self):
+        import math
+        weight = 0
+        inbred = 0.25 * math.floor((self.parents[0].inbred + self.parents[1].inbred)*4)/4
+        logging.debug(f"{self.log_head()}: Parent inbred factor {inbred}")
+        for i, ancestor in enumerate(self.ancestry):
+            if ancestor in self.ancestry[:i]:
+                
+                found_gen = int(math.log2((i+2)/2))
+                weight = 1/found_gen
+                inbred += weight
+                logging.debug(f"{self.log_head()}: Ancestor found gen {found_gen} weight {weight}")
+        
+        logging.debug(f"{self.log_head()}: Inbred total {inbred}")
+        return inbred
+
     def __str__(self):
         return (f"Colony {self.colony.name}: Torb {self.generation:02d}-{self.ID:02d}")
 
@@ -96,6 +151,7 @@ class Torb:
     
     def random_genes(self):
         from gene import Gene
+        logging.critical(f"DEPRECATED RANDOM_GENE INIT METHOD")
         logging.debug(f"Generating random genes for {Torb._next_UID}")
         for i, gene in enumerate(self.EE.gene_list):
             new_gene = Gene(i, [], 0)

@@ -1,3 +1,6 @@
+# DEPRECATED
+# THIS IS FROM THE OLD DISCORD VERSION OF THE GAME, BEFORE THE WEB-SERVER VERSION CHANGE
+
 from __future__ import annotations
 from dataclasses import dataclass
 import logging
@@ -49,6 +52,8 @@ class Colony:
             PID (int, optional): Player ID associated with the Colony, defaults to None
         """
         
+        from research import ResearchTree
+
         self.CID: int = CID
         self.name: str = name
         self.EE: EvolutionEngine = EvolutionEngine._instances[EEID]
@@ -59,17 +64,27 @@ class Colony:
         self.SID: int = SID
         Colony._instances[self.CID] = self
         Colony._next_CID += 1
-        self.at_arms: list[Torb] = []
         self.training: list[Torb] = []
         self.soldiers: list[Torb] = []
         self.breeding: list[Torb] = []
         self.resting: list[Torb] = []
         self.growing: list[Torb] = []
+        self.researching: list[Torb] = []
+        self.building: list[Torb] = []
         self.food: int = 5
+        self.food_poisoned_known: int = 0
+        self.food_poisoned_unknown: int = 0
         self.scouts: int = 0
         self.ready: bool = False
         self.destroyed: bool = False
         self.attack_target = None
+        self.gather_rate: float = 1.7
+        self.research_points: float = 0
+        self.research_tree = ResearchTree()
+        self.rest_heal_1 = 2
+        self.rest_heal_2 = 0.2
+        self.mutagen_breadth = 2
+        self.mutagen_impact = 2
         logging.info(f"{self.log_head()}: Successfully initialized: PID {self.PID}")
         return
     
@@ -99,10 +114,10 @@ class Colony:
         Args:
             pairs (list): A list of lists where each sublist is a pair of Torbs to breed
         """
-        
+        from simulator import Simulator
         logging.debug(f"{self.log_head()}: Reproducing the colony")
-        self.generations += 1
-        logging.debug(f"{self.log_head()}: Breeding generation {self.generations:02d} with pairs {pairs}")
+        
+        logging.debug(f"{self.log_head()}: Breeding generation {self.generations+1:02d} with pairs {pairs}")
         for i, pair in enumerate(pairs):
             if pair[0] in self.training or pair[0] in self.soldiers:
                 raise ColonyException(f"{pair[0].generation:02d}-{pair[0].ID:02d} is on active duty and cannot breed.")
@@ -114,12 +129,14 @@ class Colony:
             if pair[1] in self.breeding or pair[1] in self.growing:
                 raise ColonyException(f"{pair[1].generation:02d}-{pair[1].ID:02d} is busy being a part of a new family.")
             
+            self.EE.verify_parents(parents = pair)
             self.breeding += pair
-            child = self.EE.create_torb(ID = i, generation = self.generations, CID = self.CID, parents=pair)
+            child = self.EE.create_torb(ID = i, generation = Simulator._instances[self.SID].year + 1, CID = self.CID, parents=pair)
+            
             self.torbs[self.torb_count] = child
             self.growing.append(child)
             self.torb_count += 1
-            
+        self.generations += 1    
         logging.info(f"{self.log_head()}: Generation {self.generations:02d} generated")
         return
     
@@ -159,12 +176,31 @@ class Colony:
                 raise ColonyException("Soldier not found.")
             else:
                 if torb in self.soldiers:
-                    self.soldiers -= torb
+                    self.soldiers.remove(torb)
                 else:
-                    self.training -= torb
+                    self.training.remove(torb)
         logging.debug(f"{self.log_head()}: {len(torbs)} enlisted.")
         return
     
+    def get_occupied(self, occupied: bool = True):
+        all_torbs = [torb for UID, torb in self.torbs.items() if torb.alive]
+        unoccupied_torbs = []
+        occupied_torbs = []
+        for torb in all_torbs:
+            if (
+                torb in self.breeding or
+                torb in self.training or
+                torb in self.soldiers or
+                torb in self.growing or
+                torb in self.researching or
+                torb in self.resting or
+                torb in self.building
+            ):
+                occupied_torbs.append(torb)
+            else:
+                unoccupied_torbs.append(torb)
+        return occupied_torbs if occupied else unoccupied_torbs
+
     def gather(self) -> None:
         """
         Gathers food for the colony based on available Torbs.
@@ -176,8 +212,9 @@ class Colony:
         num_soldiers = len(self.soldiers)
         num_training = len(self.training)
         num_growing = len(self.growing)
-        num_gathering = num_torbs - num_breeding - num_soldiers - num_training - num_growing
-        self.food += round(num_gathering * 1.6)
+        num_gathering = len(self.get_occupied(occupied = False))
+        #num_gathering = num_torbs - num_breeding - num_soldiers - num_training - num_growing
+        self.food += round(num_gathering * self.gather_rate)
         #Maybe add differing amounts based on gathering torb genes: strength?
         return
         
@@ -196,12 +233,21 @@ class Colony:
                 torb.adjust_hp(-1)
 
         for torb in living_torbs:
+            torb.poisoned = False
             if torb not in starved_torbs:
+                adjust_amount = random.choices([1, -2], [len(self.food), len(self.food_poisoned_unknown)])
+                adjust_amount = adjust_amount[0]
                 torb.starving = False
-                torb.adjust_hp(1)
-                
-        self.food -= len(living_torbs)
+                if adjust_amount > 0:
+                    self.food -= 1
+                elif adjust_amount < 0:
+                    self.food_poisoned_unknown -= 0
+                    torb.poisoned = True
+                torb.adjust_hp(adjust_amount)
+        
+        # Consider Food object with health_impact attribute
         self.food = max(self.food, 0)
+        self.food_poisoned_unknown = max(self.food_poisoned_unknown, 0)
         return
 
     def log_head(self) -> str:
@@ -224,8 +270,13 @@ class Colony:
             torb.fertile = True if torb.alive else False
         for torb in self.resting:
             if not torb.starving:
-                torb.adjust_hp(3)
-    
+                adjust_amt = round(self.rest_heal_1 + self.rest_heal_2 * torb.max_hp)
+                torb.adjust_hp(adjust_amt)
+            self.resting.remove(torb)
+        for torb in self.researching:
+            self.research_points += 1
+            self.researching.remove(torb)
+
         self.ready = False
         return
     
@@ -300,9 +351,16 @@ class Colony:
             
         return compar_army_stats
 
+    def enroll(self, torbs: list[Torb]):
+        for torb in torbs:
+            if torb in self.get_occupied():
+                continue
+            self.researching.append(torb)
+        return len(self.researching)
+
     def rest(self, torbs: list[Torb]):
         for torb in torbs:
-            if torb in self.breeding or torb in self.soldiers or torb in self.resting or torb.starving or torb in self.training:
+            if torb in self.get_occupied():
                 # Change to exception
                 print("Torb cannot rest")
                 continue
@@ -310,6 +368,23 @@ class Colony:
                 print("Torb already max hp")
                 continue
             self.resting.append(torb)
+        return
+    
+    def discover(self):
+        rsch_title, rsch_desc, cost = self.research_tree.discover(self.research_points)
+        self.research_points -= cost
+        return rsch_title, rsch_desc
+
+    def mutagen(self, torb):
+        if 40 in any([rsch.DID for rsch in self.research_tree.researched]):
+            if self.research_points < torb.mutagen_resistance:
+                raise ColonyException(f"Not enough research points, this torb requires {torb.mutagen_resistance}")
+            for i in range(self.mutagen_breadth):
+                torb.EE.adjust_gene(torb, self.mutagen_impact)
+                self.research_points -= torb.mutagen_resistance
+                torb.mutagen_resistance *= 2
+        else:
+            raise ColonyException("Mutagen not researched")
         return
     
 @dataclass

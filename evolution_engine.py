@@ -1,3 +1,6 @@
+# DEPRECATED
+# THIS IS FROM THE OLD DISCORD VERSION OF THE GAME, BEFORE THE WEB-SERVER VERSION CHANGE
+
 from __future__ import annotations
 
 import logging
@@ -5,7 +8,7 @@ import random
 
 import numpy as np
 
-from exceptions import InvalidParents
+from exceptions import EvolutionEngineException, InvalidParents
 from torb import Torb
 from gene import Gene
 
@@ -79,17 +82,14 @@ class EvolutionEngine:
         """
         
         if len(parents) != 2:
-            logging.warning(f"{self.log_head()}: Invalid number of parents given: {len(parents)}")
+            raise EvolutionEngineException(f"{self.log_head()}: Invalid number of parents given: {len(parents)}")
         logging.debug(f"{self.log_head()}: Verifying parents {parents}")
         if not isinstance(parents[0], Torb) or not isinstance(parents[1], Torb):
-            logging.warning(f"{self.log_head()}: Parents {parents} are not valid Torbs")
-            return False
+            raise EvolutionEngineException(f"{self.log_head()}: Parents {parents} are not valid Torbs")
         if parents[0] == parents[1]:
-            logging.warning(f"{self.log_head()}: Parents {parents} are the same instance")
-            return False
+            raise EvolutionEngineException(f"{self.log_head()}: Parents {parents} are the same instance")
         if any(parent.fertile for parent in parents) == False:
-            logging.warning(f"{self.log_head()}: Parents {[parent for parent in parents if parent.fertile == False]} are infertile")
-            return False
+            raise EvolutionEngineException(f"{self.log_head()}: Parents {[parent for parent in parents if parent.fertile == False]} are infertile")
  
         logging.info(f"{self.log_head()}: Parents verified")
         return True
@@ -155,11 +155,37 @@ class EvolutionEngine:
         logging.info(f"{self.log_head()}: Allele post-mutation box {out_alleles}")
         return out_alleles, mutated
     
-    def create_torb(self, ID: int, generation: int, CID: int, parents: list[Torb]=None, genes: list[Gene]=None):
+    def create_torb(self, ID: int, generation: int, CID: int, parents: list[Torb]=[], genes: list[Gene]=None):
         logging.info(f"{self.log_head()}: Calling creation of Torb {generation:02d}-{ID:02d}")
         if parents:
             genes = self.breed_parents(parents)
-        return Torb(ID, generation, CID, parents, genes, EEID=self.EEID)
+        torb = Torb(ID, generation, CID, parents, genes, EEID = self.EEID)
+        return torb
     
+    def inbred_factor(self, torb):
+        
+        if torb.inbred < 0.01:
+            return
+        factor = (1/(torb.inbred+1))**0.5
+        for gene_type in self.gene_list:
+            gene = getattr(torb, gene_type)
+            new_alleles = []
+            for allele in gene.alleles:
+                new_alleles.append(allele * factor)
+            gene.alleles = new_alleles
+        return factor
+
+    def adjust_gene(self, torb: Torb, amount: int, is_random: bool = True):
+        if is_random == True:
+            sel_gene_type = random.choice(self.gene_list)
+            sel_gene = getattr(torb, sel_gene_type)
+            cur_alleles = sel_gene.alleles
+            sel_allele_idx = random.randrange(0, self.alleles_per_gene-1)
+            cur_alleles[sel_allele_idx] += amount
+            sel_gene.alleles = cur_alleles
+        else:
+            raise EvolutionEngineException("Not implemented yet")
+        return
+
     def log_head(self):
         return f"EEID-{self.EEID:02d}"

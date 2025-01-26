@@ -1,3 +1,6 @@
+# DEPRECATED
+# THIS IS FROM THE OLD DISCORD VERSION OF THE GAME, BEFORE THE WEB-SERVER VERSION CHANGE
+
 from __future__ import annotations
 
 import logging
@@ -59,6 +62,8 @@ class Player:
             raise PlayerException("Cannot claim non-existant colony")
         return
     
+    
+
     def train_soldiers(self, CID: int, torbs: str) -> None:
         """
         Enlists Torbs into the army of selected Colony.
@@ -89,7 +94,7 @@ class Player:
         torbs_parsed = self.torb_string_regex(torbs)
         found_torbs = [self.find_torb(CID, torb[0], torb[1]) for torb in torbs_parsed]
         Colony._instances[CID].discharge_soldier(found_torbs)
-        return len(found_torbs)
+        return len(Colony._instances[CID].soldiers), len(Colony._instancves[CID].training)
     
     def view_torbs(self, CID: int, generations: int | list = [0,99]) -> str:
         """
@@ -113,10 +118,13 @@ class Player:
             raise PlayerException("Could not find Torbs.")
         
         colony = Colony._instances[CID]
-        out_string = f"{colony.name} | Food: {colony.food} | "
-        out_string += f"Living Torbs: {len([torb for ID, torb in colony.torbs.items() if torb.alive])} | "
-        out_string += f"Dead Torbs: {len([torb for ID, torb in colony.torbs.items() if not torb.alive])}\n"
-        out_string += "`TORB GEN-ID     CURRENT/MAX HP    CONSTITUTION   DEFENSE   AGILITY    STRENGTH`"
+        if 0 in generations:
+            out_string = f"{colony.name} | Food: {colony.food} | "
+            out_string += f"Living Torbs: {len([torb for ID, torb in colony.torbs.items() if torb.alive])} | "
+            out_string += f"Dead Torbs: {len([torb for ID, torb in colony.torbs.items() if not torb.alive])}\n"
+            out_string += "`TORB GEN-ID     INBRED    CURRENT/MAX HP    CONSTITUTION   DEFENSE   AGILITY    STRENGTH`"
+        else:
+            out_string = ""
 
         if self.hide_dead == True:
             found_torbs = [torb for torb in found_torbs if torb.alive]
@@ -148,14 +156,16 @@ class Player:
                 status_effects += 1
             if not torb.alive:
                 out_string += ":headstone: "
+                status_effects += 1
             spacer = "       "
             if status_effects == 0:
                 out_string += spacer * 2
             elif status_effects == 1:
                 out_string += spacer
             
-            out_string += (f"**Colony {torb.colony.name}** - Torb `{gen_str}-{id_str}`:   ")
-            out_string += (f":mending_heart:[`{torb.hp:.2f}/{torb.max_hp:.2f}`]   Genes:  ")
+            out_string += (f"**{torb.colony.name}** - Torb `{gen_str}-{id_str}`:   ")
+            out_string += (f":bread: [{torb.inbred:.2f}]    ")
+            out_string += (f":mending_heart:[`{torb.hp:.2f}/{torb.max_hp:.2f}`]   ")
             out_string += (f":two_hearts:[`{torb.health.get_allele(0):.2f}|{torb.health.get_allele(1):.2f}`]   ")
             out_string += (f":shield:[`{torb.defense.get_allele(0):.2f}|{torb.defense.get_allele(1):.2f}`]   ")
             out_string += (f":zap:[`{torb.agility.get_allele(0):.2f}|{torb.agility.get_allele(1):.2f}`]   ")
@@ -288,33 +298,43 @@ class Player:
                     return desc
             return descriptions[-1]
 
-        hp_thresholds = [0.95, 0.7, 0.4, 0]
+        hp_thresholds = [0.95, 0.85, 0.65, 0.4, 0.2, 0]
         hp_descriptions = [
             "seems uninjured",
+            "has a few scratches",
             "is lightly injured",
-            "appear moderately injured",
-            "looks like it's on the brink of collapse"
+            "appears moderately injured",
+            "iooks heavily injured",
+            "looks like it's on the brink of falling over"
         ]
 
-        power_thresholds = [1.4, 1.15, 0.85, 0.5, 0]
+        power_thresholds = [1.75, 1.5, 1.3, 1.15, 0.85, 0.7, 0.5, 0.25, 0]
         power_descriptions = [
-            "appears much stronger than our army",
-            "seems somewhat stronger than our army",
-            "looks about the same strength as ours",
-            "is moderately weaker than ours",
-            "is much weaker than our army"
+            "looks immensely more powerful than our army",
+            "appears much more powerful than our army",
+            "seems moderately more powerful than our army",
+            "looks slightly more powerful than our army",
+            "looks like its just as powerful as ours",
+            "seems slightly less powerful than our army",
+            "is moderately less powerful than ours",
+            "is much less powerful than our army",
+            "is immensely less powerful than our army"
         ]
 
-        resil_thresholds = [1.4, 1.15, 0.85, 0.5, 0]
+        resil_thresholds = [1.75, 1.5, 1.3, 1.15, 0.85, 0.7, 0.5, 0.25, 0]
         resil_descriptions = [
+            "looks like it's immensely more resilient than our army",
             "appears much more resilient than ours",
-            "seems somewhat more resilient than our army",
+            "seems moderately more resilient than our army",
+            "looks slightly more resilient than our army",
             "looks just as resilient as ours",
+            "seems slightly less resilient than our army",
             "is moderately less resilient than ours",
-            "is much less resilient than our army"
+            "is much less resilient than our army",
+            "is immensely less resilient than ours"
         ]
 
-        out_str = f"{player_strings(self.name)}, your scouts have returned with the following info:\n"
+        out_str = f"{player_strings(self.name)}, your scouts have returned with the following info:\n\n"
         foreign_army_info = self.colonies[CID].scout_all_colonies()
         if foreign_army_info == False:
             return "You have the only army in all the lands."
@@ -323,9 +343,9 @@ class Player:
             power_str = describe_stat(power, power_thresholds, power_descriptions)
             resil_str = describe_stat(resil, resil_thresholds, resil_descriptions)
             if hp == 0:
-                out_str += f"{foreign_colony}'s Army: Does not exist\n"
+                out_str += f"**{foreign_colony}'s Army:** Does not exist\n\n"
             else:
-                out_str += f"{foreign_colony}'s Army: {hp_str}, {power_str}, and {resil_str}\n"
+                out_str += f"**{foreign_colony}'s Army:** {hp_str}, {power_str}, and {resil_str}\n\n"
         return out_str
 
     def ready_up(self, CID: int) -> None:
@@ -358,13 +378,29 @@ class Player:
         search_text = target_colony.strip()
         for target_CID, colony in Colony._instances.items():
             if colony.name == search_text:
+                if colony == Colony._instances[CID]:
+                    raise PlayerException("Cannot set self as a target.")
                 Colony._instances[CID].attack_target = target_CID
                 logging.debug(f"{self.log_head()}: Colony {Colony._instances[CID].name} chose {colony.name} as its target")
                 return True
         logging.info(f"{self.log_head()}: Couldn't find Colony {search_text[:10]}")
         return False
 
+    def rest(self, CID: int, torbs: str):
+        torbs_parsed = self.torb_string_regex(torbs)
+        found_torbs = [self.find_torb(CID, torb[0], torb[1]) for torb in torbs_parsed]
+        Colony._instances[CID].rest(found_torbs)
+        return f"{len(found_torbs)} Torbs were sent to rest and recover."
+        
+    def study(self, CID:int, torbs: str):
+        torbs_parsed = self.torb_string_regex(torbs)
+        found_torbs = [self.find_torb(CID, torb[0], torb[1]) for torb in torbs_parsed]
+        Colony._instances[CID].enroll(found_torbs)
+        return f"{len(found_torbs)} Torbs were sent to do some hard thinking."
 
+    def discvoery(self, CID: int):
+        rsch_title, rsch_desc =Colony._instances[CID].discover()
+        return f"Your Torbs have discovered {rsch_title}: {rsch_desc}"
 
     def log_head(self) -> str:
         """
