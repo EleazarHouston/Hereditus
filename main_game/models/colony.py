@@ -158,8 +158,20 @@ class Colony(models.Model):
         from .torb import Torb
         next_ID = Torb.objects.filter(colony=self).aggregate(max_id=models.Max('private_ID'))['max_id']
         next_ID = next_ID + 1 if next_ID is not None else 1
-        random.shuffle(torb_names)
-        name = torb_names[0]
+        
+        used_names = set(Torb.objects.filter(colony=self).values_list('name', flat=True))
+        available_names = [name for name in torb_names if name not in used_names]
+        
+        if available_names:
+            name = random.choice(available_names)
+        else:
+            base_name = random.choice(torb_names)
+            counter = 2
+            name = base_name
+            while name in used_names:
+                name = f"{base_name} {counter}"
+                counter += 1
+        
         max_hp = genes['vitality'][0]
         torb = Torb.objects.create(
             colony=self,
