@@ -29,9 +29,9 @@ class Player(models.Model):
         if action == 'breed':
             colony.set_breed_torbs(kwargs.get('torb_ids'))
         elif action == 'gather':
-            colony.assign_torbs_action(kwargs.get('torb_ids'), "gathering", "🌾 Gathering")
+            colony.assign_torbs_action(torb_ids=kwargs.get('torb_ids'), action="gathering")
         elif action == 'enlist':
-            colony.assign_torbs_action(kwargs.get('torb_ids'), "training", "🎯 Training")
+            colony.assign_torbs_action(torb_ids=kwargs.get('torb_ids'), action="training")
         elif action == 'scout':
             target_colony_id = kwargs.get('target_colony_id')
             colony.army.set_scout_target(target_colony_id)
@@ -49,9 +49,9 @@ class Player(models.Model):
         else:
             raise ValueError("Invalid number of Torbs to breed. Needs exactly two.")
             
-    def assign_torbs_action(self, torbs, action, description):
+    def assign_torbs_action(self, torbs, action):
         for torb in torbs:
-            torb.set_action(action, description)
+            torb.set_action(action=action)
             
     def __str__(self):
         return f"Player {self.name}"

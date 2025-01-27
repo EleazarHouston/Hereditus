@@ -75,7 +75,7 @@ class EvolutionEngine(models.Model):
         torb0.fertile = torb1.fertile = baby_torb.fertile = False
         torb0.save()
         torb1.save()
-        baby_torb.set_action("growing", "Growing")
+        baby_torb.set_action(action="growing")
         #baby_torb.save()
         return baby_torb
     

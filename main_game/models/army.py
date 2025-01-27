@@ -43,7 +43,7 @@ class Army(models.Model):
         for torb in self.colony.torb_set.all():
             if torb.action == "training":
                 torb.trained = True
-                torb.set_action("soldiering", "🏹 Soldiering")
+                torb.set_action(action="soldiering",)
                 torb.save()
                 ArmyTorb.add_to_army(self, torb)
                 

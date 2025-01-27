@@ -61,7 +61,7 @@ class Colony(models.Model):
         growing_torbs = self.torb_set.filter(growing=True)
         for torb in growing_torbs:
             torb.growing = False
-            torb.set_action("gathering", "🌾 Gathering")
+            torb.set_action(action="gathering")
             torb.save()
     
     def call_breed_torbs(self):
@@ -78,8 +78,8 @@ class Colony(models.Model):
                         story_text_type="breeding",
                         story_text=f"A new Torb, '{new_torb.name}', was born",
                         timestamp=Now())
-                torb.set_action("gathering", "🌾 Gathering")
-                torb1.set_action("gathering", "🌾 Gathering")
+                torb.set_action(action="gathering")
+                torb1.set_action(action="gathering")
         
     def set_breed_torbs(self, torbs):
         from .torb import Torb
@@ -87,14 +87,14 @@ class Colony(models.Model):
         torb0 = Torb.objects.get(id=torbs[0])
         torb1 = Torb.objects.get(id=torbs[1])
         
-        torb0.set_action("breeding", f"💦 Breeding with {torb1.name}", torb1)
-        torb1.set_action("breeding", f"💦 Breeding with {torb0.name}", torb0)
+        torb0.set_action(action="breeding", context_torb=torb1)
+        torb1.set_action(action="breeding", context_torb=torb0)
 
-    def assign_torbs_action(self, torb_ids, action, description):
+    def assign_torbs_action(self, torb_ids, action):
         from .torb import Torb
         torbs = Torb.objects.filter(id__in=torb_ids, colony=self)
         for torb in torbs:
-            torb.set_action(action, description)
+            torb.set_action(action=action)
 
     def rest_torbs(self):
         for torb in self.torb_set.all():
@@ -104,7 +104,7 @@ class Colony(models.Model):
     
     def reset_torbs_actions(self, action: str):
         for torb in self.torb_set.all():
-            torb.set_action("gathering", "🌾 Gathering")
+            torb.set_action(action="gathering")
     
     def gather_phase(self):
         num_gathering = 0

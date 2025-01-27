@@ -34,6 +34,15 @@ class Torb(models.Model):
     genes = models.JSONField(default=dict)
     army = models.ForeignKey('main_game.Army', on_delete=models.SET_NULL, null=True, blank=True)
 
+    TORB_ACTIONS = {
+        'gathering': '🌾 Gathering',
+        'growing': '🍼 Growing',
+        'dead': '💀 Dead',
+        'soldiering': '🏹 Soldiering',
+        'breeding': '💦 Breeding',
+        'training': '🎯 Training',
+    }
+
     @property
     def power(self):
         strength_allele = random.choice(self.genes['strength'])
@@ -68,21 +77,20 @@ class Torb(models.Model):
             timestamp=Now())
         logger.debug(f"Colony {self.colony.id} '{self.colony.name}' Torb {self.private_ID} '{self.name}' died, context: {context}")
         self.save()
-        self.set_action("dead", "💀 Dead")
+        self.set_action(action="dead")
         if self.army_torb.first():
             self.army_torb.first().remove_from_army()
         
-    # TODO: Make dictionary of actions and action_desc strings defined in one place
-    def set_action(self, action: str, action_desc: str, context_torb=None):
+    def set_action(self, action: str, context_torb=None):
         if not self.is_alive:
             self.action = "dead"
-            self.action_desc = "💀 Dead"
+            self.action_desc = self.TORB_ACTIONS['dead']
             self.save()
             return
         
         if self.growing:
             self.action = "growing"
-            self.action_desc = "🍼 Growing"
+            self.action_desc = self.TORB_ACTIONS['growing']
             self.save()
             return
         
@@ -92,12 +100,14 @@ class Torb(models.Model):
             logger.debug(f"Colony {self.colony.id} '{self.colony.name}' Torb {self.private_ID} Already breeding with {self.context_torb}")
             self.context_torb.context_torb = None
             self.context_torb.action = "gathering"
-            self.context_torb.action_desc = "🌾 Gathering"
+            self.context_torb.action_desc = self.TORB_ACTIONS['gathering']
             self.context_torb.save()
-            
         
         self.action = action
-        self.action_desc = action_desc
+        if action == 'breeding' and context_torb:
+            self.action_desc = f"💦 Breeding with {context_torb.name}"
+        else:
+            self.action_desc = self.TORB_ACTIONS.get(action, 'Unknown Action')
         self.context_torb = context_torb
         self.save()
     
