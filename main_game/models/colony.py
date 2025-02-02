@@ -8,12 +8,13 @@ from django.db.models.functions import Now
 from .game import Game
 from .story_text import StoryText
 from .torb_names import torb_names
+from .player import AIPlayer
 
 logger = logging.getLogger('hereditus')
 
 class Colony(models.Model):
     from .torb import Torb
-    player = models.OneToOneField('Player', null=True, blank=True, default=None, on_delete=models.SET_NULL, related_name='colony')
+    player = models.ForeignKey('Player', null=True, blank=True, default=None, on_delete=models.SET_NULL, related_name='colonies')
     name = models.CharField(max_length=64, default="DefaultName")
     game = models.ForeignKey('main_game.Game', on_delete=models.CASCADE, null=True)
     food = models.IntegerField(default=5)
@@ -205,6 +206,9 @@ class Colony(models.Model):
         if created or not self.army:
             self.army = army
             self.save()
+        
+        if is_new and isinstance(self.player, AIPlayer):
+            self.player.make_decisions(self)
             
     def __str__(self):
         return self.name
