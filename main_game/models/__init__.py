@@ -4,4 +4,4 @@ from .game import Game
 from .story_text import StoryText
 from .torb import Torb
 from .army import Army, ArmyTorb
-from .player import Player
+from .player import Player, AIPlayer

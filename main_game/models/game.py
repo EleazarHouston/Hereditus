@@ -3,6 +3,8 @@ import logging
 from django.contrib.auth.models import User
 from django.db import models
 
+from .player import AIPlayer
+
 logger = logging.getLogger('hereditus')
 
 class Game(models.Model):
@@ -44,6 +46,15 @@ class Game(models.Model):
         self.round_number += 1
         self.save()
         logger.debug(f"Next round processed successfully")
+        self.run_ai_players()
+    
+    def run_ai_players(self):
+        ai_colonies = self.colony_set.filter(player__user__isnull=True)
+        print(ai_colonies)
+        for colony in ai_colonies:
+            cur_player = colony.player
+            print(isinstance(cur_player, AIPlayer))
+            colony.player.make_decisions(colony)
     
     def check_ready_status(self):
         logger.debug(f"Checking colonies ready statuses")

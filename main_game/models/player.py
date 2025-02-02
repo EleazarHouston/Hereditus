@@ -1,14 +1,25 @@
 import logging
+import random
+
 from django.db import models
 from django.contrib.auth.models import User
+
+from polymorphic.models import PolymorphicModel
 
 from .torb import Torb
 
 logger = logging.getLogger('hereditus')
 
-class Player(models.Model):
+class Player(PolymorphicModel):
     name = models.CharField(max_length=255)
     user = models.OneToOneField(User, null=True, blank=True, on_delete=models.CASCADE, related_name='players')
+    polymorphic_ctype = models.ForeignKey(
+        'contenttypes.ContentType',
+        editable=False,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='polymorphic_%(app_label)s.%(class)s_set+'
+    )
     
     @property
     def is_human(self):
@@ -48,16 +59,60 @@ class Player(models.Model):
             colony.set_breed_torbs(torbs)
         else:
             raise ValueError("Invalid number of Torbs to breed. Needs exactly two.")
-            
-    def assign_torbs_action(self, torbs, action):
-        for torb in torbs:
-            torb.set_action(action=action)
-            
+
     def __str__(self):
         return f"Player {self.name}"
     
 class AIPlayer(Player):
     difficulty = models.IntegerField(default=10)
     
-    def ai_logic(self):
-        pass
+    def make_decisions(self, colony):
+        # Get a queryset of Torbs that are gathering
+        gathering_torbs = colony.torbs.filter(action="gathering")
+        # List to keep track of Torbs that have been assigned an important action
+        important_torbs = []
+        
+        # Breeding
+        if colony.food > 5 and colony.food > colony.torb_count // 2:
+            num_breeding_pairs = int(colony.torb_count ** 0.5)
+            logger.debug(f"AIPlayer {self} is breeding {num_breeding_pairs} pairs of random Torbs")
+            for _ in range(num_breeding_pairs):
+                # Select two random torbs that are gathering for breeding
+                torb_ids = list(gathering_torbs.order_by('?')[:2].values_list('id', flat=True))
+                gathering_torbs = gathering_torbs.exclude(id__in=torb_ids)
+                important_torbs.extend(torb_ids)
+                self.perform_action(colony, action='breed', torb_ids=torb_ids)
+        
+        # Enlisting soldiers
+        if colony.torb_count > 6 and colony.food >= 5:
+            # Determine the number of torbs to enlist
+            desired_army_size = max(1, colony.torb_count // random.randint(6, 10))
+            current_army_size = colony.torbs.filter(action="training").count()
+            num_to_enlist = desired_army_size - current_army_size
+            
+            if num_to_enlist > 0:
+                # Select random torbs that are gathering for enlisting
+                logger.debug(f"AIPlayer {self} is enlisting {num_to_enlist} random Torbs")
+                torb_ids = list(gathering_torbs.order_by('?')[:num_to_enlist].values_list('id', flat=True))
+                important_torbs.extend(torb_ids)
+                gathering_torbs = gathering_torbs.exclude(id__in=torb_ids)
+                self.perform_action(colony, action='enlist', torb_ids=torb_ids)
+        
+        # Scouting
+        if colony.torbs.filter(action="soldiering").exists():
+            undiscovered_colonies = colony.game.colony_set.exclude(id__in=colony.discovered_colonies.all())
+            if undiscovered_colonies.exists():
+                target_colony = undiscovered_colonies.order_by('?').first()
+                logger.debug(f"AIPlayer {self} is scouting colony {target_colony}")
+                self.perform_action(colony, action='scout', target_colony_id=target_colony.id)
+        
+        # Attacking
+        soldiers = colony.torbs.filter(action="soldiering")
+        if soldiers.exists() and all(torb.hp == torb.max_hp for torb in soldiers):
+            enemy_colonies = colony.discovered_colonies.exclude(player=self)
+            if enemy_colonies.exists():
+                target_colony = enemy_colonies.order_by('?').first()
+                logger.debug(f"AIPlayer {self} is attacking colony {target_colony}")
+                self.perform_action(colony, action='attack', target_colony_id=target_colony.id)
+        
+        self.perform_action(colony, action='end_turn')
