@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Torb, Colony, Game, EvolutionEngine, StoryText, Army, ArmyTorb, Player
+from .models import Torb, Colony, Game, EvolutionEngine, StoryText, Army, ArmyTorb, Player, AIPlayer
 
 class TorbAdmin(admin.ModelAdmin):
     list_display = ('name', 'private_ID', 'colony', 'is_alive', 'hp', 'max_hp', 'action', 'action_desc')
@@ -24,3 +24,4 @@ admin.site.register(Army, ArmyAdmin)
 admin.site.register(StoryText)
 admin.site.register(ArmyTorb)
 admin.site.register(Player)
+admin.site.register(AIPlayer)
