@@ -32,10 +32,6 @@ class Game(models.Model):
         return self.colony_set.filter(ready=False).count()
     
     def next_round(self):
-        
-        # have whatever calls this by default check if all colonies are ready
-        # do combat here
-        
         for colony in self.colony_set.all().order_by('?'):
             colony.new_round(round_number = self.round_number)
             
