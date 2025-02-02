@@ -139,7 +139,7 @@ class Colony(models.Model):
             if torb not in starved_torbs:
                 food_meal_amount = 1
                 torb.starving = False
-                torb.adjust_hp(1)
+                torb.adjust_hp(1, context="eating a good meal")
                 torb.save()
                 less_food += food_meal_amount
         self.adjust_food(-1 * less_food)
