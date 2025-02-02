@@ -30,11 +30,11 @@ class Colony(models.Model):
     
     @property
     def num_soldiers(self):
-        return len([torb for torb in self.torb_set.all() if torb.action == "soldiering" and torb.is_alive])
+        return len([torb for torb in self.torbs.all() if torb.action == "soldiering" and torb.is_alive])
     
     @property
     def num_training(self):
-        return len([torb for torb in self.torb_set.all() if torb.action == "training" and torb.is_alive])
+        return len([torb for torb in self.torbs.all() if torb.action == "training" and torb.is_alive])
     
     def new_round(self, round_number: int):
         self.reset_fertility()
@@ -53,12 +53,12 @@ class Colony(models.Model):
             timestamp=Now())
                 
     def reset_fertility(self):
-        for torb in self.torb_set.filter(is_alive=True, growing=False):
+        for torb in self.torbs.filter(is_alive=True, growing=False):
             torb.fertile = True
             torb.save()
             
     def grow_torbs(self):
-        growing_torbs = self.torb_set.filter(growing=True)
+        growing_torbs = self.torbs.filter(growing=True)
         for torb in growing_torbs:
             torb.growing = False
             torb.set_action(action="gathering")
@@ -66,7 +66,7 @@ class Colony(models.Model):
     
     def call_breed_torbs(self):
         checked_torbs = []
-        for torb in self.torb_set.all():
+        for torb in self.torbs.all():
             if torb.action == "breeding" and torb not in checked_torbs:
                 checked_torbs.append(torb)
                 checked_torbs.append(torb.context_torb)
@@ -97,18 +97,18 @@ class Colony(models.Model):
             torb.set_action(action=action)
 
     def rest_torbs(self):
-        for torb in self.torb_set.all():
+        for torb in self.torbs.all():
             if torb.action == "resting" and not torb.starving:
                 adjust_amount = round(self.rest_heal_flat + self.rest_heal_perc & torb.max_hp)
                 torb.adjust_hp(adjust_amount, context="resting")
     
     def reset_torbs_actions(self, action: str):
-        for torb in self.torb_set.all():
+        for torb in self.torbs.all():
             torb.set_action(action="gathering")
     
     def gather_phase(self):
         num_gathering = 0
-        for torb in self.torb_set.all():
+        for torb in self.torbs.all():
             if torb.action == "gathering":
                 num_gathering += 1
         food_gathered = round(num_gathering * self.gather_rate)
@@ -125,7 +125,7 @@ class Colony(models.Model):
         self.save()
     
     def colony_meal(self):
-        living_torbs = [torb for torb in self.torb_set.all() if torb.is_alive]
+        living_torbs = [torb for torb in self.torbs.all() if torb.is_alive]
         starved_torbs = []
         
         if self.food < len(living_torbs):

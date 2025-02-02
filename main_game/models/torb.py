@@ -20,7 +20,7 @@ class Torb(models.Model):
     private_ID = models.IntegerField(default=0)
     name = models.CharField(max_length=16, default="Nonam")
     generation = models.IntegerField(default=0)
-    colony = models.ForeignKey('main_game.Colony', on_delete=models.CASCADE)
+    colony = models.ForeignKey('main_game.Colony', on_delete=models.CASCADE, related_name='torbs')
     is_alive = models.BooleanField(default=True)
     hp = models.IntegerField(default=5)
     max_hp = models.IntegerField(default=5)
@@ -131,4 +131,3 @@ class Torb(models.Model):
             out_text += "<br>Juvenile"
         
         return out_text
-        

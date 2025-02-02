@@ -21,7 +21,7 @@ def colony_view(request, colony_id):
     if player.user != request.user:
         return redirect('main_page')
     
-    torbs = colony.torb_set.all().order_by('private_ID')
+    torbs = colony.torbs.all().order_by('private_ID')
     story_texts = StoryText.objects.filter(colony=colony).order_by('timestamp')
     
     if request.method == 'POST':
@@ -87,7 +87,7 @@ def army_view(request, colony_id):
     if player.user != request.user:
         return redirect('main_page')
 
-    torbs = colony.torb_set.all()
+    torbs = colony.torbs.all()
     num_soldiers = len([torb for torb in torbs if torb.action == "soldiering"])
     num_training = len([torb for torb in torbs if torb.action == "training"])
     known_colonies = colony.discovered_colonies.all().order_by('id')

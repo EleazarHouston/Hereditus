@@ -40,7 +40,7 @@ class Army(models.Model):
         self.save()
 
     def train_soldiers(self):
-        for torb in self.colony.torb_set.all():
+        for torb in self.colony.torbs.all():
             if torb.action == "training":
                 torb.trained = True
                 torb.set_action(action="soldiering",)
@@ -48,7 +48,7 @@ class Army(models.Model):
                 ArmyTorb.add_to_army(self, torb)
                 
     def purge_soldiers(self):
-        for torb in self.colony.torb_set.all():
+        for torb in self.colony.torbs.all():
             if torb.action != "soldiering":
                 self.remove_torb_from_army(torb)
     
