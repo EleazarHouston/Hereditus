@@ -61,6 +61,7 @@ class Torb(models.Model):
         return f"Colony {self.colony} Torb: {self.private_ID} '{self.name}'"
     
     def adjust_hp(self, adjust_amount, context="an unknown source"):
+        # TODO: Only log if Torb hp actually changes
         logger.debug(f"Colony {self.colony.id} '{self.colony.name}' Torb {self.private_ID} '{self.name}' adjusted hp amt {adjust_amount} context: {context}")
         adjust_amount = int(adjust_amount)
         from .story_text import StoryText

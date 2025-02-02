@@ -21,7 +21,7 @@ admin.site.register(Colony, ColonyAdmin)
 admin.site.register(Game, GameAdmin)
 admin.site.register(EvolutionEngine, EvolutionEngineAdmin)
 admin.site.register(Army, ArmyAdmin)
-admin.site.register(StoryText)
+admin.site.register(StoryText) # TODO: Show text in tabular view
 admin.site.register(ArmyTorb)
 admin.site.register(Player)
 admin.site.register(AIPlayer)
