@@ -118,6 +118,16 @@ def army_view(request, colony_id):
         'all_colonies': all_colonies
         })
 
+@login_required
+def settings_view(request, colony_id):
+    colony = get_object_or_404(Colony, id=colony_id)
+    return render(request, 'main_game/settings.html', {'colony': colony})
+
+@login_required
+def science_view(request, colony_id):
+    colony = get_object_or_404(Colony, id=colony_id)
+    return render(request, 'main_game/science.html', {'colony': colony})
+
 def main_page(request):
     if request.user.is_authenticated:
         return redirect('load_colony')

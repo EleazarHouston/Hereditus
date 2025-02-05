@@ -12,8 +12,30 @@
         <!-- Navigation Bar -->
         <div class="navbar">
             <ul>
-                <li><a href="{% url 'colony_view' colony.id %}" class="{% if request.resolver_match.url_name == 'colony_view' %}active{% endif %}">Overview</a></li>
-                <li><a href="{% url 'army_view' colony.id %}" class="{% if request.resolver_match.url_name == 'army_view' %}active{% endif %}">Army</a></li>
+                <li>
+                    <a href="{% url 'colony_view' colony.id %}" 
+                       class="{% if request.resolver_match.url_name == 'colony_view' %}active{% endif %}">
+                        Overview
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'army_view' colony.id %}" 
+                       class="{% if request.resolver_match.url_name == 'army_view' %}active{% endif %}">
+                        Army
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'science_view' colony.id %}" 
+                       class="{% if request.resolver_match.url_name == 'science_view' %}active{% endif %}">
+                        Science
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'settings_view' colony.id %}" 
+                       class="{% if request.resolver_match.url_name == 'settings_view' %}active{% endif %}">
+                        Settings
+                    </a>
+                </li>
             </ul>
         </div>
 
