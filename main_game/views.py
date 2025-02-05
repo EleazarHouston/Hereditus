@@ -59,7 +59,7 @@ def check_ready_status(request, colony_id):
     return JsonResponse({'ready': colony.ready})
 
 @login_required
-def load_colony(request):
+def play(request):
     user = request.user
     error_message = None
 
@@ -134,7 +134,7 @@ def science_view(request, colony_id):
 
 def main_page(request):
     if request.user.is_authenticated:
-        return redirect('load_colony')
+        return redirect('play')
     return render(request, 'main_game/main_page.html')
 
 class RegisterForm(UserCreationForm):
@@ -146,7 +146,7 @@ class RegisterForm(UserCreationForm):
 
 def register(request):
     if request.user.is_authenticated:
-        return redirect('load_colony')
+        return redirect('play')
 
     if request.method == 'POST':
         form = RegisterForm(request.POST)
@@ -156,7 +156,7 @@ def register(request):
             password = form.cleaned_data.get('password1')
             user = authenticate(username=username, password=password)
             login(request, user)
-            return redirect('load_colony')
+            return redirect('play')
     else:
         form = RegisterForm()
 
@@ -164,7 +164,7 @@ def register(request):
 
 def login_view(request):
     if request.user.is_authenticated:
-        return redirect('load_colony')
+        return redirect('play')
 
     if request.method == "POST":
         form = AuthenticationForm(request, data=request.POST)
@@ -174,7 +174,7 @@ def login_view(request):
             user = authenticate(username=username, password=password)
             if user is not None:
                 login(request, user)
-                return redirect('load_colony')
+                return redirect('play')
     else:
         form = AuthenticationForm()
 

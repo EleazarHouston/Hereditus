@@ -150,7 +150,7 @@
                         {% endif %}
                     {% endfor %}
                     <div class="colony-box">
-                        <form action="{% url 'load_colony' %}" method="post" class="new-colony-form">
+                        <form action="{% url 'play' %}" method="post" class="new-colony-form">
                             {% csrf_token %}
                             <input type="hidden" name="game_id" value="{{ game.id }}">
                             <input type="text" name="colony_name" class="new-colony-input" maxlength="63" placeholder="Colony Name" required>
