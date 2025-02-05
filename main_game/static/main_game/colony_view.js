@@ -1,4 +1,3 @@
-
 document.addEventListener('DOMContentLoaded', function() {
     const checkboxes = document.querySelectorAll('.torb-checkbox');
     const breedButton = document.getElementById('breed-button');
@@ -143,34 +142,60 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function sortTable(columnIndex) {
     const table = document.getElementById("torb-table");
-    let switching = true;
-    let shouldSwitch;
-    let dir = "asc";
-    let switchCount = 0;
+    let rows, switching, i, x, y, shouldSwitch, direction, switchCount = 0;
+
+    switching = true;
+    direction = "asc"; 
+
+    // Clear previous arrows
+    document.querySelectorAll('.sort-arrow').forEach(arrow => {
+        arrow.innerHTML = '';
+    });
 
     while (switching) {
         switching = false;
-        const rows = table.rows;
-        for (let i = 1; i < rows.length - 1; i++) {
-            shouldSwitch = false;
-            const x = rows[i].getElementsByTagName("TD")[columnIndex];
-            const y = rows[i + 1].getElementsByTagName("TD")[columnIndex];
+        rows = table.rows;
 
-            if (dir === "asc" && x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
-                shouldSwitch = true;
-                break;
-            } else if (dir === "desc" && x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
-                shouldSwitch = true;
-                break;
+        for (i = 1; i < rows.length - 1; i++) {
+            shouldSwitch = false;
+            x = rows[i].getElementsByTagName("TD")[columnIndex];
+            y = rows[i + 1].getElementsByTagName("TD")[columnIndex];
+
+            let xContent = x.innerHTML.toLowerCase();
+            let yContent = y.innerHTML.toLowerCase();
+
+            // Check if content is numeric
+            if (!isNaN(xContent) && !isNaN(yContent)) {
+                xContent = parseFloat(xContent);
+                yContent = parseFloat(yContent);
+            }
+
+            if (direction === "asc") {
+                if (xContent > yContent) {
+                    shouldSwitch = true;
+                    break;
+                }
+            } else if (direction === "desc") {
+                if (xContent < yContent) {
+                    shouldSwitch = true;
+                    break;
+                }
             }
         }
+
         if (shouldSwitch) {
             rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
             switching = true;
             switchCount++;
-        } else if (switchCount === 0 && dir === "asc") {
-            dir = "desc";
-            switching = true;
+        } else {
+            if (switchCount === 0 && direction === "asc") {
+                direction = "desc";
+                switching = true;
+            }
         }
     }
+
+    // Set the arrow for the sorted column
+    const arrow = document.getElementById(`sort-arrow-${columnIndex}`);
+    arrow.innerHTML = direction === "asc" ? "↑" : "↓";
 }
