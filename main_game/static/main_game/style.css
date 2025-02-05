@@ -440,3 +440,49 @@ button.attack-button.target {
 th {
     cursor: pointer;
 }
+
+.modern-filter-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.modern-checkbox {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.modern-checkbox input[type="checkbox"] {
+    display: none;
+}
+
+.modern-checkbox-label {
+    padding: 10px 15px;
+    background-color: #333;
+    color: #E0E0E0;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.modern-checkbox input[type="checkbox"]:checked + .modern-checkbox-label {
+    background-color: #847d00; /* Red color for selection */
+    color: white;
+}
+
+.modern-checkbox-label:hover {
+    background-color: #444;
+}
+
+.filter-buttons-container {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin: 10px 0;
+}
+
+.filter-label {
+    margin-right: 10px;
+    font-size: 1.2em;
+    color: #FF9800; /* Orange color for the label */
+}

@@ -64,10 +64,16 @@
             </div>
         </div>
 
-        <div class="filter-buttons" style="margin: 0;">
-            {% for action in unique_actions %}
-                <label><input type="checkbox" value="{{ action|lower }}" onclick="filterTorbs()"> {{ action|capfirst }}</label>
-            {% endfor %}
+        <div class="filter-buttons-container">
+            <span class="filter-label">Filter Actions:</span>
+            <div class="filter-buttons modern-filter-buttons" style="margin: 0;">
+                {% for action in unique_actions %}
+                    <label class="modern-checkbox">
+                        <input type="checkbox" value="{{ action|lower }}" onclick="filterTorbs()"> 
+                        <span class="modern-checkbox-label">{{ action|capfirst }}</span>
+                    </label>
+                {% endfor %}
+            </div>
         </div>
         <table id="torb-table" style="margin-top: 0;">
             <thead>
