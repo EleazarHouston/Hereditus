@@ -459,19 +459,19 @@ th {
 
 .modern-checkbox-label {
     padding: 10px 15px;
-    background-color: #333;
+    background-color: #5d5d5d;
     color: #E0E0E0;
     border-radius: 5px;
     transition: background-color 0.3s ease;
 }
 
 .modern-checkbox input[type="checkbox"]:checked + .modern-checkbox-label {
-    background-color: #847d00; /* Yellow color for selection */
+    background-color: #333333; /* Activated color */
     color: white;
 }
 
 .modern-checkbox-label:hover {
-    background-color: #444;
+    background-color: #4f4f4f;
 }
 
 .filter-buttons-container {

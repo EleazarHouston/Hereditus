@@ -269,7 +269,7 @@ function filterAttributes() {
 
     if (filterState === 'all') {
         filterState = 'fertile';
-        fertileFilterLabel.textContent = '✅ Fertile';
+        fertileFilterLabel.textContent = '✔️ Fertile';
         fertileFilter.checked = true;
     } else if (filterState === 'fertile') {
         filterState = 'infertile';
