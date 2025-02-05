@@ -25,7 +25,7 @@
                     {% csrf_token %}
                     <button
                         type="submit"
-                        name="action"
+                        name="player-action"
                         value="end_turn"
                         class="end-turn-button {% if colony.ready %}disabled{% else %}{% endif %}"
                         {% if colony.ready %}disabled{% endif %}
@@ -42,9 +42,9 @@
                 <div class="action-console-container">
                     <div class="action-buttons">
                         {% csrf_token %}
-                        <button type="submit" name="action" value="breed" disabled id="breed-button">Breed</button>
-                        <button type="submit" name="action" value="gather">Gather</button>
-                        <button type="submit" name="action" value="enlist">Enlist</button>
+                        <button type="submit" name="player-action" value="breed" disabled id="breed-button">Breed</button>
+                        <button type="submit" name="player-action" value="gather">Gather</button>
+                        <button type="submit" name="player-action" value="enlist">Enlist</button>
                     </div>
                 </div>
             </div>
@@ -66,10 +66,10 @@
 
         <div class="filter-buttons-container">
             <span class="filter-label">Filter Actions:</span>
-            <div class="filter-buttons modern-filter-buttons" style="margin: 0;">
+            <div class="filter-buttons modern-filter-buttons action-filter" style="margin: 0;">
                 {% for action in unique_actions %}
                     <label class="modern-checkbox">
-                        <input type="checkbox" value="{{ action|lower }}" onclick="filterTorbs()"> 
+                        <input type="checkbox" class="action-checkbox" value="{{ action|lower }}" onclick="filterTorbs()"> 
                         <span class="modern-checkbox-label">{{ action|capfirst }}</span>
                     </label>
                 {% endfor %}
@@ -77,7 +77,7 @@
             <span class="filter-label" style="margin-left: auto;">Filter Attributes:</span>
             <div class="filter-buttons modern-filter-buttons" style="margin: 0;">
                 <label class="modern-checkbox">
-                    <input type="checkbox" id="fertile-filter" onclick="filterAttributes()"> 
+                    <input type="checkbox" id="fertile-filter" value="fertile" onclick="filterAttributes()"> 
                     <span class="modern-checkbox-label" id="fertile-filter-label">Fertile</span>
                 </label>
             </div>

@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Ensure the correct action value is set
             const hiddenInput = document.createElement('input');
             hiddenInput.type = 'hidden';
-            hiddenInput.name = 'action';
+            hiddenInput.name = 'player-action';
             hiddenInput.value = 'end_turn';
             form.appendChild(hiddenInput);
 
@@ -130,15 +130,24 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function filterTorbs() {
-    const checkboxes = document.querySelectorAll('.filter-buttons input[type="checkbox"]');
-    const selectedActions = Array.from(checkboxes)
+    const actionCheckboxes = document.querySelectorAll('.action-filter input[type="checkbox"]');
+    const selectedActions = Array.from(actionCheckboxes)
         .filter(checkbox => checkbox.checked)
         .map(checkbox => checkbox.value.toLowerCase());
+
+    const fertileFilter = document.getElementById('fertile-filter');
+    const filterState = fertileFilter.dataset.filterState || 'all';
 
     const url = new URL(filterTorbsUrl, window.location.origin);
     if (selectedActions.length > 0) {
         url.searchParams.append('action', selectedActions.join(','));
+    } else {
+        url.searchParams.append('action', 'all');
     }
+    if (filterState !== 'all') {
+        url.searchParams.append('fertile', filterState);
+    }
+
     fetch(url)
         .then(response => response.json())
         .then(data => {
@@ -283,15 +292,6 @@ function filterAttributes() {
 
     fertileFilter.dataset.filterState = filterState;
 
-    rows.forEach(row => {
-        const isFertile = row.dataset.fertile === 'True';
-        if (filterState === 'fertile' && !isFertile) {
-            row.style.display = 'none';
-        } else if (filterState === 'infertile' && isFertile) {
-            row.style.display = 'none';
-        } else {
-            row.style.display = '';
-        }
-    });
+    filterTorbs(); // Call filterTorbs to apply both filters together
 }
 

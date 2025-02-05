@@ -26,10 +26,10 @@ def colony_view(request, colony_id):
     
     if request.method == 'POST':
         selected_torbs = request.POST.getlist('selected_torbs')
-        action = request.POST.get('action')
+        player_action = request.POST.get('player-action')
 
         try:
-            player.perform_action(colony=colony, action=action, torb_ids=selected_torbs)
+            player.perform_action(colony=colony, action=player_action, torb_ids=selected_torbs)
         except ValueError as e:
             logger.error(f"Invalid action: {e}")
             
@@ -104,10 +104,10 @@ def army_view(request, colony_id):
     
     if request.method == 'POST':
         selected_colony_id = request.POST.get('selected_colony')
-        action = request.POST.get('action')
+        player_action = request.POST.get('player-action')
 
         try:
-            player.perform_action(colony=colony, action=action, target_colony_id=selected_colony_id)
+            player.perform_action(colony=colony, action=player_action, target_colony_id=selected_colony_id)
         except ValueError as e:
             logger.error(f"Invalid action: {e}")
 
@@ -188,12 +188,22 @@ def logout_view(request):
 @login_required
 def filter_torbs(request, colony_id):
     colony = get_object_or_404(Colony, id=colony_id)
-    action_filter = request.GET.get('action', None)
+    action_filter = request.GET.get('action', 'all')
+    fertile_filter = request.GET.get('fertile', 'all')
     torbs = colony.torbs.all()
     
-    if action_filter:
+    print(f"action_filter: {action_filter}")
+    print(f"fertile_filter: {fertile_filter}")
+    
+    if action_filter and action_filter != 'all':
         action_filter_list = [action.lower() for action in action_filter.split(',')]
         torbs = torbs.filter(action__in=action_filter_list)
+    
+    if fertile_filter != 'all':
+        if fertile_filter == 'fertile':
+            torbs = torbs.filter(fertile=True)
+        elif fertile_filter == 'infertile':
+            torbs = torbs.filter(fertile=False)
     
     torbs = torbs.order_by('private_ID')
     gene_names = list(torbs.first().genes.keys()) if torbs.exists() else []
