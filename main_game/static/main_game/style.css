@@ -466,7 +466,7 @@ th {
 }
 
 .modern-checkbox input[type="checkbox"]:checked + .modern-checkbox-label {
-    background-color: #847d00; /* Red color for selection */
+    background-color: #847d00; /* Yellow color for selection */
     color: white;
 }
 

@@ -77,6 +77,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+
+    reapplyTooltips();
 });
 
 let isPolling = false;
@@ -163,7 +165,38 @@ function filterTorbs() {
                 const columnIndex = sortedColumn.id.split('-').pop();
                 sortTable(parseInt(columnIndex));
             }
+            // Reapply tooltip functionality
+            reapplyTooltips();
         });
+}
+
+function reapplyTooltips() {
+    const tooltips = document.querySelectorAll('.status-tooltip');
+
+    tooltips.forEach(tooltip => {
+        tooltip.addEventListener('mouseenter', function() {
+            const tooltipText = this.getAttribute('data-tooltip');
+            const tooltipDiv = document.createElement('div');
+            tooltipDiv.className = 'dynamic-tooltip';
+            tooltipDiv.innerHTML = tooltipText;
+
+            document.body.appendChild(tooltipDiv);
+
+            const rect = this.getBoundingClientRect();
+            tooltipDiv.style.top = `${rect.top - tooltipDiv.offsetHeight - 10}px`;
+            tooltipDiv.style.left = `${rect.left + (rect.width / 2) - (tooltipDiv.offsetWidth / 2)}px`;
+
+            tooltipDiv.style.opacity = '1';
+            tooltipDiv.style.visibility = 'visible';
+        });
+
+        tooltip.addEventListener('mouseleave', function() {
+            const tooltipDiv = document.querySelector('.dynamic-tooltip');
+            if (tooltipDiv) {
+                tooltipDiv.remove();
+            }
+        });
+    });
 }
 
 function sortTable(columnIndex) {
@@ -224,5 +257,41 @@ function sortTable(columnIndex) {
     // Set the arrow for the sorted column
     const arrow = document.getElementById(`sort-arrow-${columnIndex}`);
     arrow.innerHTML = direction === "asc" ? "↑" : "↓";
+}
+
+function filterAttributes() {
+    const fertileFilter = document.getElementById('fertile-filter');
+    const fertileFilterLabel = document.getElementById('fertile-filter-label');
+    const torbTableBody = document.querySelector('#torb-table tbody');
+    const rows = torbTableBody.querySelectorAll('tr');
+
+    let filterState = fertileFilter.dataset.filterState || 'all';
+
+    if (filterState === 'all') {
+        filterState = 'fertile';
+        fertileFilterLabel.textContent = '✅ Fertile';
+        fertileFilter.checked = true;
+    } else if (filterState === 'fertile') {
+        filterState = 'infertile';
+        fertileFilterLabel.textContent = '❌ Fertile';
+        fertileFilter.checked = true;
+    } else {
+        filterState = 'all';
+        fertileFilterLabel.textContent = 'Fertile';
+        fertileFilter.checked = false;
+    }
+
+    fertileFilter.dataset.filterState = filterState;
+
+    rows.forEach(row => {
+        const isFertile = row.dataset.fertile === 'True';
+        if (filterState === 'fertile' && !isFertile) {
+            row.style.display = 'none';
+        } else if (filterState === 'infertile' && isFertile) {
+            row.style.display = 'none';
+        } else {
+            row.style.display = '';
+        }
+    });
 }
 

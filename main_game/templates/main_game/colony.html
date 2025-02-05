@@ -75,6 +75,17 @@
                 {% endfor %}
             </div>
         </div>
+
+        <div class="filter-buttons-container">
+            <span class="filter-label">Filter Attributes:</span>
+            <div class="filter-buttons modern-filter-buttons" style="margin: 0;">
+                <label class="modern-checkbox">
+                    <input type="checkbox" id="fertile-filter" onclick="filterAttributes()"> 
+                    <span class="modern-checkbox-label" id="fertile-filter-label">Fertile</span>
+                </label>
+            </div>
+        </div>
+
         <table id="torb-table" style="margin-top: 0;">
             <thead>
                 <tr>
