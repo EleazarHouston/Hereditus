@@ -4,4 +4,8 @@
 
 {% block content %}
     <h1>Settings</h1>
+    <form action="{% url 'logout' %}" method="post">
+        {% csrf_token %}
+        <button type="submit" class="modern-button">Logout</button>
+    </form>
 {% endblock %}

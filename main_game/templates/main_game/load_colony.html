@@ -123,12 +123,18 @@
 </head>
 <body>
     <div class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h1>Select a Colony</h1>
+            <form action="{% url 'logout' %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="modern-button">Logout</button>
+            </form>
+        </div>
         {% if error_message %}
             <div class="error-message" style="color: red; margin-bottom: 20px; font-size: 1.5em;">
                 {{ error_message }}
             </div>
         {% endif %}
-        <h1>Select a Colony</h1>
         {% for game in games %}
             <button class="collapsible">{{ game.description }}</button>
             <div class="content">
