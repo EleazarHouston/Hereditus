@@ -1,4 +1,3 @@
-
 body {
     background-color: #121212;
     color: #E0E0E0;
@@ -220,7 +219,7 @@ button.action-button:disabled {
     min-height: 100px;
     flex: 1;
     margin-left: 15px;
-    max-width: calc(100%);
+    width: 100%; /* Ensure it can expand to fill available space */
 }
 
 .console-display p {
