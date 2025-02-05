@@ -35,6 +35,10 @@ def colony_view(request, colony_id):
             
         return redirect('colony_view', colony_id=colony.id)
     
+    for torb in torbs:
+        for gene_name in torb.genes:
+            torb.genes[gene_name] = sorted(torb.genes[gene_name], reverse=True)
+    
     gene_names = list(torbs.first().genes.keys()) if torbs.exists() else []
     logger.debug(f"Rendering colony_view with colony: {colony}, num_torbs: {colony.torb_count}, torbs: {torbs}, gene_names: {gene_names}, story_texts: {story_texts}")
 

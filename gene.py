@@ -35,7 +35,8 @@ class Gene:
         return
     
     def __str__(self) -> str:
-        return (f"Gene {self.GID}: {self.alleles}")
+        sorted_alleles = sorted(self.alleles, reverse=True)
+        return (f"Gene {self.GID}: {sorted_alleles}")
 
     def get_allele(self, idx=0, is_random=False) -> int:
         """
