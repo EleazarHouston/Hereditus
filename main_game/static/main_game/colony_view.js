@@ -18,6 +18,65 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    const endTurnButton = document.getElementById('endTurnButton');
+    const form = endTurnButton.closest('form');
+
+    if (endTurnButton) {
+        endTurnButton.addEventListener('click', function(event) {
+            const form = endTurnButton.closest('form');
+
+            // Prevent form from submitting immediately
+            event.preventDefault();
+
+            // Ensure the correct action value is set
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = 'action';
+            hiddenInput.value = 'end_turn';
+            form.appendChild(hiddenInput);
+
+            // Disable the button and change its text
+            endTurnButton.disabled = true;
+            endTurnButton.innerText = "Waiting for other players...";
+
+            // Start polling
+            isPolling = false;
+            startPolling();
+
+            // Submit the form after setting up everything
+            form.submit();
+        });
+    }
+
+    const consoleDisplay = document.querySelector('.console-display');
+    consoleDisplay.scrollTop = consoleDisplay.scrollHeight; // Scroll to the bottom on load
+
+    const tooltips = document.querySelectorAll('.status-tooltip');
+
+    tooltips.forEach(tooltip => {
+        tooltip.addEventListener('mouseenter', function() {
+            const tooltipText = this.getAttribute('data-tooltip');
+            const tooltipDiv = document.createElement('div');
+            tooltipDiv.className = 'dynamic-tooltip';
+            tooltipDiv.innerHTML = tooltipText;
+
+            document.body.appendChild(tooltipDiv);
+
+            const rect = this.getBoundingClientRect();
+            tooltipDiv.style.top = `${rect.top - tooltipDiv.offsetHeight - 10}px`;
+            tooltipDiv.style.left = `${rect.left + (rect.width / 2) - (tooltipDiv.offsetWidth / 2)}px`;
+
+            tooltipDiv.style.opacity = '1';
+            tooltipDiv.style.visibility = 'visible';
+        });
+
+        tooltip.addEventListener('mouseleave', function() {
+            const tooltipDiv = document.querySelector('.dynamic-tooltip');
+            if (tooltipDiv) {
+                tooltipDiv.remove();
+            }
+        });
+    });
 });
 
 let isPolling = false;
@@ -68,77 +127,44 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(error => console.error('Error checking initial ready status:', error));
 });
 
-document.addEventListener('DOMContentLoaded', function() {
-    const endTurnButton = document.getElementById('endTurnButton');
-    const form = endTurnButton.closest('form');
+function filterTorbs() {
+    const checkboxes = document.querySelectorAll('.filter-buttons input[type="checkbox"]');
+    const selectedActions = Array.from(checkboxes)
+        .filter(checkbox => checkbox.checked)
+        .map(checkbox => checkbox.value.toLowerCase());
 
-    if (endTurnButton) {
-        endTurnButton.addEventListener('click', function(event) {
-            const form = endTurnButton.closest('form');
-
-            // Prevent form from submitting immediately
-            event.preventDefault();
-
-            // Ensure the correct action value is set
-            const hiddenInput = document.createElement('input');
-            hiddenInput.type = 'hidden';
-            hiddenInput.name = 'action';
-            hiddenInput.value = 'end_turn';
-            form.appendChild(hiddenInput);
-
-            // Disable the button and change its text
-            endTurnButton.disabled = true;
-            endTurnButton.innerText = "Waiting for other players...";
-
-            // Start polling
-            isPolling = false;
-            startPolling();
-
-            // Submit the form after setting up everything
-            form.submit();
-        });
+    const url = new URL(filterTorbsUrl, window.location.origin);
+    if (selectedActions.length > 0) {
+        url.searchParams.append('action', selectedActions.join(','));
     }
-});
-
-document.addEventListener('DOMContentLoaded', function() {
-    const consoleDisplay = document.querySelector('.console-display');
-    consoleDisplay.scrollTop = consoleDisplay.scrollHeight; // Scroll to the bottom on load
-});
-
-// Optionally, you can also scroll to the bottom whenever new content is added
-function scrollToBottom() {
-    const consoleDisplay = document.querySelector('.console-display');
-    consoleDisplay.scrollTop = consoleDisplay.scrollHeight;
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    const tooltips = document.querySelectorAll('.status-tooltip');
-
-    tooltips.forEach(tooltip => {
-        tooltip.addEventListener('mouseenter', function() {
-            const tooltipText = this.getAttribute('data-tooltip');
-            const tooltipDiv = document.createElement('div');
-            tooltipDiv.className = 'dynamic-tooltip';
-            tooltipDiv.innerHTML = tooltipText;
-
-            document.body.appendChild(tooltipDiv);
-
-            const rect = this.getBoundingClientRect();
-            tooltipDiv.style.top = `${rect.top - tooltipDiv.offsetHeight - 10}px`;
-            tooltipDiv.style.left = `${rect.left + (rect.width / 2) - (tooltipDiv.offsetWidth / 2)}px`;
-
-            tooltipDiv.style.opacity = '1';
-            tooltipDiv.style.visibility = 'visible';
-        });
-
-        tooltip.addEventListener('mouseleave', function() {
-            const tooltipDiv = document.querySelector('.dynamic-tooltip');
-            if (tooltipDiv) {
-                tooltipDiv.remove();
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            const torbTableBody = document.querySelector('#torb-table tbody');
+            torbTableBody.innerHTML = '';
+            data.torbs.forEach(torb => {
+                const row = document.createElement('tr');
+                row.dataset.fertile = torb.fertile;
+                row.innerHTML = `
+                    <td><input type="checkbox" name="selected_torbs" value="${torb.id}" class="torb-checkbox"></td>
+                    <td>${torb.private_ID}</td>
+                    <td>${torb.generation}</td>
+                    <td>${torb.name}</td>
+                    <td>${torb.hp}/${torb.max_hp}</td>
+                    ${Object.entries(torb.genes).map(([gene, alleles]) => `<td>${alleles.join(' | ')}</td>`).join('')}
+                    <td>${torb.action_desc}</td>
+                    <td class="status-column"><span class="status-tooltip" data-tooltip="${torb.status}">🛈</span></td>
+                `;
+                torbTableBody.appendChild(row);
+            });
+            // Reapply sorting
+            const sortedColumn = document.querySelector('.sort-arrow:not(:empty)');
+            if (sortedColumn) {
+                const columnIndex = sortedColumn.id.split('-').pop();
+                sortTable(parseInt(columnIndex));
             }
         });
-    });
-});
+}
 
 function sortTable(columnIndex) {
     const table = document.getElementById("torb-table");
@@ -199,3 +225,4 @@ function sortTable(columnIndex) {
     const arrow = document.getElementById(`sort-arrow-${columnIndex}`);
     arrow.innerHTML = direction === "asc" ? "↑" : "↓";
 }
+

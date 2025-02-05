@@ -40,7 +40,10 @@ def colony_view(request, colony_id):
             torb.genes[gene_name] = sorted(torb.genes[gene_name], reverse=True)
     
     gene_names = list(torbs.first().genes.keys()) if torbs.exists() else []
-    logger.debug(f"Rendering colony_view with colony: {colony}, num_torbs: {colony.torb_count}, torbs: {torbs}, gene_names: {gene_names}, story_texts: {story_texts}")
+    unique_actions = torbs.values_list('action', flat=True).distinct()
+    unique_actions = list(set(action.capitalize() for action in unique_actions))  # Ensure uniqueness and capitalize
+    unique_actions.sort()
+    logger.debug(f"Rendering colony_view with colony: {colony}, num_torbs: {colony.torb_count}, torbs: {torbs}, gene_names: {gene_names}, story_texts: {story_texts}, unique_actions: {unique_actions}")
 
     return render(request, 'main_game/colony.html', {
         'colony': colony,
@@ -48,7 +51,8 @@ def colony_view(request, colony_id):
         'torbs': torbs,
         'gene_names': gene_names,
         'story_texts': story_texts,
-        })
+        'unique_actions': unique_actions,
+    })
 
 def check_ready_status(request, colony_id):
     colony = get_object_or_404(Colony, id=colony_id)
@@ -180,3 +184,37 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     return redirect('main_page')
+
+@login_required
+def filter_torbs(request, colony_id):
+    colony = get_object_or_404(Colony, id=colony_id)
+    action_filter = request.GET.get('action', None)
+    torbs = colony.torbs.all()
+    
+    if action_filter:
+        action_filter_list = [action.lower() for action in action_filter.split(',')]
+        torbs = torbs.filter(action__in=action_filter_list)
+    
+    torbs = torbs.order_by('private_ID')
+    gene_names = list(torbs.first().genes.keys()) if torbs.exists() else []
+    
+    torb_data = []
+    for torb in torbs:
+        torb_info = {
+            'id': torb.id,
+            'private_ID': torb.private_ID,
+            'generation': torb.generation,
+            'name': torb.name,
+            'hp': torb.hp,
+            'max_hp': torb.max_hp,
+            'action': torb.action.capitalize(),
+            'action_desc': torb.action_desc,
+            'genes': {gene: [f"{allele:.1f}" for allele in alleles] for gene, alleles in torb.genes.items()},
+            'status': torb.status
+        }
+        torb_data.append(torb_info)
+    
+    return JsonResponse({
+        'torbs': torb_data,
+        'gene_names': gene_names
+    })

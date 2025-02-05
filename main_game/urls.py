@@ -11,7 +11,8 @@ urlpatterns = [
     path('login', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('play/<int:colony_id>/settings/', views.settings_view, name='settings_view'),
-    path('play/<int:colony_id>/science/', views.science_view, name='science_view')
+    path('play/<int:colony_id>/science/', views.science_view, name='science_view'),
+    path('play/<int:colony_id>/filter_torbs/', views.filter_torbs, name='filter_torbs'),
 ]
 
 # Error when accessing colony URL when not logged in

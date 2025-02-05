@@ -64,7 +64,12 @@
             </div>
         </div>
 
-        <table id="torb-table">
+        <div class="filter-buttons" style="margin: 0;">
+            {% for action in unique_actions %}
+                <label><input type="checkbox" value="{{ action|lower }}" onclick="filterTorbs()"> {{ action|capfirst }}</label>
+            {% endfor %}
+        </div>
+        <table id="torb-table" style="margin-top: 0;">
             <thead>
                 <tr>
                     <th></th>
@@ -127,6 +132,7 @@
     <script src="{% static 'main_game/colony_view.js' %}"></script>
     <script>
         const checkReadyStatusUrl = "{% url 'check_ready_status' colony.id %}";
+        const filterTorbsUrl = "{% url 'filter_torbs' colony.id %}";
     </script>
 {% endblock %}
 
