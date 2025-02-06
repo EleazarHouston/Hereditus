@@ -89,7 +89,8 @@ input[type="checkbox"] {
 
 .metrics-container {
     display: flex;
-    align-items: center;
+    flex-direction: column; /* Change to column for vertical alignment */
+    align-items: stretch; /* Stretch items to ensure equal width */
     justify-content: space-between;
     margin-bottom: 0px;
     padding: 10px;
@@ -102,9 +103,11 @@ input[type="checkbox"] {
 .metrics-group {
     display: flex;
     gap: 20px;
+    width: 100%; /* Ensure groups take full width */
 }
 
 .metric {
+    flex: 1; /* Ensure metrics take equal width */
     font-size: 1.5em;
     font-weight: bold;
     color: #E0E0E0;
@@ -129,6 +132,20 @@ input[type="checkbox"] {
     color: #FF9800;
     background-color: #4f4539;
     transition: background-color 0.3s ease;
+}
+
+.metric.science {
+    color: #87c9ff;
+    background-color: #475c72;
+    transition: background-color 0.3s ease;
+    margin-top: 10px;
+}
+
+.metric.mutagen {
+    color: #ff4066;
+    background-color: #360f0f;
+    transition: background-color 0.3s ease;
+    margin-top: 10px;
 }
 
 .end-turn-button {

@@ -24,6 +24,8 @@ class Colony(models.Model):
     gather_rate = models.FloatField(default=1.7)
     discovered_colonies = models.ManyToManyField('self', symmetrical=False, related_name='discoverers', blank=True)
     army = models.OneToOneField('main_game.Army', on_delete=models.SET_NULL, null=True, blank=True, related_name='colony_army')
+    science = models.IntegerField(default=0)
+    mutagen = models.IntegerField(default=0)
     
     @property
     def torb_count(self):

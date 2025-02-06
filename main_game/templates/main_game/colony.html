@@ -19,6 +19,16 @@
                             Food: {{ colony.food }}
                         </div>
                     </div>
+                    <div class="metrics-group">
+                        <div class="metric science">
+                            <span class="icon">🧪</span>
+                            Science: {{ colony.science }}
+                        </div>
+                        <div class="metric mutagen">
+                            <span class="icon">🧬</span>
+                            Mutagen: {{ colony.mutagen }}
+                        </div>
+                    </div>
                 </div>
 
                 <div class="end-turn-container">
@@ -45,6 +55,7 @@
                         <button type="submit" name="player-action" value="breed" disabled id="breed-button">Breed</button>
                         <button type="submit" name="player-action" value="gather">Gather</button>
                         <button type="submit" name="player-action" value="enlist">Enlist</button>
+                        <button type="submit" name="player-action" value="research">Research</button>
                     </div>
                 </div>
             </div>
