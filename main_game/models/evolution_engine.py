@@ -7,7 +7,7 @@ import numpy as np
 logger = logging.getLogger('hereditus')
 
 def default_gene_list():
-    return ["vitality", "sturdiness", "agility", "strength"]
+    return ["vitality", "sturdiness", "agility", "strength", "intelligence"]
 
 # Needed only for past migrations, no longer used
 def default_gene_alleles():
@@ -37,8 +37,10 @@ class EvolutionEngine(models.Model):
         genes = {}
         for gene in self.gene_list:
             alleles = []
-            for i in range(self.alleles_per_gene):
-                alleles.append(random.randrange(self.random_gene_min, self.random_gene_max))
+            while True:
+                alleles = [random.randrange(self.random_gene_min, self.random_gene_max) for _ in range(self.alleles_per_gene)]
+                if any(allele > self.random_gene_max / 2 for allele in alleles):
+                    break
             genes[gene] = alleles
         torb = self.new_torb(generation=0, colony=colony, genes=genes)
         
