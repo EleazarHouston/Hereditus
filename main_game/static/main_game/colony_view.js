@@ -79,6 +79,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     reapplyTooltips();
+    reapplyBreedButtonLogic();
 });
 
 let isPolling = false;
@@ -176,7 +177,30 @@ function filterTorbs() {
             }
             // Reapply tooltip functionality
             reapplyTooltips();
+            // Reapply breed button enabling/disabling logic
+            reapplyBreedButtonLogic();
         });
+}
+
+function reapplyBreedButtonLogic() {
+    const checkboxes = document.querySelectorAll('.torb-checkbox');
+    const breedButton = document.getElementById('breed-button');
+
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', () => {
+            const selectedTorbs = document.querySelectorAll('.torb-checkbox:checked');
+            let allFertile = true;
+
+            selectedTorbs.forEach(selected => {
+                const row = selected.closest('tr');
+                if (row.dataset.fertile === "false") {
+                    allFertile = false;
+                }
+            });
+
+            breedButton.disabled = (selectedTorbs.length !== 2 || !allFertile);
+        });
+    });
 }
 
 function reapplyTooltips() {

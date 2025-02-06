@@ -192,9 +192,6 @@ def filter_torbs(request, colony_id):
     fertile_filter = request.GET.get('fertile', 'all')
     torbs = colony.torbs.all()
     
-    print(f"action_filter: {action_filter}")
-    print(f"fertile_filter: {fertile_filter}")
-    
     if action_filter and action_filter != 'all':
         action_filter_list = [action.lower() for action in action_filter.split(',')]
         torbs = torbs.filter(action__in=action_filter_list)
@@ -220,7 +217,8 @@ def filter_torbs(request, colony_id):
             'action': torb.action.capitalize(),
             'action_desc': torb.action_desc,
             'genes': {gene: [f"{allele:.1f}" for allele in alleles] for gene, alleles in torb.genes.items()},
-            'status': torb.status
+            'status': torb.status,
+            'fertile': torb.fertile
         }
         torb_data.append(torb_info)
     

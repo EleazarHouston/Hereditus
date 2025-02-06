@@ -104,7 +104,7 @@
             </thead>
             <tbody>
                 {% for torb in torbs %}
-                    <tr data-fertile="{{ torb.fertile }}">
+                    <tr data-fertile="{{ torb.fertile|yesno:"true,false" }}">
                         <td>
                             <input
                                 type="checkbox"
