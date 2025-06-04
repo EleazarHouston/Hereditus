@@ -7,6 +7,7 @@ from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from .models import Torb, Colony, StoryText, Game, Player
+from .forms import NewColonyForm, ColonyActionForm, ArmyActionForm
 
 logger = logging.getLogger(__name__)
 
@@ -23,17 +24,22 @@ def colony_view(request, colony_id):
     
     torbs = colony.torbs.all().order_by('private_ID')
     story_texts = StoryText.objects.filter(colony=colony).order_by('timestamp')
-    
-    if request.method == 'POST':
-        selected_torbs = request.POST.getlist('selected_torbs')
-        player_action = request.POST.get('player-action')
 
-        try:
-            player.perform_action(colony=colony, action=player_action, torb_ids=selected_torbs)
-        except ValueError as e:
-            logger.error(f"Invalid action: {e}")
-            
+    if request.method == 'POST':
+        form = ColonyActionForm(request.POST, torb_queryset=torbs)
+        if form.is_valid():
+            selected_torbs = [t.id for t in form.cleaned_data['selected_torbs']]
+            player_action = form.cleaned_data['player_action']
+            try:
+                player.perform_action(colony=colony, action=player_action, torb_ids=selected_torbs)
+            except ValueError as e:
+                logger.error(f"Invalid action: {e}")
+        else:
+            logger.error(f"Invalid colony action form: {form.errors}")
+
         return redirect('colony_view', colony_id=colony.id)
+    else:
+        form = ColonyActionForm(torb_queryset=torbs)
     
     for torb in torbs:
         for gene_name in torb.genes:
@@ -52,6 +58,7 @@ def colony_view(request, colony_id):
         'gene_names': gene_names,
         'story_texts': story_texts,
         'unique_actions': unique_actions,
+        'colony_action_form': form,
     })
 
 def check_ready_status(request, colony_id):
@@ -64,26 +71,32 @@ def play(request):
     error_message = None
 
     if request.method == 'POST':
-        game_id = request.POST.get('game_id')
-        colony_name = request.POST.get('colony_name')
-        game = get_object_or_404(Game, pk=game_id)
-        
-        can_make_new_game = game.colony_set.filter(player__user=user).count() < game.max_colonies_per_player
+        form = NewColonyForm(request.POST)
+        if form.is_valid():
+            game_id = form.cleaned_data['game_id']
+            colony_name = form.cleaned_data['colony_name']
+            game = get_object_or_404(Game, pk=game_id)
 
-        if not can_make_new_game:
-            error_message = "You already have the max number of colonies for this game."
-        elif not game.closed or user in game.allowed_players:
-            colony = Colony.objects.create(name=colony_name, game=game)
-            player, _ = Player.objects.get_or_create(user=user)
-            colony.player = player
-            colony.save()
+            can_make_new_game = game.colony_set.filter(player__user=user).count() < game.max_colonies_per_player
+
+            if not can_make_new_game:
+                error_message = "You already have the max number of colonies for this game."
+            elif not game.closed or user in game.allowed_players:
+                colony = Colony.objects.create(name=colony_name, game=game)
+                player, _ = Player.objects.get_or_create(user=user)
+                colony.player = player
+                colony.save()
+        else:
+            error_message = "Invalid colony data."
 
     colonies = Colony.objects.filter(player__user=user)
     games = Game.objects.filter(private=False) | Game.objects.filter(allowed_players__in=[user])
+    new_colony_form = NewColonyForm()
 
     return render(request, 'main_game/load_colony.html', {
         'colonies': colonies,
         'games': games,
+        'new_colony_form': new_colony_form,
         'error_message': error_message,
         })
 
@@ -103,15 +116,20 @@ def army_view(request, colony_id):
     story_texts = StoryText.objects.filter(colony=colony).order_by('timestamp')
     
     if request.method == 'POST':
-        selected_colony_id = request.POST.get('selected_colony')
-        player_action = request.POST.get('player-action')
-
-        try:
-            player.perform_action(colony=colony, action=player_action, target_colony_id=selected_colony_id)
-        except ValueError as e:
-            logger.error(f"Invalid action: {e}")
+        form = ArmyActionForm(request.POST)
+        if form.is_valid():
+            selected_colony_id = form.cleaned_data.get('selected_colony')
+            player_action = form.cleaned_data['action']
+            try:
+                player.perform_action(colony=colony, action=player_action, target_colony_id=selected_colony_id)
+            except ValueError as e:
+                logger.error(f"Invalid action: {e}")
+        else:
+            logger.error(f"Invalid army action form: {form.errors}")
 
         return redirect('army_view', colony_id=colony.id)
+    else:
+        form = ArmyActionForm()
     return render(request, 'main_game/army.html', {
         'colony': colony,
         'player_colony': colony,
@@ -119,7 +137,8 @@ def army_view(request, colony_id):
         'num_soldiers': num_soldiers,
         'num_training': num_training,
         'known_colonies': known_colonies,
-        'all_colonies': all_colonies
+        'all_colonies': all_colonies,
+        'army_action_form': form,
         })
 
 @login_required

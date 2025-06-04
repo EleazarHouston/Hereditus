@@ -25,7 +25,7 @@
                     {% csrf_token %}
                     <button
                         type="submit"
-                        name="player-action"
+                        name="player_action"
                         value="end_turn"
                         class="end-turn-button {% if colony.ready %}disabled{% else %}{% endif %}"
                         {% if colony.ready %}disabled{% endif %}
@@ -42,9 +42,9 @@
                 <div class="action-console-container">
                     <div class="action-buttons">
                         {% csrf_token %}
-                        <button type="submit" name="player-action" value="breed" disabled id="breed-button">Breed</button>
-                        <button type="submit" name="player-action" value="gather">Gather</button>
-                        <button type="submit" name="player-action" value="enlist">Enlist</button>
+                        <button type="submit" name="player_action" value="breed" disabled id="breed-button">Breed</button>
+                        <button type="submit" name="player_action" value="gather">Gather</button>
+                        <button type="submit" name="player_action" value="enlist">Enlist</button>
                     </div>
                 </div>
             </div>
