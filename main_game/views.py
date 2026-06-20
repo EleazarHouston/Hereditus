@@ -133,8 +133,10 @@ def lab_view(request, colony_id):
         form = LabActionForm(data, torbs=torbs)
         if form.is_valid():
             action = form.cleaned_data["player_action"]
-            kwargs = {"torb_ids": form.cleaned_data["selected_torbs"]}
-            if action == "make_mutagen":
+            kwargs = {}
+            if action == "research":
+                kwargs["torb_ids"] = form.cleaned_data["selected_torbs"]
+            elif action == "make_mutagen":
                 kwargs["science_points_used"] = form.cleaned_data["science_points_used"]
             elif action == "purchase_discovery":
                 kwargs["discovery_id"] = form.cleaned_data["discovery_id"]

@@ -34,7 +34,7 @@ class ActionServiceTests(TestCase):
         colony = ColonyFactory()
         target = ColonyFactory()
 
-        with self.assertRaises(Colony.DoesNotExist):
+        with self.assertRaisesMessage(ValueError, "same game"):
             ActionService.perform(
                 player=colony.player,
                 colony=colony,
