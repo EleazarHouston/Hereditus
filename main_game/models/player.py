@@ -51,6 +51,14 @@ class Player(PolymorphicModel):
             colony.army.set_attack_target(target_colony_id)
         elif action == 'end_turn':
             colony.ready_up()
+        elif action == 'research':
+            colony.assign_torbs_action(torb_ids=kwargs.get('torb_ids'), action="researching")
+        elif action == 'make_mutagen':
+            colony.lab.make_mutagen(science_points_used=int(kwargs.get('science_points_used', 0)))
+        elif action == 'purchase_discovery':
+            from .lab import Discovery
+            discovery = Discovery.objects.get(id=kwargs.get('discovery_id'))
+            colony.lab.unlock_discovery(discovery)
         else:
             raise ValueError(f"Unknown action: {action}")
     

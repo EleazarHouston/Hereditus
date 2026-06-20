@@ -5,3 +5,4 @@ from .story_text import StoryText
 from .torb import Torb
 from .army import Army, ArmyTorb
 from .player import Player, AIPlayer
+from .lab import Lab, Discovery

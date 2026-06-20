@@ -10,7 +10,7 @@ logger = logging.getLogger('hereditus')
 
 class Army(models.Model):
     from .torb import Torb
-    colony = models.OneToOneField('main_game.Colony', on_delete=models.CASCADE, related_name='army_instance')
+    colony = models.OneToOneField('Colony', on_delete=models.CASCADE, related_name='army_instance')
     scout_target = models.ForeignKey('colony', blank=True, null=True, on_delete=models.SET_NULL, related_name='scouting_armies')
     attack_target= models.ForeignKey('colony', blank=True, null=True, on_delete=models.SET_NULL, related_name='attacking_armies')
     morale = models.IntegerField(default=100)

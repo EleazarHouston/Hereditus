@@ -1,5 +1,17 @@
 from django.contrib import admin
-from .models import Torb, Colony, Game, EvolutionEngine, StoryText, Army, ArmyTorb, Player, AIPlayer
+from .models import (
+    AIPlayer,
+    Army,
+    ArmyTorb,
+    Colony,
+    Discovery,
+    EvolutionEngine,
+    Game,
+    Lab,
+    Player,
+    StoryText,
+    Torb,
+)
 
 class TorbAdmin(admin.ModelAdmin):
     list_display = ('name', 'private_ID', 'colony', 'is_alive', 'hp', 'max_hp', 'action', 'action_desc')
@@ -25,3 +37,5 @@ admin.site.register(StoryText) # TODO: Show text in tabular view
 admin.site.register(ArmyTorb)
 admin.site.register(Player)
 admin.site.register(AIPlayer)
+admin.site.register(Lab)
+admin.site.register(Discovery)

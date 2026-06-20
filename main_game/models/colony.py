@@ -7,8 +7,8 @@ from django.db.models.functions import Now
 
 from .game import Game
 from .story_text import StoryText
-from .torb_names import torb_names
 from .player import AIPlayer
+from .torb_names import torb_names
 
 logger = logging.getLogger('hereditus')
 
@@ -23,9 +23,9 @@ class Colony(models.Model):
     rest_heal_perc = models.FloatField(default=0.2)
     gather_rate = models.FloatField(default=1.7)
     discovered_colonies = models.ManyToManyField('self', symmetrical=False, related_name='discoverers', blank=True)
+    
+    # probably fine to remove, connection from Army side
     army = models.OneToOneField('main_game.Army', on_delete=models.SET_NULL, null=True, blank=True, related_name='colony_army')
-    science = models.IntegerField(default=0)
-    mutagen = models.IntegerField(default=0)
     
     @property
     def torb_count(self):
@@ -46,6 +46,7 @@ class Colony(models.Model):
         self.call_breed_torbs()
         self.rest_torbs()
         self.army.new_round()
+        self.lab.new_round()
         self.colony_meal()
         #self.scout_target = None # Moved to army
         self.save()
@@ -54,12 +55,26 @@ class Colony(models.Model):
             story_text_type="system",
             story_text=f"It is now year {round_number+1}.",
             timestamp=Now())
+        logger.debug(f"Finished processing new round for Colony {self.name}")
                 
     def reset_fertility(self):
         for torb in self.torbs.filter(is_alive=True, growing=False):
             torb.fertile = True
             torb.save()
-            
+    
+    def gather_phase(self):
+        num_gathering = 0
+        for torb in self.torbs.all():
+            if torb.action == "gathering":
+                num_gathering += 1
+        food_gathered = round(num_gathering * self.gather_rate)
+        self.adjust_food(food_gathered)
+        StoryText.objects.create(
+            colony=self,
+            story_text_type="food",
+            story_text=f"Your Torbs gathered {food_gathered} food.",
+            timestamp=Now())
+    
     def grow_torbs(self):
         growing_torbs = self.torbs.filter(growing=True)
         for torb in growing_torbs:
@@ -79,55 +94,19 @@ class Colony(models.Model):
                     StoryText.objects.create(
                         colony=self,
                         story_text_type="breeding",
-                        story_text=f"A new Torb, '{new_torb.name}', was born",
+                        story_text=f"A new Torb, '{new_torb.name}', was born.",
                         timestamp=Now())
                 torb.set_action(action="gathering")
                 torb1.set_action(action="gathering")
         
-    def set_breed_torbs(self, torbs):
-        from .torb import Torb
-        self.discovered_colonies.add(self)
-        torb0 = Torb.objects.get(id=torbs[0])
-        torb1 = Torb.objects.get(id=torbs[1])
-        
-        torb0.set_action(action="breeding", context_torb=torb1)
-        torb1.set_action(action="breeding", context_torb=torb0)
-
-    def assign_torbs_action(self, torb_ids, action):
-        from .torb import Torb
-        torbs = Torb.objects.filter(id__in=torb_ids, colony=self)
-        for torb in torbs:
-            torb.set_action(action=action)
-
     def rest_torbs(self):
         for torb in self.torbs.all():
             if torb.action == "resting" and not torb.starving:
-                adjust_amount = round(self.rest_heal_flat + self.rest_heal_perc & torb.max_hp)
+                adjust_amount = round(self.rest_heal_flat + self.rest_heal_perc * torb.max_hp)
                 torb.adjust_hp(adjust_amount, context="resting")
     
-    def reset_torbs_actions(self, action: str):
-        for torb in self.torbs.all():
-            torb.set_action(action="gathering")
-    
-    def gather_phase(self):
-        num_gathering = 0
-        for torb in self.torbs.all():
-            if torb.action == "gathering":
-                num_gathering += 1
-        food_gathered = round(num_gathering * self.gather_rate)
-        self.adjust_food(food_gathered)
-        StoryText.objects.create(
-            colony=self,
-            story_text_type="food",
-            story_text=f"Your Torbs gathered {food_gathered} food.",
-            timestamp=Now())
-    
-    def adjust_food(self, adjust_amount):
-        adjust_amount = int(adjust_amount)
-        self.food = max(self.food + adjust_amount, 0)
-        self.save()
-    
     def colony_meal(self):
+        logger.debug(f"Processing colony meal for Colony {self.name}")
         living_torbs = [torb for torb in self.torbs.all() if torb.is_alive]
         starved_torbs = []
         
@@ -150,6 +129,30 @@ class Colony(models.Model):
             story_text_type="food",
             story_text=f"Your Torbs ate {less_food} food and {len(starved_torbs)} went hungry.",
             timestamp=Now())
+    
+    def set_breed_torbs(self, torbs):
+        from .torb import Torb
+        self.discovered_colonies.add(self)
+        torb0 = Torb.objects.get(id=torbs[0])
+        torb1 = Torb.objects.get(id=torbs[1])
+        
+        torb0.set_action(action="breeding", context_torb=torb1)
+        torb1.set_action(action="breeding", context_torb=torb0)
+
+    def assign_torbs_action(self, torb_ids, action):
+        from .torb import Torb
+        torbs = Torb.objects.filter(id__in=torb_ids, colony=self)
+        for torb in torbs:
+            torb.set_action(action=action)
+    
+    def reset_torbs_actions(self, action: str):
+        for torb in self.torbs.all():
+            torb.set_action(action="gathering")
+    
+    def adjust_food(self, adjust_amount):
+        adjust_amount = int(adjust_amount)
+        self.food = max(self.food + adjust_amount, 0)
+        self.save()
     
     def ready_up(self):
         self.ready = True
@@ -191,6 +194,7 @@ class Colony(models.Model):
             self.game.evolution_engine_instance.protogenesis_torb(colony=self)
 
     def save(self, *args, **kwargs):
+        from .lab import Lab
         is_new = self.pk is None
         super().save(*args, **kwargs)
         
@@ -208,6 +212,8 @@ class Colony(models.Model):
         if created or not self.army:
             self.army = army
             self.save()
+        
+        Lab.objects.get_or_create(colony=self)
         
         if is_new and isinstance(self.player, AIPlayer):
             self.player.make_decisions(self)

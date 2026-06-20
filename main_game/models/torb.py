@@ -15,6 +15,7 @@ class Torb(models.Model):
         ('training', 'training'),
         ('resting', 'resting'),
         ('growing', 'growing'),
+        ('researching', 'researching'),
     ]
     
     private_ID = models.IntegerField(default=0)
@@ -41,6 +42,7 @@ class Torb(models.Model):
         'soldiering': '🏹 Soldiering',
         'breeding': '💦 Breeding',
         'training': '🎯 Training',
+        'researching': '🔬 Researching'
     }
 
     @property
