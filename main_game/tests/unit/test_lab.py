@@ -92,3 +92,83 @@ class LabModelTests(TestCase):
 
         torb.refresh_from_db()
         self.assertEqual(torb.hp, 5)
+
+
+class LabBoundaryTests(TestCase):
+    def setUp(self):
+        self.colony = ColonyFactory()
+        self.lab = self.colony.lab
+
+    def test_research_accrues_deterministic_intelligence_contribution(self):
+        TorbFactory(
+            colony=self.colony,
+            private_ID=1,
+            action="researching",
+            genes={"intelligence": [4]},
+        )
+        TorbFactory(
+            colony=self.colony,
+            private_ID=2,
+            action="researching",
+            genes={},
+        )
+
+        contribution = ResearchService.conduct_research(self.lab, rng=_ResearchRng())
+
+        self.lab.refresh_from_db()
+        self.assertEqual(contribution, 4)
+        self.assertEqual(self.lab.science_points, 4)
+
+    def test_mutagen_rejects_below_minimum_and_nonmultiples_without_spending(self):
+        self.lab.science_points = 30
+        self.lab.save(update_fields=["science_points"])
+
+        for amount in (9, 11):
+            with self.subTest(amount=amount):
+                with self.assertRaises(ValueError):
+                    ResearchService.make_mutagen(self.lab, amount)
+                self.lab.refresh_from_db()
+                self.assertEqual(self.lab.science_points, 30)
+                self.assertEqual(self.lab.mutagen, 0)
+
+    def test_exact_mutagen_multiple_conserves_science(self):
+        self.lab.science_points = 20
+        self.lab.save(update_fields=["science_points"])
+
+        made = ResearchService.make_mutagen(self.lab, 20)
+
+        self.lab.refresh_from_db()
+        self.assertEqual(made, 2)
+        self.assertEqual(self.lab.science_points, 0)
+        self.assertEqual(self.lab.mutagen, 2)
+
+    def test_insufficient_science_does_not_change_lab(self):
+        self.lab.science_points = 10
+        self.lab.save(update_fields=["science_points"])
+
+        with self.assertRaisesMessage(ValueError, "Not enough science"):
+            ResearchService.make_mutagen(self.lab, 20)
+
+        self.lab.refresh_from_db()
+        self.assertEqual(self.lab.science_points, 10)
+        self.assertEqual(self.lab.mutagen, 0)
+
+    def test_expensive_discovery_does_not_change_lab(self):
+        discovery = DiscoveryFactory(research_cost=20)
+        self.lab.science_points = 10
+        self.lab.save(update_fields=["science_points"])
+
+        with self.assertRaisesMessage(ValueError, "Not enough science"):
+            ResearchService.unlock_discovery(self.lab, discovery)
+
+        self.lab.refresh_from_db()
+        self.assertEqual(self.lab.science_points, 10)
+        self.assertFalse(self.lab.discoveries.filter(pk=discovery.pk).exists())
+
+
+class _ResearchRng:
+    def choice(self, values):
+        return values[0]
+
+    def random(self):
+        return 0.5

@@ -73,7 +73,9 @@ class Colony(models.Model):
         self.torbs.filter(is_alive=True, growing=False).update(fertile=True)
 
     def gather_phase(self):
-        gathered = round(self.torbs.filter(action="gathering").count() * self.gather_rate)
+        gathered = round(
+            self.torbs.filter(action="gathering", is_alive=True).count() * self.gather_rate
+        )
         self.adjust_food(gathered)
         StoryText.objects.create(
             colony=self,

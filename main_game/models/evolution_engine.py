@@ -55,7 +55,7 @@ class EvolutionEngine(models.Model):
             rng.shuffle(parent0)
             rng.shuffle(parent1)
             alleles = []
-            for index in range(min(len(parent0), len(parent1))):
+            for index in range(min(self.alleles_per_gene, len(parent0), len(parent1))):
                 if index == 0:
                     allele = rng.choice([parent0[index], parent1[index]])
                 else:
