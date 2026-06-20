@@ -1,0 +1,85 @@
+[build-system]
+requires = ["setuptools>=74"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hereditus-web"
+version = "0.1.0"
+description = "Multiplayer genetics colony-building game"
+requires-python = ">=3.12"
+dependencies = [
+    "Django==5.1",
+    "django-environ==0.11.2",
+    "django-polymorphic==3.1.0",
+    "numpy==1.26.0",
+    "psycopg2-binary==2.9.9",
+]
+
+[project.optional-dependencies]
+dev = [
+    "coverage[toml]>=7.9,<8",
+    "django-stubs[compatible-mypy]>=5.1,<6",
+    "factory-boy>=3.3,<4",
+    "hypothesis>=6.135,<7",
+    "mypy>=1.16,<2",
+    "pip-tools>=7.4,<8",
+    "pre-commit>=4.2,<5",
+    "pytest>=8.4,<9",
+    "pytest-django>=4.11,<5",
+    "pytest-xdist>=3.7,<4",
+    "ruff>=0.12,<1",
+]
+
+[tool.setuptools.packages.find]
+include = ["main_game*", "webapp*"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "webapp.settings.test"
+python_files = ["test_*.py"]
+testpaths = ["main_game/tests"]
+addopts = ["--strict-config", "--strict-markers"]
+markers = [
+    "concurrency: requires PostgreSQL and exercises concurrent transactions",
+    "integration: exercises workflows across multiple domain components",
+    "e2e: requires Playwright and a running application",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["main_game"]
+omit = ["main_game/migrations/*", "main_game/tests/*"]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
+skip_covered = true
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+exclude = ["main_game/migrations", "legacy"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "DJ"]
+ignore = ["DJ001", "DJ008", "DJ012", "E501"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.mypy]
+python_version = "3.12"
+plugins = ["mypy_django_plugin.main"]
+check_untyped_defs = true
+ignore_missing_imports = true
+exclude = ["main_game/migrations/", "main_game/tests/", "legacy/"]
+
+[tool.django-stubs]
+django_settings_module = "webapp.settings.test"
+
+[tool.ruff.lint.per-file-ignores]
+"main_game/models/__init__.py" = ["F401"]
+"webapp/settings/*.py" = ["F403", "F405"]
+
+[[tool.mypy.overrides]]
+module = "main_game.models.player"
+disable_error_code = ["var-annotated"]
