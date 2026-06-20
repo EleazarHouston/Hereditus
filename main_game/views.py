@@ -6,7 +6,7 @@ from django.http import JsonResponse, Http404
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.decorators import login_required
-from .models import Torb, Colony, StoryText, Game, Player
+from .models import Torb, Colony, StoryText, Game, Player, Discovery
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ def colony_view(request, colony_id):
         'torbs': torbs,
         'gene_names': gene_names,
         'story_texts': story_texts,
-        'unique_actions': unique_actions,
+        'unique_actions': unique_actions
     })
 
 def check_ready_status(request, colony_id):
@@ -105,7 +105,6 @@ def army_view(request, colony_id):
     if request.method == 'POST':
         selected_colony_id = request.POST.get('selected_colony')
         player_action = request.POST.get('player-action')
-
         try:
             player.perform_action(colony=colony, action=player_action, target_colony_id=selected_colony_id)
         except ValueError as e:
@@ -125,12 +124,55 @@ def army_view(request, colony_id):
 @login_required
 def settings_view(request, colony_id):
     colony = get_object_or_404(Colony, id=colony_id)
+    
+    player = colony.player
+
+    if player.user != request.user:
+        return redirect('main_page')
+    
     return render(request, 'main_game/settings.html', {'colony': colony})
 
 @login_required
-def science_view(request, colony_id):
+def lab_view(request, colony_id):
     colony = get_object_or_404(Colony, id=colony_id)
-    return render(request, 'main_game/science.html', {'colony': colony})
+    player = colony.player
+    if player.user != request.user:
+        return redirect('main_page')
+
+    error_message = None
+    if request.method == 'POST':
+        player_action = request.POST.get('player-action')
+        selected_torbs = request.POST.getlist('selected_torbs')
+
+        action_kwargs = {}
+        if player_action == 'research':
+            action_kwargs['torb_ids'] = selected_torbs
+        elif player_action == 'make_mutagen':
+            action_kwargs['science_points_used'] = request.POST.get('science_points_used')
+        elif player_action == 'purchase_discovery':
+            action_kwargs['discovery_id'] = request.POST.get('discovery_id')
+
+        try:
+            player.perform_action(colony=colony, action=player_action, **action_kwargs)
+        except (TypeError, ValueError, Discovery.DoesNotExist) as error:
+            error_message = str(error)
+            logger.error("Invalid lab action: %s", error)
+        else:
+            return redirect('lab_view', colony_id=colony.id)
+
+    torbs = colony.torbs.all().order_by('private_ID')
+    unlocked_discoveries = colony.lab.discoveries.all().order_by('research_cost', 'name')
+    available_discoveries = Discovery.objects.exclude(
+        pk__in=unlocked_discoveries.values('pk')
+    ).order_by('research_cost', 'name')
+
+    return render(request, 'main_game/lab.html', {
+        'colony': colony,
+        'torbs': torbs,
+        'unlocked_discoveries': unlocked_discoveries,
+        'available_discoveries': available_discoveries,
+        'error_message': error_message,
+    })
 
 def main_page(request):
     if request.user.is_authenticated:
