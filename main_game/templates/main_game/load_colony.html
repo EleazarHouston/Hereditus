@@ -115,7 +115,12 @@
             margin-left: -110px;
         }
 
-        .new-colony-button:hover .tooltip {
+        .tooltip-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip-wrapper:hover .tooltip {
             visibility: visible;
         }
 
@@ -154,12 +159,14 @@
                             {% csrf_token %}
                             <input type="hidden" name="game_id" value="{{ game.id }}">
                             <input type="text" name="colony_name" class="new-colony-input" maxlength="63" placeholder="Colony Name" required>
-                            <button type="submit" class="new-colony-button {% if game.closed %}disabled{% endif %}" {% if game.closed %}disabled{% endif %}>
-                                New Colony
+                            <div class="tooltip-wrapper">
+                                <button type="submit" class="new-colony-button {% if game.closed %}disabled{% endif %}" {% if game.closed %}disabled{% endif %}>
+                                    New Colony
+                                </button>
                                 {% if game.closed %}
                                     <span class="tooltip">This game is closed to new colonies</span>
                                 {% endif %}
-                            </button>
+                            </div>
                         </form>
                     </div> 
                 </div>

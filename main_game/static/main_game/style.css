@@ -98,12 +98,14 @@ input[type="checkbox"] {
     border-radius: 10px;
     border: 1px solid #333;
     width: auto;
+    white-space: nowrap;
 }
 
 .metrics-group {
     display: flex;
     gap: 20px;
     width: 100%; /* Ensure groups take full width */
+    white-space: nowrap;
 }
 
 .metric {
@@ -111,27 +113,32 @@ input[type="checkbox"] {
     font-size: 1.5em;
     font-weight: bold;
     color: #E0E0E0;
-    padding: 10px 15px;
+    padding: 10px 10px;
     background-color: #384436;
     border-radius: 8px;
     display: flex;
     align-items: center;
+    white-space: nowrap;
 }
 
 .metric.torbs {
     color: #4CAF50;
     transition: background-color 0.3s ease;
+    display: flex;
+    white-space: nowrap;
 }
 
 .metric .icon {
     margin-right: 8px;
     font-size: 1.4em;
+    display: flex;
 }
 
 .metric.food {
     color: #FF9800;
     background-color: #4f4539;
     transition: background-color 0.3s ease;
+    display: flex;
 }
 
 .metric.science {
@@ -146,6 +153,61 @@ input[type="checkbox"] {
     background-color: #360f0f;
     transition: background-color 0.3s ease;
     margin-top: 10px;
+}
+
+.lab-metrics .metric {
+    margin-top: 0;
+}
+
+.metric.year {
+    color: #e0e0e0;
+    background-color: #333;
+}
+
+.error-message {
+    margin: 15px 0;
+    padding: 12px;
+    color: #ffb3b3;
+    background-color: #4a1717;
+    border: 1px solid #9e3c3c;
+    border-radius: 5px;
+}
+
+.inline-form {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.inline-form button {
+    margin-top: 0;
+}
+
+.inline-form input[type="number"] {
+    padding: 8px;
+    font-size: 16px;
+}
+
+.discovery-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+}
+
+.discovery-card {
+    padding: 16px;
+    background-color: #1e1e1e;
+    border: 1px solid #444;
+    border-radius: 8px;
+}
+
+.discovery-card.unlocked {
+    border-color: #4caf50;
+}
+
+.discovery-card h4 {
+    margin-top: 0;
 }
 
 .end-turn-button {
@@ -502,4 +564,15 @@ th {
     margin-right: 10px;
     font-size: 1.2em;
     color: #FF9800; /* Orange color for the label */
+}
+
+.current-year-note {
+    margin-left: 10px;
+    font-size: 0.9em;
+    color: #FF9800; /* Orange color for better visibility */
+    background-color: #333;
+    padding: 5px 10px;
+    border-radius: 5px;
+    display: inline-block;
+    font-weight: bold;
 }

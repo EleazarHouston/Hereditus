@@ -25,9 +25,9 @@
                     </a>
                 </li>
                 <li>
-                    <a href="{% url 'science_view' colony.id %}" 
-                       class="{% if request.resolver_match.url_name == 'science_view' %}active{% endif %}">
-                        Science
+                    <a href="{% url 'lab_view' colony.id %}" 
+                       class="{% if request.resolver_match.url_name == 'lab_view' %}active{% endif %}">
+                        Lab
                     </a>
                 </li>
                 <li>

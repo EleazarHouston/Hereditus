@@ -1,0 +1,107 @@
+{% extends 'main_game/base.html' %}
+
+{% block title %}Lab{% endblock %}
+
+{% block content %}
+    <h1>Lab: {{ colony.name }}</h1>
+
+    {% if error_message %}
+        <div class="error-message" role="alert">{{ error_message }}</div>
+    {% endif %}
+
+    <div class="metrics-container lab-metrics">
+        <div class="metrics-group">
+            <div class="metric science">
+                <span class="icon">🧪</span>
+                Science: {{ colony.lab.science_points }}
+            </div>
+            <div class="metric mutagen">
+                <span class="icon">🧬</span>
+                Mutagen: {{ colony.lab.mutagen }}
+            </div>
+            <div class="metric year">Year: {{ colony.game.round_number }}</div>
+        </div>
+    </div>
+
+    <section>
+        <h2>Assign Researchers</h2>
+        <form method="post" action="{% url 'lab_view' colony.id %}">
+            {% csrf_token %}
+            <table>
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Intelligence</th>
+                        <th>Current Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for torb in torbs %}
+                        <tr>
+                            <td><input type="checkbox" name="selected_torbs" value="{{ torb.id }}"></td>
+                            <td>{{ torb.private_ID }}</td>
+                            <td>{{ torb.name }}</td>
+                            <td>
+                                {% for allele in torb.genes.intelligence %}
+                                    {{ allele|floatformat:1 }}{% if not forloop.last %} | {% endif %}
+                                {% empty %}
+                                    N/A
+                                {% endfor %}
+                            </td>
+                            <td>{{ torb.action_desc }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="5">This colony has no Torbs.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <button type="submit" name="player-action" value="research">Assign to Research</button>
+        </form>
+    </section>
+
+    <section>
+        <h2>Make Mutagen</h2>
+        <form method="post" action="{% url 'lab_view' colony.id %}" class="inline-form">
+            {% csrf_token %}
+            <label for="science-points-used">Science points to use:</label>
+            <input id="science-points-used" type="number" name="science_points_used" min="10" step="1" required>
+            <button type="submit" name="player-action" value="make_mutagen">Make Mutagen</button>
+        </form>
+        <p>Every 10 science points produces one mutagen.</p>
+    </section>
+
+    <section>
+        <h2>Discoveries</h2>
+        <h3>Unlocked</h3>
+        <div class="discovery-list">
+            {% for discovery in unlocked_discoveries %}
+                <article class="discovery-card unlocked">
+                    <h4>{{ discovery.name }}</h4>
+                    <p>{{ discovery.description }}</p>
+                </article>
+            {% empty %}
+                <p>No discoveries unlocked yet.</p>
+            {% endfor %}
+        </div>
+
+        <h3>Available</h3>
+        <div class="discovery-list">
+            {% for discovery in available_discoveries %}
+                <article class="discovery-card">
+                    <h4>{{ discovery.name }}</h4>
+                    <p>{{ discovery.description }}</p>
+                    <p>Research cost: {{ discovery.research_cost }}</p>
+                    <form method="post" action="{% url 'lab_view' colony.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="discovery_id" value="{{ discovery.id }}">
+                        <button type="submit" name="player-action" value="purchase_discovery">Unlock</button>
+                    </form>
+                </article>
+            {% empty %}
+                <p>All discoveries have been unlocked.</p>
+            {% endfor %}
+        </div>
+    </section>
+{% endblock %}

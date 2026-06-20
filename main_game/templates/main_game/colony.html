@@ -8,29 +8,33 @@
     <form method="post" action="{% url 'colony_view' colony.id %}">
         <div class="action-console-container">
             <div class="column">
+                
                 <div class="metrics-container">
                     <div class="metrics-group">
                         <div class="metric torbs">
                             <span class="icon">🐗</span>
                             Torbs: {{ num_torbs }}
                         </div>
+                        {% spaceless %}
                         <div class="metric food">
                             <span class="icon">🍎</span>
+                            
                             Food: {{ colony.food }}
                         </div>
+                        {% endspaceless %}
                     </div>
                     <div class="metrics-group">
                         <div class="metric science">
                             <span class="icon">🧪</span>
-                            Science: {{ colony.science }}
+                            Science: {{ colony.lab.science_points }}
                         </div>
                         <div class="metric mutagen">
                             <span class="icon">🧬</span>
-                            Mutagen: {{ colony.mutagen }}
+                            Mutagen: {{ colony.lab.mutagen }}
                         </div>
                     </div>
                 </div>
-
+                
                 <div class="end-turn-container">
                     {% csrf_token %}
                     <button
@@ -47,6 +51,9 @@
                             End Turn
                         {% endif %}
                     </button>
+                    <span class="current-year-note" style="margin-left: 10px; font-size: 0.9em; color: #ccc;">
+                        Year: {{ colony.game.round_number }}
+                    </span>
                 </div>
 
                 <div class="action-console-container">
@@ -152,6 +159,7 @@
         </table>
     </form>
 {% endblock %}
+
 
 {% block scripts %}
     <script src="{% static 'main_game/colony_view.js' %}"></script>

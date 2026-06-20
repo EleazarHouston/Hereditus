@@ -5,7 +5,7 @@
 
 {% block content %}
     {% if player_colony.num_soldiers > 0 %}
-        <h1>The Army of {{ player_colony.name }}</h1>
+        <h1>{{ player_colony.name }}'s Army</h1>
         <div class="action-console-container" style="display: flex; flex-direction: row; width: 100%;">
             <div class="column" style="flex: 1; max-width: 10%;">
                 <form method="post" action="{% url 'army_view' colony.id %}">
@@ -13,7 +13,7 @@
                         {% csrf_token %}
                         <button
                             type="submit"
-                            name="action"
+                            name="player-action"
                             value="end_turn"
                             class="end-turn-button {% if colony.ready %}disabled{% else %}{% endif %}"
                             {% if colony.ready %}disabled{% endif %}
@@ -29,8 +29,8 @@
                 </form>
                 <form method="post" action="{% url 'army_view' player_colony.id  %}">
                     {% csrf_token %}
-                    <button type="submit" name="action" value="scout" class="cancel-scout-button">Cancel Scout</button>
-                    <button type="submit" name="action" value="attack" class="cancel-attack-button">Cancel Attack</button>
+                    <button type="submit" name="player-action" value="scout" class="cancel-scout-button">Cancel Scout</button>
+                    <button type="submit" name="player-action" value="attack" class="cancel-attack-button">Cancel Attack</button>
                 </form>
             </div>
             <div class="column" style="flex: 2;">
@@ -131,14 +131,14 @@
                             <form method="post" action="{% url 'army_view' player_colony.id %}">
                                 {% csrf_token %}
                                 <input type="hidden" name="selected_colony" value="{{ colony.id }}">
-                                <button type="submit" name="action" value="scout" class="scout-button {% if player_colony.army.scout_target == colony %}target{% endif %}">Scout</button>
+                                <button type="submit" name="player-action" value="scout" class="scout-button {% if player_colony.army.scout_target == colony %}target{% endif %}">Scout</button>
                             </form>
                         </td>
                         <td>
                             <form method="post" action="{% url 'army_view' player_colony.id %}">
                                 {% csrf_token %}
                                 <input type="hidden" name="selected_colony" value="{{ colony.id }}">
-                                <button type="submit" name="action" value="attack" class="attack-button {% if player_colony.army.attack_target  == colony %}target{% endif %}" {% if colony not in known_colonies %}disabled{% endif %}>Attack</button>
+                                <button type="submit" name="player-action" value="attack" class="attack-button {% if player_colony.army.attack_target  == colony %}target{% endif %}" {% if colony not in known_colonies %}disabled{% endif %}>Attack</button>
                             </form>
                         </td>
                     </tr>
