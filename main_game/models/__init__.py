@@ -1,8 +1,8 @@
+from .army import Army, ArmyTorb
 from .colony import Colony
 from .evolution_engine import EvolutionEngine
 from .game import Game
+from .lab import Discovery, Lab
+from .player import AIPlayer, Player
 from .story_text import StoryText
 from .torb import Torb
-from .army import Army, ArmyTorb
-from .player import Player, AIPlayer
-from .lab import Lab, Discovery
