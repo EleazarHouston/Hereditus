@@ -278,3 +278,204 @@ class ArmyLifecycleTests(TestCase):
                 story_text__contains="glorious victory",
             ).exists()
         )
+
+    def test_army_str(self):
+        colony = ColonyFactory(name="Strivers")
+        self.assertEqual(str(colony.army), "Army of Strivers")
+
+    def test_unsupported_combat_action_raises(self):
+        with self.assertRaises(ValueError):
+            CombatService.set_target(colony=self.colony, action="nuke", target_id=1)
+
+
+class ScoutTargetMessageTests(TestCase):
+    def setUp(self):
+        self.colony = ColonyFactory()
+        self.target = ColonyFactory(game=self.colony.game, name="Target")
+
+    def test_cannot_scout_self(self):
+        self.colony.army.set_scout_target(self.colony.pk)
+
+        self.colony.army.refresh_from_db()
+        self.assertIsNone(self.colony.army.scout_target)
+        self.assertTrue(
+            StoryText.objects.filter(
+                colony=self.colony,
+                story_text__contains="scout ourselves",
+            ).exists()
+        )
+
+    def test_first_scout_of_discovered_colony(self):
+        self.colony.discovered_colonies.add(self.target)
+
+        self.colony.army.set_scout_target(self.target.pk)
+
+        self.colony.army.refresh_from_db()
+        self.assertEqual(self.colony.army.scout_target, self.target)
+        self.assertTrue(
+            StoryText.objects.filter(
+                colony=self.colony,
+                story_text=f"Our scout target is {self.target.name}.",
+            ).exists()
+        )
+
+    def test_cancel_attack_target(self):
+        self.colony.army.set_attack_target(None)
+
+        self.colony.army.refresh_from_db()
+        self.assertIsNone(self.colony.army.attack_target)
+        self.assertTrue(
+            StoryText.objects.filter(
+                colony=self.colony,
+                story_text__contains="attack plans have been canceled",
+            ).exists()
+        )
+
+    def test_retarget_attack_announces_new_target(self):
+        other = ColonyFactory(game=self.colony.game, name="Other")
+        self.colony.discovered_colonies.add(self.target, other)
+
+        self.colony.army.set_attack_target(self.target.pk)
+        self.colony.army.set_attack_target(other.pk)
+
+        self.colony.army.refresh_from_db()
+        self.assertEqual(self.colony.army.attack_target, other)
+        self.assertTrue(
+            StoryText.objects.filter(
+                colony=self.colony,
+                story_text=f"Our new attack target is {other.name}.",
+            ).exists()
+        )
+
+
+class ScoutDefendedColonyTests(TestCase):
+    def setUp(self):
+        self.attacker = ColonyFactory()
+        self.defender = ColonyFactory(game=self.attacker.game, name="Defender")
+
+    def _set_up_scout(self, *, ally_alleles, enemy_alleles):
+        ally = TorbFactory(colony=self.attacker, private_ID=1, action=Torb.Action.SOLDIERING)
+        enemy = TorbFactory(colony=self.defender, private_ID=1, action=Torb.Action.SOLDIERING)
+        ArmyTorbFactory(army=self.attacker.army, torb=ally, active_alleles=ally_alleles)
+        ArmyTorbFactory(army=self.defender.army, torb=enemy, active_alleles=enemy_alleles)
+        self.attacker.army.scout_target = self.defender
+        self.attacker.army.save(update_fields=["scout_target"])
+
+    def test_scout_outpaces_defender(self):
+        self._set_up_scout(
+            ally_alleles={"strength": 1, "agility": 1, "vitality": 16, "sturdiness": 16},
+            enemy_alleles={"strength": 1, "agility": 1, "vitality": 1, "sturdiness": 1},
+        )
+
+        result = self.attacker.army.scout_colony(rng=CombatRng())
+
+        self.assertTrue(result)
+        self.assertTrue(self.attacker.discovered_colonies.filter(pk=self.defender.pk).exists())
+        self.assertTrue(
+            StoryText.objects.filter(
+                colony=self.attacker,
+                story_text__contains="too nimble",
+            ).exists()
+        )
+
+    def test_scout_lucky_escape(self):
+        self._set_up_scout(
+            ally_alleles={"strength": 1, "agility": 1, "vitality": 1, "sturdiness": 1},
+            enemy_alleles={"strength": 4, "agility": 4, "vitality": 1, "sturdiness": 1},
+        )
+
+        result = self.attacker.army.scout_colony(rng=CombatRng(uniforms=[5]))
+
+        self.assertTrue(result)
+        self.assertTrue(
+            StoryText.objects.filter(
+                colony=self.attacker,
+                story_text__contains="wasn't caught",
+            ).exists()
+        )
+
+    def test_failed_scout_message_names_discovered_target(self):
+        scout = TorbFactory(
+            colony=self.attacker, private_ID=1, hp=5, max_hp=5, action=Torb.Action.SOLDIERING
+        )
+        membership = ArmyTorbFactory(army=self.attacker.army, torb=scout)
+        self.attacker.discovered_colonies.add(self.defender)
+
+        self.attacker.army._scout_failed(
+            membership,
+            self.defender,
+            random_enemy_torb_power=8,
+            random_ally_torb_resilience=3,
+            rng=CombatRng(randint_value=1),
+        )
+
+        self.assertTrue(
+            StoryText.objects.filter(
+                colony=self.attacker,
+                story_text__contains=f"scout {self.defender.name}",
+            ).exists()
+        )
+
+
+class BattleAndAttackBranchTests(TestCase):
+    def setUp(self):
+        self.attacker = ColonyFactory()
+        self.defender = ColonyFactory(game=self.attacker.game, name="Defender")
+        self.attacker.discovered_colonies.add(self.defender)
+        self.attacker.army.morale = 50
+        self.attacker.army.save(update_fields=["morale"])
+
+    def _enlist(self, colony):
+        torb = TorbFactory(colony=colony, private_ID=1, action=Torb.Action.SOLDIERING)
+        return ArmyTorbFactory(army=colony.army, torb=torb)
+
+    def test_attack_without_soldiers_bumbles(self):
+        self.attacker.army.attack_target = self.defender
+        self.attacker.army.save(update_fields=["attack_target"])
+
+        result = self.attacker.army.attack_colony(rng=CombatRng())
+
+        self.assertFalse(result)
+        self.assertTrue(
+            StoryText.objects.filter(
+                colony=self.attacker,
+                story_text__contains="bumbled about",
+            ).exists()
+        )
+
+    def test_lost_battle_triggers_attack_failure_story(self):
+        self._enlist(self.attacker)
+        self._enlist(self.defender)
+        self.attacker.army.morale = 1
+        self.attacker.army.attack_target = self.defender
+        self.attacker.army.save(update_fields=["morale", "attack_target"])
+
+        self.attacker.army.attack_colony(rng=CombatRng(randrange_value=2))
+
+        self.assertTrue(
+            StoryText.objects.filter(
+                colony=self.attacker, story_text__contains="was defeated"
+            ).exists()
+        )
+        self.assertTrue(
+            StoryText.objects.filter(colony=self.defender, story_text__contains="repelled").exists()
+        )
+
+    def test_battle_without_allies_is_lost(self):
+        self._enlist(self.defender)
+
+        result = self.attacker.army.battle_army(
+            self.defender.army, rng=CombatRng(randrange_value=1)
+        )
+
+        self.assertFalse(result)
+
+    def test_battle_exhausting_rounds_is_lost(self):
+        self._enlist(self.attacker)
+        self._enlist(self.defender)
+
+        result = self.attacker.army.battle_army(
+            self.defender.army, rng=CombatRng(randrange_value=1), max_rounds=0
+        )
+
+        self.assertFalse(result)
