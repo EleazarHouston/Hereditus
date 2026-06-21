@@ -30,6 +30,7 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: pip install -r requirements.lock
+      - run: python -m playwright install --with-deps chromium
       - run: ruff check .
       - run: ruff format --check .
       - run: mypy main_game webapp

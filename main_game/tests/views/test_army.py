@@ -34,6 +34,17 @@ class ArmyViewTests(TestCase):
         self.colony.army.refresh_from_db()
         self.assertEqual(self.colony.army.scout_target, self.target)
 
+    def test_end_turn_does_not_send_target_payload(self):
+        response = self.client.post(
+            self.url,
+            {"player-action": "end_turn"},
+            follow=True,
+        )
+
+        self.assertContains(response, "Army orders updated.")
+        self.colony.refresh_from_db()
+        self.assertTrue(self.colony.ready)
+
     def test_malformed_post_redirects_with_flash(self):
         response = self.client.post(
             self.url,

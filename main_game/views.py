@@ -110,12 +110,16 @@ def army_view(request, colony_id):
         data["player_action"] = data.get("player-action")
         form = ArmyActionForm(data)
         if form.is_valid():
+            action = form.cleaned_data["player_action"]
+            kwargs = {}
+            if action in {"scout", "attack"}:
+                kwargs["target_colony_id"] = form.cleaned_data["selected_colony"]
             try:
                 ActionService.perform(
                     player=colony.player,
                     colony=colony,
-                    action=form.cleaned_data["player_action"],
-                    target_colony_id=form.cleaned_data["selected_colony"],
+                    action=action,
+                    **kwargs,
                 )
             except (Colony.DoesNotExist, ValueError) as error:
                 logger.info("Rejected army action: %s", error)
