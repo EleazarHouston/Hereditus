@@ -9,17 +9,30 @@ class AIService:
         rng = rng or random.Random()
         player = colony.player
         gathering_ids = list(
-            colony.torbs.filter(action="gathering").order_by("pk").values_list("pk", flat=True)
+            colony.torbs.filter(
+                action="gathering",
+                is_alive=True,
+                growing=False,
+            )
+            .order_by("pk")
+            .values_list("pk", flat=True)
         )
 
         if colony.food > 5 and colony.food > colony.torb_count // 2:
-            rng.shuffle(gathering_ids)
+            breeding_ids = list(
+                colony.torbs.filter(
+                    pk__in=gathering_ids,
+                    fertile=True,
+                ).values_list("pk", flat=True)
+            )
+            rng.shuffle(breeding_ids)
             for _ in range(int(colony.torb_count**0.5)):
-                pair = gathering_ids[:2]
-                gathering_ids = gathering_ids[2:]
+                pair = breeding_ids[:2]
+                breeding_ids = breeding_ids[2:]
                 if len(pair) < 2:
                     break
                 ActionService.perform(player=player, colony=colony, action="breed", torb_ids=pair)
+                gathering_ids = [torb_id for torb_id in gathering_ids if torb_id not in pair]
 
         if colony.torb_count > 6 and colony.food >= 5:
             desired = max(1, colony.torb_count // rng.randint(6, 10))

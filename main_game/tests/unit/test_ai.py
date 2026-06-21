@@ -91,3 +91,22 @@ class AIDecisionTests(TestCase):
         colony.army.refresh_from_db()
         self.assertIsNone(colony.army.scout_target)
         self.assertEqual(colony.army.attack_target, target)
+
+    def test_infertile_gatherers_are_not_selected_for_breeding(self):
+        colony = self.make_colony(food=10)
+        infertile = [
+            TorbFactory(
+                colony=colony,
+                private_ID=index,
+                fertile=False,
+                action=Torb.Action.GATHERING,
+            )
+            for index in range(1, 3)
+        ]
+
+        AIService.make_decisions(colony, rng=random.Random(0))
+
+        for torb in infertile:
+            torb.refresh_from_db()
+            self.assertEqual(torb.action, Torb.Action.GATHERING)
+            self.assertIsNone(torb.context_torb_id)

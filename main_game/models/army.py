@@ -432,7 +432,7 @@ class Army(models.Model):
     ):
         rng = rng or random.Random()
         damage_to_take = rng.randint(
-            0, round(random_enemy_torb_power - random_ally_torb_resilience, 0)
+            0, int(round(random_enemy_torb_power - random_ally_torb_resilience))
         )
         if colony_to_scout in self.colony.discovered_colonies.all():
             story_text = f"Your scout was attacked when trying to scout {colony_to_scout.name} and didn't get any new information."

@@ -162,6 +162,28 @@ class CombatResolutionTests(TestCase):
             ).exists()
         )
 
+    def test_failed_scout_accepts_standard_random_generator(self):
+        scout = TorbFactory(
+            colony=self.attacker,
+            private_ID=1,
+            hp=5,
+            max_hp=5,
+            action=Torb.Action.SOLDIERING,
+        )
+        membership = ArmyTorbFactory(army=self.attacker.army, torb=scout)
+
+        self.attacker.army._scout_failed(
+            membership,
+            self.defender,
+            random_enemy_torb_power=8.2,
+            random_ally_torb_resilience=3.1,
+            rng=__import__("random").Random(0),
+        )
+
+        scout.refresh_from_db()
+        self.assertGreaterEqual(scout.hp, 0)
+        self.assertLessEqual(scout.hp, 5)
+
     def test_morale_is_clamped(self):
         self.attacker.army.adjust_morale(1000)
         self.assertEqual(self.attacker.army.morale, 100)
