@@ -34,4 +34,5 @@ jobs:
       - run: ruff check .
       - run: ruff format --check .
       - run: mypy main_game webapp
-      - run: pytest
+      - run: coverage run -m pytest
+      - run: coverage report
