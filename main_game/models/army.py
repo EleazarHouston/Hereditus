@@ -493,16 +493,19 @@ class ArmyTorb(models.Model):
         vitality_allele = rng.choice(torb.genes["vitality"])
         sturdiness_allele = rng.choice(torb.genes["sturdiness"])
 
-        return cls.objects.create(
-            army=army,
+        membership, _ = cls.objects.update_or_create(
             torb=torb,
-            active_alleles={
-                "strength": strength_allele,
-                "agility": agility_allele,
-                "vitality": vitality_allele,
-                "sturdiness": sturdiness_allele,
+            defaults={
+                "army": army,
+                "active_alleles": {
+                    "strength": strength_allele,
+                    "agility": agility_allele,
+                    "vitality": vitality_allele,
+                    "sturdiness": sturdiness_allele,
+                },
             },
         )
+        return membership
 
     def remove_from_army(self):
         self.delete()
