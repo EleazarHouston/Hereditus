@@ -35,3 +35,15 @@ class ColonyViewAuthorizationTests(TestCase):
         for url in self.urls:
             with self.subTest(url=url):
                 self.assertEqual(self.client.get(url).status_code, 200)
+
+    def test_anonymous_posts_to_gameplay_views_are_redirected_to_login(self):
+        post_urls = [
+            reverse("colony_view", args=[self.colony.pk]),
+            reverse("army_view", args=[self.colony.pk]),
+            reverse("lab_view", args=[self.colony.pk]),
+        ]
+        for url in post_urls:
+            with self.subTest(url=url):
+                response = self.client.post(url, {"player-action": "invalid"})
+                self.assertEqual(response.status_code, 302)
+                self.assertIn(reverse("login"), response.url)

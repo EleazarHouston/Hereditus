@@ -127,6 +127,13 @@
     </style>
 </head>
 <body>
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="message {{ message.tags }}" role="status">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
     <div class="container">
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <h1>Select a Colony</h1>

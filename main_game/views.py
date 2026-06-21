@@ -1,10 +1,12 @@
 import logging
 
+from django.contrib import messages
 from django.contrib.auth import authenticate, get_user_model, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
+from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from .forms import ArmyActionForm, ColonyActionForm, LabActionForm
 from .models import Colony, Discovery, Game, StoryText
@@ -16,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 @login_required
+@require_http_methods(["GET", "POST"])
 def colony_view(request, colony_id):
     colony = get_owned_colony(request.user, colony_id)
     torbs = colony.torbs.all().order_by("private_ID")
@@ -24,12 +27,23 @@ def colony_view(request, colony_id):
         data["player_action"] = data.get("player-action")
         form = ColonyActionForm(data, torbs=torbs)
         if form.is_valid():
-            ActionService.perform(
-                player=colony.player,
-                colony=colony,
-                action=form.cleaned_data["player_action"],
-                torb_ids=form.cleaned_data["selected_torbs"],
-            )
+            action = form.cleaned_data["player_action"]
+            kwargs = {}
+            if action != "end_turn":
+                kwargs["torb_ids"] = form.cleaned_data["selected_torbs"]
+            try:
+                ActionService.perform(
+                    player=colony.player,
+                    colony=colony,
+                    action=action,
+                    **kwargs,
+                )
+            except ValueError as error:
+                messages.error(request, str(error))
+            else:
+                messages.success(request, "Colony action updated.")
+        else:
+            messages.error(request, "Invalid colony action.")
         return redirect("colony_view", colony_id=colony.pk)
 
     gene_names = list(torbs.first().genes) if torbs.exists() else []
@@ -51,12 +65,14 @@ def colony_view(request, colony_id):
 
 
 @login_required
+@require_GET
 def check_ready_status(request, colony_id):
     colony = get_owned_colony(request.user, colony_id)
     return JsonResponse({"ready": colony.ready})
 
 
 @login_required
+@require_http_methods(["GET", "POST"])
 def play(request):
     error_message = None
     if request.method == "POST":
@@ -68,6 +84,10 @@ def play(request):
             )
         except (Game.DoesNotExist, PermissionError, ValueError) as error:
             error_message = str(error)
+            messages.error(request, error_message)
+        else:
+            messages.success(request, "Colony created.")
+            return redirect("play")
 
     games = Game.objects.filter(private=False) | Game.objects.filter(allowed_players=request.user)
     return render(
@@ -82,6 +102,7 @@ def play(request):
 
 
 @login_required
+@require_http_methods(["GET", "POST"])
 def army_view(request, colony_id):
     colony = get_owned_colony(request.user, colony_id)
     if request.method == "POST":
@@ -98,6 +119,11 @@ def army_view(request, colony_id):
                 )
             except (Colony.DoesNotExist, ValueError) as error:
                 logger.info("Rejected army action: %s", error)
+                messages.error(request, str(error))
+            else:
+                messages.success(request, "Army orders updated.")
+        else:
+            messages.error(request, "Invalid army action.")
         return redirect("army_view", colony_id=colony.pk)
 
     torbs = colony.torbs.all()
@@ -117,12 +143,14 @@ def army_view(request, colony_id):
 
 
 @login_required
+@require_GET
 def settings_view(request, colony_id):
     colony = get_owned_colony(request.user, colony_id)
     return render(request, "main_game/settings.html", {"colony": colony})
 
 
 @login_required
+@require_http_methods(["GET", "POST"])
 def lab_view(request, colony_id):
     colony = get_owned_colony(request.user, colony_id)
     torbs = colony.torbs.all().order_by("private_ID")
@@ -144,10 +172,13 @@ def lab_view(request, colony_id):
                 ActionService.perform(player=colony.player, colony=colony, action=action, **kwargs)
             except (TypeError, ValueError, Discovery.DoesNotExist) as error:
                 error_message = str(error)
+                messages.error(request, error_message)
             else:
+                messages.success(request, "Lab action completed.")
                 return redirect("lab_view", colony_id=colony.pk)
         else:
             error_message = "Invalid lab action."
+            messages.error(request, error_message)
 
     unlocked = colony.lab.discoveries.order_by("research_cost", "name")
     return render(
@@ -165,6 +196,7 @@ def lab_view(request, colony_id):
     )
 
 
+@require_GET
 def main_page(request):
     if request.user.is_authenticated:
         return redirect("play")
@@ -179,6 +211,7 @@ class RegisterForm(UserCreationForm):
         fields = ["username", "password1", "password2"]
 
 
+@require_http_methods(["GET", "POST"])
 def register(request):
     if request.user.is_authenticated:
         return redirect("play")
@@ -190,27 +223,33 @@ def register(request):
             password=form.cleaned_data["password1"],
         )
         login(request, user)
+        messages.success(request, "Registration complete.")
         return redirect("play")
     return render(request, "main_game/register.html", {"form": form})
 
 
+@require_http_methods(["GET", "POST"])
 def login_view(request):
     if request.user.is_authenticated:
         return redirect("play")
     form = AuthenticationForm(request, data=request.POST or None)
     if request.method == "POST" and form.is_valid():
         login(request, form.get_user())
+        messages.success(request, "Logged in.")
         return redirect("play")
     return render(request, "main_game/login.html", {"form": form})
 
 
 @login_required
+@require_POST
 def logout_view(request):
     logout(request)
+    messages.success(request, "Logged out.")
     return redirect("main_page")
 
 
 @login_required
+@require_GET
 def filter_torbs(request, colony_id):
     colony = get_owned_colony(request.user, colony_id)
     torbs = colony.torbs.all()
