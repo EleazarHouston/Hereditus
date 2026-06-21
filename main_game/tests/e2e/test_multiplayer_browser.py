@@ -37,7 +37,9 @@ def end_turn(page: Page) -> None:
 
 @pytest.mark.e2e
 @pytest.mark.django_db(transaction=True)
-def test_two_players_advance_research_scout_and_attack_through_browser(live_server):
+def test_two_players_advance_research_scout_and_attack_through_browser(
+    browser_available, live_server
+):
     game = GameFactory(description="Browser campaign", starting_torbs=2)
     first_user = UserFactory(username="browser-one")
     second_user = UserFactory(username="browser-two")
